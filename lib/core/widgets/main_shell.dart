@@ -2,20 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
-/// Persistent shell that wraps all main tab screens.
-/// Provides the bottom navigation bar.
-///
-/// Tabs:
-///   0 → /browse   (Explore)
-///   1 → /saved    (Saved)
-///   2 → /account  (Account)
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.child});
 
   final Widget child;
 
-  // Ordered list of tab paths — must match GoRouter ShellRoute order.
   static const _tabs = ['/browse', '/saved', '/account'];
 
   int _currentIndex(BuildContext context) {
@@ -27,8 +20,45 @@ class MainShell extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
-    if (_currentIndex(context) == index) return; // already on tab — no-op
+    if (_currentIndex(context) == index) return;
     context.go(_tabs[index]);
+  }
+
+  // AppBar title changes per tab
+  Widget _buildTitle(int index) {
+    if (index == 0) {
+      // Browse — NyumbaLink brand name
+      return RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Nyumba',
+              style: AppTextStyles.h3.copyWith(color: AppColors.primary),
+            ),
+            TextSpan(
+              text: 'Link',
+              style: AppTextStyles.h3.copyWith(color: AppColors.accent),
+            ),
+          ],
+        ),
+      );
+    }
+    // Other tabs — plain title
+    const titles = ['Explore', 'Saved', 'Account'];
+    return Text(titles[index], style: AppTextStyles.h3);
+  }
+
+  // AppBar actions change per tab
+  List<Widget> _buildActions(int index) {
+    if (index == 0) {
+      return [
+        IconButton(
+          icon: const Icon(Icons.notifications_none_rounded),
+          onPressed: () {},
+        ),
+      ];
+    }
+    return [];
   }
 
   @override
@@ -36,6 +66,10 @@ class MainShell extends StatelessWidget {
     final currentIndex = _currentIndex(context);
 
     return Scaffold(
+      appBar: AppBar(
+        title: _buildTitle(currentIndex),
+        actions: _buildActions(currentIndex),
+      ),
       body: child,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -79,7 +113,6 @@ class MainShell extends StatelessWidget {
   }
 }
 
-/// Individual bottom nav item with animated active indicator.
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,
