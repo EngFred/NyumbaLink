@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../properties/presentation/providers/properties_provider.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_provider.dart';
@@ -30,13 +31,23 @@ class BookingPage extends ConsumerStatefulWidget {
 
 class _BookingPageState extends ConsumerState<BookingPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _notesController = TextEditingController();
 
   DateTime? _moveInDate;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      _nameController.text = user.name;
+      _emailController.text = user.email;
+    }
+  }
 
   @override
   void dispose() {
@@ -72,7 +83,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   }
 
   void _submit() {
-    // Prevent double submission if already loading
     if (ref.read(bookingProvider).isLoading) return;
 
     if (_formKey.currentState?.validate() ?? false) {
@@ -107,7 +117,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(bookingProvider);
 
-    // ── Success State Overlay ──
     if (state.successResponse != null) {
       return Scaffold(
         body: SafeArea(
@@ -163,7 +172,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 const Gap(40),
                 ElevatedButton(
                   onPressed: () {
-                    // Refresh properties so statuses are accurate when we return
                     ref.read(propertiesProvider.notifier).refresh();
                     context.go('/browse');
                   },
@@ -176,7 +184,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       );
     }
 
-    // ── Booking Form ──
     return Scaffold(
       appBar: AppBar(
         title: Text(

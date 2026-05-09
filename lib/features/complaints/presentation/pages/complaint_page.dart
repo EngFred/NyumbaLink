@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/complaint_entities.dart';
 import '../providers/complaint_provider.dart';
 
@@ -20,7 +21,6 @@ class ComplaintPage extends ConsumerStatefulWidget {
 
 class _ComplaintPageState extends ConsumerState<ComplaintPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -41,10 +41,15 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
   @override
   void initState() {
     super.initState();
-    // Default to APP_ISSUE if opened globally, or PROPERTY_CONDITION if opened from a property
     _selectedCategory = widget.propertyId != null
         ? 'PROPERTY_CONDITION'
         : 'APP_ISSUE';
+
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      _nameController.text = user.name;
+      _emailController.text = user.email;
+    }
   }
 
   @override
@@ -68,7 +73,6 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
         description: _descriptionController.text.trim(),
         propertyId: widget.propertyId,
       );
-
       ref.read(complaintProvider.notifier).submit(request);
     }
   }

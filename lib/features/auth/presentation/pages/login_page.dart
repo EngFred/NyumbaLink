@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../providers/auth_provider.dart';
 
-/// Login screen — UI shell only. No auth logic yet.
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,8 +28,38 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  void _submit() async {
+    // Prevent multiple submissions
+    if (ref.read(authProvider).isLoading) return;
+
+    if (_formKey.currentState?.validate() ?? false) {
+      final success = await ref
+          .read(authProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text);
+
+      if (success && mounted) {
+        // If they successfully logged in, redirect them to the home page
+        context.go('/browse');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Listen for errors and show SnackBars without blocking the build method
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
+
+    final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -47,8 +78,6 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Gap(16),
-
-                // ── Header ─────────────────────────────────────────────────
                 Text('Welcome back', style: AppTextStyles.h1),
                 const Gap(8),
                 Text(
@@ -57,37 +86,34 @@ class _LoginPageState extends State<LoginPage> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-
                 const Gap(40),
 
-                // ── Email ──────────────────────────────────────────────────
                 Text('Email address', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     hintText: 'you@example.com',
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
+                    if (v == null || v.trim().isEmpty)
                       return 'Email is required';
-                    }
                     return null;
                   },
                 ),
-
                 const Gap(20),
 
-                // ── Password ───────────────────────────────────────────────
                 Text('Password', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
+                  enabled: !isLoading,
                   decoration: InputDecoration(
                     hintText: '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -106,34 +132,32 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
-
                 const Gap(12),
 
-                // ── Forgot password ────────────────────────────────────────
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      // TODO: forgot password flow
-                    },
+                    onPressed: isLoading ? null : () {},
                     child: const Text('Forgot password?'),
                   ),
                 ),
-
                 const Gap(32),
 
-                // ── Submit ─────────────────────────────────────────────────
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO: wire up auth provider
-                    if (_formKey.currentState?.validate() ?? false) {}
-                  },
-                  child: const Text('Sign in'),
+                  onPressed: isLoading ? null : _submit,
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Sign in'),
                 ),
-
                 const Gap(24),
 
-                // ── Register link ──────────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -144,7 +168,9 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => context.go(AppRoutes.register),
+                      onPressed: isLoading
+                          ? null
+                          : () => context.go(AppRoutes.register),
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
@@ -154,7 +180,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-
                 const Gap(32),
               ],
             ),

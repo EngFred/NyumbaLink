@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/presentation/pages/account_page.dart'; // <-- IMPORT
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/bookings/presentation/pages/booking_page.dart';
 import '../../features/bookings/presentation/pages/my_bookings_page.dart';
 import '../../features/complaints/presentation/pages/complaint_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart'; // <-- IMPORT
 import '../../features/properties/presentation/pages/browse_page.dart';
 import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/hostel_rooms_page.dart';
@@ -58,6 +60,11 @@ final GoRouter appRouter = GoRouter(
           path: '/bookings',
           name: 'bookings',
           builder: (context, state) => const MyBookingsPage(),
+        ),
+        GoRoute(
+          path: '/account',
+          name: 'account',
+          builder: (context, state) => const AccountPage(),
         ),
       ],
     ),
@@ -116,6 +123,15 @@ final GoRouter appRouter = GoRouter(
           transitionsBuilder: _slideUpTransition,
         );
       },
+    ),
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const NotificationsPage(),
+        transitionsBuilder: _slideUpTransition,
+      ),
     ),
   ],
 );

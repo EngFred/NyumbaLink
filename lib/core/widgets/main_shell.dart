@@ -8,7 +8,8 @@ class MainShell extends StatelessWidget {
 
   final Widget child;
 
-  static const _tabs = ['/browse', '/saved', '/bookings'];
+  // ── 4 TABS NOW ──
+  static const _tabs = ['/browse', '/saved', '/bookings', '/account'];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
@@ -40,13 +41,12 @@ class MainShell extends StatelessWidget {
         ),
       );
     }
-    const titles = ['Explore', 'Saved', 'My Bookings'];
+    const titles = ['Explore', 'Saved', 'My Bookings', 'Account'];
     return Text(titles[index], style: AppTextStyles.h3);
   }
 
   List<Widget> _buildActions(BuildContext context, int index) {
     return [
-      // ── ADDED GLOBAL FEEDBACK BUTTON ──
       IconButton(
         icon: const Icon(Icons.feedback_outlined),
         tooltip: 'Report an issue',
@@ -55,7 +55,8 @@ class MainShell extends StatelessWidget {
       if (index == 0)
         IconButton(
           icon: const Icon(Icons.notifications_none_rounded),
-          onPressed: () {},
+          // ── PUSH TO NOTIFICATIONS PAGE ──
+          onPressed: () => context.push('/notifications'),
         ),
     ];
   }
@@ -102,6 +103,13 @@ class MainShell extends StatelessWidget {
                   label: 'Bookings',
                   isActive: currentIndex == 2,
                   onTap: () => _onTap(context, 2),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  label: 'Account',
+                  isActive: currentIndex == 3,
+                  onTap: () => _onTap(context, 3),
                 ),
               ],
             ),

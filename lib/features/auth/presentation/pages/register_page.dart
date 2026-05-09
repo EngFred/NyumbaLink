@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../providers/auth_provider.dart';
 
-/// Register screen — UI shell only. No auth logic yet.
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _phoneController =
+      TextEditingController(); // Kept for UI, but not sent to backend DTO
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -34,8 +37,39 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  void _submit() async {
+    if (ref.read(authProvider).isLoading) return;
+
+    if (_formKey.currentState?.validate() ?? false) {
+      final success = await ref
+          .read(authProvider.notifier)
+          .register(
+            _nameController.text.trim(),
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+
+      if (success && mounted) {
+        context.go('/browse');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
+
+    final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -54,8 +88,6 @@ class _RegisterPageState extends State<RegisterPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Gap(16),
-
-                // ── Header ─────────────────────────────────────────────────
                 Text('Create account', style: AppTextStyles.h1),
                 const Gap(8),
                 Text(
@@ -64,10 +96,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-
                 const Gap(40),
 
-                // ── Full name ──────────────────────────────────────────────
                 Text('Full name', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
@@ -75,6 +105,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   keyboardType: TextInputType.name,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     hintText: 'John Doe',
                     prefixIcon: Icon(Icons.person_outline_rounded),
@@ -82,16 +113,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: (v) =>
                       (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
                 ),
-
                 const Gap(20),
 
-                // ── Phone ──────────────────────────────────────────────────
                 Text('Phone number', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     hintText: '+256 700 000 000',
                     prefixIcon: Icon(Icons.phone_outlined),
@@ -99,16 +129,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: (v) =>
                       (v?.trim().isEmpty ?? true) ? 'Phone is required' : null,
                 ),
-
                 const Gap(20),
 
-                // ── Email ──────────────────────────────────────────────────
                 Text('Email address', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  enabled: !isLoading,
                   decoration: const InputDecoration(
                     hintText: 'you@example.com',
                     prefixIcon: Icon(Icons.email_outlined),
@@ -116,16 +145,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: (v) =>
                       (v?.trim().isEmpty ?? true) ? 'Email is required' : null,
                 ),
-
                 const Gap(20),
 
-                // ── Password ───────────────────────────────────────────────
                 Text('Password', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
+                  enabled: !isLoading,
                   decoration: InputDecoration(
                     hintText: '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -141,22 +169,20 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 8) {
-                      return 'Password must be at least 8 characters';
-                    }
+                    if (v.length < 6)
+                      return 'Password must be at least 6 characters';
                     return null;
                   },
                 ),
-
                 const Gap(20),
 
-                // ── Confirm password ───────────────────────────────────────
                 Text('Confirm password', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirm,
                   textInputAction: TextInputAction.done,
+                  enabled: !isLoading,
                   decoration: InputDecoration(
                     hintText: '••••••••',
                     prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -171,30 +197,30 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) {
+                    if (v == null || v.isEmpty)
                       return 'Please confirm your password';
-                    }
-                    if (v != _passwordController.text) {
+                    if (v != _passwordController.text)
                       return 'Passwords do not match';
-                    }
                     return null;
                   },
                 ),
-
                 const Gap(40),
 
-                // ── Submit ─────────────────────────────────────────────────
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO: wire up auth provider
-                    if (_formKey.currentState?.validate() ?? false) {}
-                  },
-                  child: const Text('Create account'),
+                  onPressed: isLoading ? null : _submit,
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Create account'),
                 ),
-
                 const Gap(24),
 
-                // ── Login link ─────────────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -205,7 +231,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => context.go(AppRoutes.login),
+                      onPressed: isLoading
+                          ? null
+                          : () => context.go(AppRoutes.login),
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
@@ -215,7 +243,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ],
                 ),
-
                 const Gap(32),
               ],
             ),
