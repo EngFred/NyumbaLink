@@ -15,6 +15,9 @@ extension ComplaintRequestMapper on ComplaintRequest {
     if (propertyId != null && propertyId!.isNotEmpty) {
       map['propertyId'] = propertyId;
     }
+    if (userId != null && userId!.isNotEmpty) {
+      map['userId'] = userId;
+    }
 
     return map;
   }

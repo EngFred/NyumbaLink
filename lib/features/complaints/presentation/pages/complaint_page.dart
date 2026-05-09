@@ -45,6 +45,7 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
         ? 'PROPERTY_CONDITION'
         : 'APP_ISSUE';
 
+    // Auto-fill user details if logged in
     final user = ref.read(authProvider).user;
     if (user != null) {
       _nameController.text = user.name;
@@ -65,6 +66,8 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
     if (ref.read(complaintProvider).isLoading) return;
 
     if (_formKey.currentState?.validate() ?? false) {
+      final user = ref.read(authProvider).user; // <-- Fetch user
+
       final request = ComplaintRequest(
         submitterName: _nameController.text.trim(),
         submitterPhone: _phoneController.text.trim(),
@@ -72,7 +75,9 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
         category: _selectedCategory,
         description: _descriptionController.text.trim(),
         propertyId: widget.propertyId,
+        userId: user?.id, // <-- ADDED: Attach userId to the request
       );
+
       ref.read(complaintProvider.notifier).submit(request);
     }
   }

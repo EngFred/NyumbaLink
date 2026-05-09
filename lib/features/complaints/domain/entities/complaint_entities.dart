@@ -6,6 +6,7 @@ class ComplaintRequest {
     required this.category,
     required this.description,
     this.propertyId,
+    this.userId,
   });
 
   final String submitterName;
@@ -14,4 +15,5 @@ class ComplaintRequest {
   final String category;
   final String description;
   final String? propertyId;
+  final String? userId;
 }

@@ -16,6 +16,7 @@ extension BookingRequestMapper on BookingRequest {
     if (hostelRoomId != null) map['hostelRoomId'] = hostelRoomId;
     if (moveOutDate != null) map['moveOutDate'] = fmt.format(moveOutDate!);
     if (notes != null && notes!.isNotEmpty) map['notes'] = notes;
+    if (userId != null && userId!.isNotEmpty) map['userId'] = userId;
 
     return map;
   }

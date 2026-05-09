@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/notifications/presentation/providers/notifications_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   const MainShell({super.key, required this.child});
 
   final Widget child;
 
-  // ── 4 TABS NOW ──
   static const _tabs = ['/browse', '/saved', '/bookings', '/account'];
 
   int _currentIndex(BuildContext context) {
@@ -45,7 +47,9 @@ class MainShell extends StatelessWidget {
     return Text(titles[index], style: AppTextStyles.h3);
   }
 
-  List<Widget> _buildActions(BuildContext context, int index) {
+  List<Widget> _buildActions(BuildContext context, WidgetRef ref, int index) {
+    final unreadCount = ref.watch(notificationsProvider).unreadCount;
+
     return [
       IconButton(
         icon: const Icon(Icons.feedback_outlined),
@@ -53,22 +57,46 @@ class MainShell extends StatelessWidget {
         onPressed: () => context.push('/complaint'),
       ),
       if (index == 0)
-        IconButton(
-          icon: const Icon(Icons.notifications_none_rounded),
-          // ── PUSH TO NOTIFICATIONS PAGE ──
-          onPressed: () => context.push('/notifications'),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.notifications_none_rounded),
+              onPressed: () => context.push('/notifications'),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: 10,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unreadCount > 9 ? '9+' : unreadCount.toString(),
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
     ];
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = _currentIndex(context);
 
     return Scaffold(
       appBar: AppBar(
         title: _buildTitle(currentIndex),
-        actions: _buildActions(context, currentIndex),
+        actions: _buildActions(context, ref, currentIndex),
       ),
       body: child,
       bottomNavigationBar: Container(

@@ -93,6 +93,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         return;
       }
 
+      final user = ref.read(authProvider).user;
+
       final request = BookingRequest(
         renterName: _nameController.text.trim(),
         renterPhone: _phoneController.text.trim(),
@@ -101,6 +103,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         hostelRoomId: widget.hostelRoomId,
         moveInDate: _moveInDate!,
         notes: _notesController.text.trim(),
+        userId: user?.id,
       );
 
       ref

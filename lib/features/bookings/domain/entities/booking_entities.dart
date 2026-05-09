@@ -8,6 +8,7 @@ class BookingRequest {
     required this.moveInDate,
     this.moveOutDate,
     this.notes,
+    this.userId,
   });
 
   final String renterName;
@@ -18,6 +19,7 @@ class BookingRequest {
   final DateTime moveInDate;
   final DateTime? moveOutDate;
   final String? notes;
+  final String? userId;
 }
 
 class BookingResponse {
