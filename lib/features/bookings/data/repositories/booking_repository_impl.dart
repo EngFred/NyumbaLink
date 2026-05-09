@@ -21,10 +21,8 @@ class BookingRepositoryImpl implements BookingRepository {
 
   // ── Create ────────────────────────────────────────────────────────────────
   //
-  // Always saves the booking locally after the server confirms it,
-  // regardless of whether the user is authenticated or not.
-  // This guarantees the local store is always up-to-date and the UI
-  // never has to branch on auth state for reads.
+  // Always saves locally after the server confirms, regardless of auth state.
+  // Local storage is the single source of truth for the UI.
 
   @override
   Future<BookingResponse> createBooking(
@@ -36,7 +34,6 @@ class BookingRepositoryImpl implements BookingRepository {
       request.toJson(),
     );
 
-    // Always persist locally — this is our single source of truth.
     await _localDataSource.saveBookingLocally(
       bookingId: responseModel.id,
       cancellationToken: responseModel.cancellationToken,
@@ -49,10 +46,23 @@ class BookingRepositoryImpl implements BookingRepository {
 
   // ── Cancel ────────────────────────────────────────────────────────────────
   //
-  // Authenticated users use the secure /cancel-mine endpoint (no token needed).
-  // Guest users use the public /cancel-by-renter endpoint (token required).
-  // In both cases the local record is updated so the UI reflects the change
-  // immediately without a round-trip.
+  // Cancellation endpoint decision logic:
+  //
+  //   token is non-empty → use /cancel-by-renter (public, token-based).
+  //                         Covers two cases:
+  //                           a) actual guest user
+  //                           b) authenticated user whose booking was made
+  //                              as a guest BEFORE they logged in
+  //                              (userId still null in DB, sync may not
+  //                              have run yet or failed silently)
+  //
+  //   token is empty     → booking was created while already logged in
+  //                         (userId set in DB from the start), so
+  //                         /cancel-mine works safely.
+  //
+  // This means an authenticated user with a pre-login guest booking can
+  // ALWAYS cancel — the token is the fallback proof of ownership even
+  // when the account sync hasn't linked the booking yet.
 
   @override
   Future<void> cancelBooking(
@@ -61,22 +71,22 @@ class BookingRepositoryImpl implements BookingRepository {
     bool isAuthenticated, {
     String? reason,
   }) async {
-    if (isAuthenticated) {
-      await _remoteDataSource.cancelMine(id, reason: reason);
-    } else {
+    if (token.isNotEmpty) {
+      // Token available → safe for all cases (guest or unsynced booking).
       await _remoteDataSource.cancelBookingByRenter(id, token, reason: reason);
+    } else {
+      // No token → booking was made while logged in → use secure endpoint.
+      await _remoteDataSource.cancelMine(id, reason: reason);
     }
 
-    // Always update local regardless of auth state.
+    // Always update local immediately so the UI reflects the change.
     await _localDataSource.markAsCancelled(id);
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
   //
   // SharedPreferences is ALWAYS the single source of truth for the UI.
-  // The remote API is never read for display purposes.
-  // The isAuthenticated flag is kept in the signature for interface
-  // compatibility but is no longer used here.
+  // isAuthenticated is kept for interface compatibility but ignored.
 
   @override
   Future<List<SavedBooking>> getMyBookings(bool isAuthenticated) async {
@@ -86,10 +96,9 @@ class BookingRepositoryImpl implements BookingRepository {
 
   // ── Sync ──────────────────────────────────────────────────────────────────
   //
-  // Called once by AuthProvider right after a successful login / registration.
-  // Links every locally stored booking to the user's server account using the
-  // cancellation token as proof of ownership.
-  // Local storage is NOT cleared — it remains the display source of truth.
+  // Called once right after login / registration.
+  // Links local guest bookings to the server account via cancellation tokens.
+  // Even if this fails, the token-based cancel path above is the safety net.
 
   @override
   Future<void> syncGuestData() async {
@@ -103,7 +112,7 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await _remoteDataSource.syncBookings(payload);
     } catch (_) {
-      // Sync failure is silent — the user can still use the app offline.
+      // Sync failure is silent — cancel still works via the token path.
     }
   }
 }
