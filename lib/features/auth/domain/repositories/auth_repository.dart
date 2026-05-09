@@ -6,4 +6,7 @@ abstract class AuthRepository {
   Future<void> logout();
   Future<AuthUser?> getCachedUser();
   Future<String?> getCachedToken();
+
+  Future<AuthUser> updateProfile({String? name, String? email});
+  Future<void> changePassword(String currentPassword, String newPassword);
 }

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/auth_models.dart';
 
@@ -34,6 +36,32 @@ class AuthRemoteDataSource {
         data: {'name': name, 'email': email, 'password': password},
       );
       return AuthResponseModel.fromJson(res.data!);
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
+
+  Future<AuthUserModel> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final res = await _dio.patch<Map<String, dynamic>>(
+        '/users/me',
+        data: data,
+      );
+      return AuthUserModel.fromJson(res.data!);
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
+
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await _dio.patch(
+        '/users/me/password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
     } on DioException catch (e) {
       throw handleDioException(e);
     }

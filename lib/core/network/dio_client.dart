@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
 import '../errors/app_exception.dart';
@@ -23,11 +24,30 @@ Dio _buildDio() {
     ),
   );
 
+  // ── Inject Bearer Token Interceptor ──
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString(
+          'nyumbalink_jwt_token',
+        ); // Matches AuthLocalDataSource key
+
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
+    ),
+  );
+
   // Log in debug mode only
   assert(() {
     dio.interceptors.add(
       LogInterceptor(
+        requestHeader: true,
         requestBody: true,
+        responseHeader: false,
         responseBody: true,
         logPrint: (o) => debugLog(o.toString()),
       ),
@@ -66,6 +86,11 @@ AppException handleDioException(DioException e) {
         } else if (raw is String) {
           msg = raw;
         }
+      }
+
+      // If unauthorized, we could potentially trigger a global logout here
+      if (status == 401) {
+        return ServerException(msg, statusCode: status); // Handled by UI
       }
 
       if (status == 404) return NotFoundException(msg);

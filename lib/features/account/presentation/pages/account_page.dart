@@ -147,13 +147,7 @@ class AccountPage extends ConsumerWidget {
                       Icons.chevron_right_rounded,
                       color: AppColors.grey400,
                     ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Edit profile coming soon!'),
-                        ),
-                      );
-                    },
+                    onTap: () => context.push('/edit-profile'),
                   ),
                   const Divider(),
                   ListTile(
@@ -169,13 +163,9 @@ class AccountPage extends ConsumerWidget {
                       Icons.chevron_right_rounded,
                       color: AppColors.grey400,
                     ),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Change password coming soon!'),
-                        ),
-                      );
-                    },
+                    onTap: () => context.push(
+                      '/change-password',
+                    ), // <-- Updated Navigation
                   ),
                 ],
               ),
