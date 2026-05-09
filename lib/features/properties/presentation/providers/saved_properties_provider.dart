@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/datasources/favorites_remote_datasource.dart';
 import '../../domain/entities/property_entities.dart';
 
-/// A lightweight entity to store locally so we don't have to save/parse the massive full Property object
+/// A lightweight entity stored locally — avoids serialising the full Property object.
 class SavedProperty {
   const SavedProperty({
     required this.id,
@@ -40,7 +42,6 @@ class SavedProperty {
     type: json['type'] as String,
   );
 
-  // Helper to map from the full domain Property
   factory SavedProperty.fromDomain(Property p) => SavedProperty(
     id: p.id,
     title: p.title,
@@ -51,7 +52,7 @@ class SavedProperty {
   );
 }
 
-// ── State ──
+// ── State ─────────────────────────────────────────────────────────────────────
 
 class SavedPropertiesState {
   const SavedPropertiesState({
@@ -73,51 +74,105 @@ class SavedPropertiesState {
   }
 }
 
-// ── Provider ──
+// ── Provider ──────────────────────────────────────────────────────────────────
 
 final savedPropertiesProvider =
     StateNotifierProvider<SavedPropertiesNotifier, SavedPropertiesState>((ref) {
-      return SavedPropertiesNotifier()..load();
+      final isAuthenticated = ref.watch(authProvider).isAuthenticated;
+      final remoteDataSource = ref.watch(favoritesRemoteDataSourceProvider);
+      return SavedPropertiesNotifier(isAuthenticated, remoteDataSource)..load();
     });
 
+// ── Notifier ──────────────────────────────────────────────────────────────────
+
 class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
-  SavedPropertiesNotifier() : super(const SavedPropertiesState());
+  SavedPropertiesNotifier(this._isAuthenticated, this._remoteDataSource)
+    : super(const SavedPropertiesState());
+
+  final bool _isAuthenticated;
+  final FavoritesRemoteDataSource _remoteDataSource;
 
   static const _key = 'nyumbalink_saved_properties';
 
+  // ── Read ──────────────────────────────────────────────────────────────────
+  //
+  // SharedPreferences is ALWAYS the single source of truth for the UI.
+  // The remote API is never read for display purposes — only written to
+  // (toggle / sync) as a fire-and-forget side-effect when the user is
+  // authenticated.
+
   Future<void> load() async {
     state = state.copyWith(isLoading: true);
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_key) ?? [];
-
-    final list = data
-        .map((e) => SavedProperty.fromJson(jsonDecode(e)))
-        .toList();
-    state = state.copyWith(savedList: list, isLoading: false);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = prefs.getStringList(_key) ?? [];
+      final list = data
+          .map(
+            (e) =>
+                SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>),
+          )
+          .toList();
+      state = state.copyWith(savedList: list, isLoading: false);
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
   }
+
+  // ── Write ─────────────────────────────────────────────────────────────────
 
   Future<void> toggleSave(Property property) async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getStringList(_key) ?? [];
 
     final existingIndex = data.indexWhere(
-      (e) => SavedProperty.fromJson(jsonDecode(e)).id == property.id,
+      (e) =>
+          SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>).id ==
+          property.id,
     );
 
     if (existingIndex >= 0) {
-      // It's already saved; remove it
       data.removeAt(existingIndex);
     } else {
-      // Not saved; add it
-      final newSummary = SavedProperty.fromDomain(property);
-      data.insert(0, jsonEncode(newSummary.toJson())); // Add to top of list
+      data.insert(0, jsonEncode(SavedProperty.fromDomain(property).toJson()));
     }
 
     await prefs.setStringList(_key, data);
-    await load(); // Refresh state
+
+    // Refresh UI from local immediately — no waiting on network.
+    await load();
+
+    // Fire-and-forget: keep the server in sync when logged in.
+    if (_isAuthenticated) {
+      _remoteDataSource.toggleFavorite(property.id).catchError((_) {});
+    }
   }
 
-  bool isSaved(String propertyId) {
-    return state.savedList.any((p) => p.id == propertyId);
+  bool isSaved(String propertyId) =>
+      state.savedList.any((p) => p.id == propertyId);
+
+  // ── Sync ──────────────────────────────────────────────────────────────────
+  //
+  // Called once by AuthProvider right after a successful login / registration.
+  // Pushes every locally saved property ID to the backend so the user's
+  // favourites are available on other devices.
+  // Local storage is NOT cleared — it remains the display source of truth.
+
+  Future<void> syncGuestData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getStringList(_key) ?? [];
+    if (data.isEmpty) return;
+
+    final ids = data
+        .map(
+          (e) =>
+              SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>).id,
+        )
+        .toList();
+
+    try {
+      await _remoteDataSource.syncFavorites(ids);
+    } catch (_) {
+      // Sync failure is silent — the user can still use the app offline.
+    }
   }
 }

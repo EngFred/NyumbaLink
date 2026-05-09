@@ -1,6 +1,8 @@
 import 'package:intl/intl.dart';
+
 import '../../domain/entities/booking_entities.dart';
 
+// ── EXTENSION MAPPER ──
 extension BookingRequestMapper on BookingRequest {
   Map<String, dynamic> toJson() {
     final fmt = DateFormat('yyyy-MM-dd');
@@ -11,8 +13,9 @@ extension BookingRequestMapper on BookingRequest {
       'moveInDate': fmt.format(moveInDate),
     };
 
-    if (renterEmail != null && renterEmail!.isNotEmpty)
+    if (renterEmail != null && renterEmail!.isNotEmpty) {
       map['renterEmail'] = renterEmail;
+    }
     if (hostelRoomId != null) map['hostelRoomId'] = hostelRoomId;
     if (moveOutDate != null) map['moveOutDate'] = fmt.format(moveOutDate!);
     if (notes != null && notes!.isNotEmpty) map['notes'] = notes;
@@ -22,6 +25,7 @@ extension BookingRequestMapper on BookingRequest {
   }
 }
 
+// ── RESPONSE MODEL ──
 class BookingResponseModel {
   const BookingResponseModel({
     required this.id,
@@ -50,6 +54,7 @@ class BookingResponseModel {
   }
 }
 
+// ── LOCAL (GUEST) BOOKING MODEL ──
 class LocalBookingModel {
   const LocalBookingModel({
     required this.id,
@@ -84,7 +89,6 @@ class LocalBookingModel {
     propertyTitle: json['propertyTitle']?.toString() ?? '',
     roomNumber: json['roomNumber']?.toString(),
     bookedAt: json['bookedAt']?.toString() ?? DateTime.now().toIso8601String(),
-    // Safely parse bools just in case
     isCancelled: json['isCancelled'] == true || json['isCancelled'] == 'true',
   );
 
@@ -96,6 +100,44 @@ class LocalBookingModel {
       roomNumber: roomNumber,
       bookedAt: bookedAt,
       isCancelled: isCancelled,
+    );
+  }
+}
+
+// ── REMOTE (AUTHENTICATED) BOOKING MODEL ──
+class RemoteBookingModel {
+  const RemoteBookingModel({
+    required this.id,
+    required this.status,
+    required this.createdAt,
+    required this.propertyTitle,
+    this.roomNumber,
+  });
+
+  final String id;
+  final String status;
+  final String createdAt;
+  final String propertyTitle;
+  final String? roomNumber;
+
+  factory RemoteBookingModel.fromJson(Map<String, dynamic> json) {
+    return RemoteBookingModel(
+      id: json['id'] as String,
+      status: json['status'] as String,
+      createdAt: json['createdAt'] as String,
+      propertyTitle: json['property']['title'] as String,
+      roomNumber: json['hostelRoom']?['roomNumber'] as String?,
+    );
+  }
+
+  SavedBooking toEntity() {
+    return SavedBooking(
+      id: id,
+      cancellationToken: '', // Not needed for logged-in users
+      propertyTitle: propertyTitle,
+      roomNumber: roomNumber,
+      bookedAt: createdAt,
+      isCancelled: status == 'CANCELLED',
     );
   }
 }

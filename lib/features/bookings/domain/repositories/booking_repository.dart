@@ -6,6 +6,12 @@ abstract class BookingRepository {
     String propertyTitle,
     String? roomNumber,
   );
-  Future<void> cancelBooking(String id, String token, {String? reason});
-  Future<List<SavedBooking>> getMyBookings();
+  Future<void> cancelBooking(
+    String id,
+    String token,
+    bool isAuthenticated, {
+    String? reason,
+  });
+  Future<List<SavedBooking>> getMyBookings(bool isAuthenticated);
+  Future<void> syncGuestData();
 }

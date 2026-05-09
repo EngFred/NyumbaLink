@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/my_bookings_provider.dart';
 
 class MyBookingsPage extends ConsumerWidget {
@@ -33,9 +36,7 @@ class MyBookingsPage extends ConsumerWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
-              // Pop the dialog first
               Navigator.pop(ctx);
-              // Then trigger the cancellation
               ref.read(myBookingsProvider.notifier).cancelBooking(id, token);
             },
             child: const Text('Yes, Cancel'),
@@ -48,6 +49,7 @@ class MyBookingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(myBookingsProvider);
+    final isAuthenticated = ref.watch(authProvider).isAuthenticated;
 
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -75,7 +77,7 @@ class MyBookingsPage extends ConsumerWidget {
       );
     }
 
-    if (state.bookings.isEmpty) {
+    if (state.bookings.isEmpty && isAuthenticated) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -103,10 +105,59 @@ class MyBookingsPage extends ConsumerWidget {
           onRefresh: () => ref.read(myBookingsProvider.notifier).load(),
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: state.bookings.length,
+            // Add 1 to length if NOT authenticated, to make room for the banner
+            itemCount: state.bookings.length + (isAuthenticated ? 0 : 1),
             separatorBuilder: (_, __) => const Gap(16),
             itemBuilder: (context, index) {
-              final b = state.bookings[index];
+              // ── GUEST BANNER ──
+              if (!isAuthenticated && index == 0) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary50,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primary200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.cloud_off_rounded,
+                        color: AppColors.primary,
+                      ),
+                      const Gap(16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'You are browsing as a guest',
+                              style: AppTextStyles.labelMd,
+                            ),
+                            const Gap(4),
+                            Text(
+                              'Sign in to safely back up your bookings across devices.',
+                              style: AppTextStyles.bodySm,
+                            ),
+                            const Gap(8),
+                            GestureDetector(
+                              onTap: () => context.push(AppRoutes.register),
+                              child: Text(
+                                'Create Account',
+                                style: AppTextStyles.labelMd.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Adjust the index if the banner is taking up index 0
+              final b = state.bookings[isAuthenticated ? index : index - 1];
               final date = DateTime.tryParse(b.bookedAt);
               final dateStr = date != null
                   ? DateFormat('MMM dd, yyyy').format(date)
@@ -164,13 +215,27 @@ class MyBookingsPage extends ConsumerWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Token', style: AppTextStyles.caption),
-                              Text(
-                                b.cancellationToken,
-                                style: AppTextStyles.labelMd.copyWith(
-                                  color: AppColors.primary,
+                              // Only show the raw token UI to guests. Logged in users
+                              // use the authenticated delete route securely behind the scenes.
+                              if (b.cancellationToken.isNotEmpty) ...[
+                                Text('Token', style: AppTextStyles.caption),
+                                Text(
+                                  b.cancellationToken,
+                                  style: AppTextStyles.labelMd.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                                 ),
-                              ),
+                              ] else ...[
+                                Text(
+                                  'Secure Booking',
+                                  style: AppTextStyles.caption,
+                                ),
+                                const Icon(
+                                  Icons.lock_outline,
+                                  size: 16,
+                                  color: AppColors.success,
+                                ),
+                              ],
                             ],
                           ),
                           TextButton.icon(

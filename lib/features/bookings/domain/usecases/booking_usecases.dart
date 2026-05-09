@@ -18,8 +18,14 @@ class CancelBookingUseCase {
   const CancelBookingUseCase(this._repo);
   final BookingRepository _repo;
 
-  Future<void> call(String id, String token, {String? reason}) {
-    return _repo.cancelBooking(id, token, reason: reason);
+  // Added isAuthenticated parameter
+  Future<void> call(
+    String id,
+    String token,
+    bool isAuthenticated, {
+    String? reason,
+  }) {
+    return _repo.cancelBooking(id, token, isAuthenticated, reason: reason);
   }
 }
 
@@ -27,7 +33,8 @@ class GetMyBookingsUseCase {
   const GetMyBookingsUseCase(this._repo);
   final BookingRepository _repo;
 
-  Future<List<SavedBooking>> call() {
-    return _repo.getMyBookings();
+  // Added isAuthenticated parameter
+  Future<List<SavedBooking>> call(bool isAuthenticated) {
+    return _repo.getMyBookings(isAuthenticated);
   }
 }

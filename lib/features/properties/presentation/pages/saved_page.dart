@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/saved_properties_provider.dart';
 
 class SavedPage extends ConsumerWidget {
@@ -16,12 +18,13 @@ class SavedPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(savedPropertiesProvider);
+    final isAuthenticated = ref.watch(authProvider).isAuthenticated;
 
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state.savedList.isEmpty) {
+    if (state.savedList.isEmpty && isAuthenticated) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -50,10 +53,56 @@ class SavedPage extends ConsumerWidget {
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: state.savedList.length,
+      // Add 1 to the list count if the user is NOT authenticated to make room for the banner
+      itemCount: state.savedList.length + (isAuthenticated ? 0 : 1),
       separatorBuilder: (_, __) => const Gap(16),
       itemBuilder: (context, index) {
-        final property = state.savedList[index];
+        // ── OFFLINE BANNER FOR GUESTS ──
+        if (!isAuthenticated && index == 0) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cloud_off_rounded, color: AppColors.primary),
+                const Gap(16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'You are browsing as a guest',
+                        style: AppTextStyles.labelMd,
+                      ),
+                      const Gap(4),
+                      Text(
+                        'Sign in to securely sync your favorite properties across devices.',
+                        style: AppTextStyles.bodySm,
+                      ),
+                      const Gap(8),
+                      GestureDetector(
+                        onTap: () => context.push(AppRoutes.register),
+                        child: Text(
+                          'Create Account',
+                          style: AppTextStyles.labelMd.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Adjust index if the guest banner is showing at index 0
+        final property = state.savedList[isAuthenticated ? index : index - 1];
 
         return GestureDetector(
           onTap: () => context.push(AppRoutes.propertyDetailPath(property.id)),
