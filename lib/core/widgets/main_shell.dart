@@ -44,16 +44,20 @@ class MainShell extends StatelessWidget {
     return Text(titles[index], style: AppTextStyles.h3);
   }
 
-  List<Widget> _buildActions(int index) {
-    if (index == 0) {
-      return [
+  List<Widget> _buildActions(BuildContext context, int index) {
+    return [
+      // ── ADDED GLOBAL FEEDBACK BUTTON ──
+      IconButton(
+        icon: const Icon(Icons.feedback_outlined),
+        tooltip: 'Report an issue',
+        onPressed: () => context.push('/complaint'),
+      ),
+      if (index == 0)
         IconButton(
           icon: const Icon(Icons.notifications_none_rounded),
           onPressed: () {},
         ),
-      ];
-    }
-    return [];
+    ];
   }
 
   @override
@@ -63,7 +67,7 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: _buildTitle(currentIndex),
-        actions: _buildActions(currentIndex),
+        actions: _buildActions(context, currentIndex),
       ),
       body: child,
       bottomNavigationBar: Container(

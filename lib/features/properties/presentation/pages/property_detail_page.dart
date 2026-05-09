@@ -7,17 +7,17 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
-import '../providers/saved_properties_provider.dart'; // <-- Import new provider
+import '../providers/saved_properties_provider.dart';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
+
   final String propertyId;
 
   @override
@@ -106,7 +106,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(propertyDetailProvider(widget.propertyId));
 
-    // <-- Watch the saved provider to see if THIS property is saved
+    // Watch the saved provider to see if THIS property is saved
     final isSaved = ref
         .watch(savedPropertiesProvider)
         .savedList
@@ -156,7 +156,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   color: isSaved ? AppColors.error : AppColors.textPrimary,
                 ),
                 onPressed: () {
-                  // <-- Toggle save state
+                  // Toggle save state
                   ref
                       .read(savedPropertiesProvider.notifier)
                       .toggleSave(property);
@@ -311,6 +311,35 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   Text('Description', style: AppTextStyles.h3),
                   const Gap(8),
                   Text(property.description, style: AppTextStyles.bodyMd),
+
+                  // ── ADDED PROPERTY REPORT BUTTON ──
+                  const Gap(48),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        context.push(
+                          '/complaint',
+                          extra: {
+                            'propertyId': property.id,
+                            'propertyTitle': property.title,
+                          },
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.flag_outlined,
+                        size: 18,
+                        color: AppColors.grey600,
+                      ),
+                      label: Text(
+                        'Report an issue with this property',
+                        style: AppTextStyles.bodySm.copyWith(
+                          color: AppColors.grey600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Gap(24),
                 ],
               ),
             ),
