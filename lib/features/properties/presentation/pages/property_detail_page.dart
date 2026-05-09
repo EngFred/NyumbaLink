@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
+import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
@@ -23,6 +23,84 @@ class PropertyDetailPage extends ConsumerStatefulWidget {
 
 class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   int _currentImageIndex = 0;
+
+  // Helps format local numbers to international format for WhatsApp
+  String _formatWhatsApp(String phone) {
+    String formatted = phone.replaceAll(RegExp(r'\s+|-|\+'), '');
+    if (formatted.startsWith('0')) {
+      formatted = '256${formatted.substring(1)}';
+    }
+    return formatted;
+  }
+
+  void _showEnquireOptions(Property property) {
+    // 1. Fire the backend increment request in the background
+    ref.read(propertyDetailProvider(widget.propertyId).notifier).enquire();
+
+    // 2. Show the real-world contact options
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  'Contact ${property.contact.role.toLowerCase()}',
+                  style: AppTextStyles.h3,
+                ),
+              ),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF25D366), // WhatsApp Green
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                title: Text('Message on WhatsApp', style: AppTextStyles.h4),
+                subtitle: Text('Fastest response', style: AppTextStyles.bodySm),
+                onTap: () async {
+                  ctx.pop();
+                  final phone =
+                      property.contact.whatsapp ?? property.contact.phone;
+                  final url = Uri.parse(
+                    'https://wa.me/${_formatWhatsApp(phone)}?text=Hi, I am inquiring about your property: ${property.title} on NyumbaLink.',
+                  );
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: Icon(Icons.call, color: Colors.white, size: 20),
+                ),
+                title: Text('Phone Call', style: AppTextStyles.h4),
+                subtitle: Text(
+                  property.contact.phone,
+                  style: AppTextStyles.bodySm,
+                ),
+                onTap: () async {
+                  ctx.pop();
+                  final url = Uri.parse('tel:${property.contact.phone}');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +139,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 100),
+        // Removed bottom 100 padding since we use bottomNavigationBar now
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -204,55 +282,52 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           ],
         ),
       ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  ref
-                      .read(propertyDetailProvider(widget.propertyId).notifier)
-                      .enquire();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Enquiry sent!')),
-                  );
-                },
-                child: const Text('Enquire'),
+
+      // Moved from bottomSheet to bottomNavigationBar wrapped in SafeArea
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -4),
               ),
-            ),
-            const Gap(16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: property.isAvailable || property.isHostel
-                    ? () {
-                        if (property.isHostel) {
-                          context.push(
-                            AppRoutes.hostelRoomsPath(property.id),
-                            extra: property.title,
-                          );
-                        } else {
-                          context.push(
-                            AppRoutes.bookingPath(property.id),
-                            extra: {'title': property.title},
-                          );
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _showEnquireOptions(property),
+                  child: const Text('Enquire'),
+                ),
+              ),
+              const Gap(16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: property.isAvailable || property.isHostel
+                      ? () {
+                          if (property.isHostel) {
+                            context.push(
+                              AppRoutes.hostelRoomsPath(property.id),
+                              extra: property.title,
+                            );
+                          } else {
+                            context.push(
+                              AppRoutes.bookingPath(property.id),
+                              extra: {'title': property.title},
+                            );
+                          }
                         }
-                      }
-                    : null,
-                child: Text(property.isHostel ? 'View Rooms' : 'Book Now'),
+                      : null,
+                  child: Text(property.isHostel ? 'View Rooms' : 'Book Now'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

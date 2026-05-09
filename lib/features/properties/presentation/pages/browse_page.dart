@@ -79,7 +79,7 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
           _TypeTabBar(
             activeType: _activeTypeTab,
             onSelect: (t) {
-              setState(() => _activeTypeTab = _activeTypeTab == t ? null : t);
+              setState(() => _activeTypeTab = t);
             },
           ),
           if (!state.isLoading)
@@ -236,7 +236,7 @@ class _SearchBar extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               decoration: InputDecoration(
-                hintText: 'Search by name, area, district...',
+                hintText: 'Search by name, area...',
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
                 suffixIcon: controller.text.isNotEmpty
                     ? IconButton(
@@ -319,10 +319,13 @@ class _SearchBar extends StatelessWidget {
 
 class _TypeTabBar extends StatelessWidget {
   const _TypeTabBar({required this.activeType, required this.onSelect});
-  final String? activeType;
-  final ValueChanged<String> onSelect;
 
+  final String? activeType;
+  final ValueChanged<String?> onSelect;
+
+  // Added null to represent the "All" tab
   static const _tabs = [
+    null,
     'APARTMENT',
     'HOSTEL',
     'RESIDENTIAL_HOUSE',
@@ -344,6 +347,12 @@ class _TypeTabBar extends StatelessWidget {
         itemBuilder: (_, i) {
           final t = _tabs[i];
           final selected = activeType == t;
+
+          final label = t == null ? 'All' : PropertyTypeHelper.label(t);
+          final icon = t == null
+              ? Icons.apps_rounded
+              : PropertyTypeHelper.icon(t);
+
           return GestureDetector(
             onTap: () => onSelect(t),
             child: AnimatedContainer(
@@ -360,13 +369,13 @@ class _TypeTabBar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    PropertyTypeHelper.icon(t),
+                    icon,
                     size: 13,
                     color: selected ? Colors.white : AppColors.grey600,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    PropertyTypeHelper.label(t),
+                    label,
                     style: AppTextStyles.labelMd.copyWith(
                       color: selected ? Colors.white : AppColors.textSecondary,
                     ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
@@ -9,7 +8,7 @@ class MainShell extends StatelessWidget {
 
   final Widget child;
 
-  static const _tabs = ['/browse', '/saved', '/account'];
+  static const _tabs = ['/browse', '/saved', '/bookings'];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
@@ -24,10 +23,8 @@ class MainShell extends StatelessWidget {
     context.go(_tabs[index]);
   }
 
-  // AppBar title changes per tab
   Widget _buildTitle(int index) {
     if (index == 0) {
-      // Browse — NyumbaLink brand name
       return RichText(
         text: TextSpan(
           children: [
@@ -43,12 +40,10 @@ class MainShell extends StatelessWidget {
         ),
       );
     }
-    // Other tabs — plain title
-    const titles = ['Explore', 'Saved', 'Account'];
+    const titles = ['Explore', 'Saved', 'My Bookings'];
     return Text(titles[index], style: AppTextStyles.h3);
   }
 
-  // AppBar actions change per tab
   List<Widget> _buildActions(int index) {
     if (index == 0) {
       return [
@@ -98,9 +93,9 @@ class MainShell extends StatelessWidget {
                   onTap: () => _onTap(context, 1),
                 ),
                 _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Account',
+                  icon: Icons.receipt_long_outlined,
+                  activeIcon: Icons.receipt_long_rounded,
+                  label: 'Bookings',
                   isActive: currentIndex == 2,
                   onTap: () => _onTap(context, 2),
                 ),
