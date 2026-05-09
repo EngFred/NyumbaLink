@@ -24,6 +24,13 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    // ── AUTO-REFRESH ON OPEN ──
+    // This ensures that every time the user navigates to this page,
+    // it fetches the latest notifications silently in the background.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsProvider.notifier).load();
+    });
   }
 
   @override
@@ -51,6 +58,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
         return Icons.home_work_outlined;
       case 'PASSWORD_CHANGED':
         return Icons.lock_outline_rounded;
+      case 'SYSTEM_ALERT':
+        return Icons.campaign_outlined;
       default:
         return Icons.notifications_none_rounded;
     }
@@ -66,8 +75,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
         return AppColors.info;
       case 'NEW_PROPERTY':
         return AppColors.primary;
-      default:
+      case 'SYSTEM_ALERT':
         return AppColors.accent;
+      default:
+        return AppColors.textPrimary;
     }
   }
 
@@ -87,6 +98,12 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
+          // Explicit refresh button for better UX control
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
+            onPressed: () => ref.read(notificationsProvider.notifier).load(),
+          ),
           if (notifState.unreadCount > 0)
             TextButton(
               onPressed: () =>
@@ -100,7 +117,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   }
 
   Widget _buildAuthenticatedView(NotificationsState state) {
-    if (state.isLoading) {
+    if (state.isLoading && state.notifications.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -152,42 +169,45 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       onRefresh: () => ref.read(notificationsProvider.notifier).load(),
       child: ListView.separated(
         controller: _scrollController,
-        padding: const EdgeInsets.all(16),
+        // Remove outer padding to allow edge-to-edge premium design
+        padding: EdgeInsets.zero,
         itemCount: state.notifications.length + (state.isLoadingMore ? 1 : 0),
-        separatorBuilder: (_, __) => const Gap(12),
+        // Premium subtle divider indented to align with the text
+        separatorBuilder: (_, __) => const Divider(
+          height: 1,
+          thickness: 1,
+          color: AppColors.grey200,
+          indent: 84, // 20 padding + 48 avatar + 16 gap
+        ),
         itemBuilder: (context, index) {
           if (index >= state.notifications.length) {
             return const Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(24),
               child: Center(child: CircularProgressIndicator()),
             );
           }
 
           final n = state.notifications[index];
           final color = _getColorForType(n.type);
+          final isUnread = !n.isRead;
 
           return Dismissible(
             key: Key(n.id),
             direction: DismissDirection.endToStart,
             background: Container(
               alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                borderRadius: BorderRadius.circular(16),
-              ),
+              padding: const EdgeInsets.only(right: 24),
+              color: AppColors.error,
               child: const Icon(Icons.delete_outline, color: Colors.white),
             ),
             onDismissed: (_) {
               ref.read(notificationsProvider.notifier).deleteNotification(n.id);
             },
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
               onTap: () {
-                if (!n.isRead) {
+                if (isUnread) {
                   ref.read(notificationsProvider.notifier).markAsRead(n.id);
                 }
-
                 // Deep link handling
                 if (n.data != null && n.data!['propertyId'] != null) {
                   context.push(
@@ -198,25 +218,29 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: n.isRead
-                      ? AppColors.surface
-                      : AppColors.primary50.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: n.isRead ? AppColors.grey200 : AppColors.primary200,
-                  ),
+                // Premium background: subtle blue tint if unread, white if read
+                color: isUnread
+                    ? AppColors.primary50.withOpacity(0.4)
+                    : AppColors.surface,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: color.withOpacity(0.1),
+                    // Premium larger avatar
+                    Container(
+                      height: 48,
+                      width: 48,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(
                         _getIconForType(n.type),
                         color: color,
-                        size: 20,
+                        size: 24,
                       ),
                     ),
                     const Gap(16),
@@ -225,42 +249,51 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Text(
                                   n.title,
                                   style: AppTextStyles.labelLg.copyWith(
-                                    fontWeight: n.isRead
-                                        ? FontWeight.w500
-                                        : FontWeight.w700,
+                                    fontWeight: isUnread
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                               ),
+                              const Gap(8),
                               Text(
-                                timeago.format(n.createdAt),
-                                style: AppTextStyles.caption,
+                                timeago.format(n.createdAt, locale: 'en_short'),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: isUnread
+                                      ? AppColors.primary
+                                      : AppColors.textHint,
+                                  fontWeight: isUnread
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
                               ),
                             ],
                           ),
-                          const Gap(6),
+                          const Gap(4),
                           Text(
                             n.message,
                             style: AppTextStyles.bodySm.copyWith(
-                              color: n.isRead
-                                  ? AppColors.textSecondary
-                                  : AppColors.textPrimary,
+                              color: isUnread
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    if (!n.isRead) ...[
+                    if (isUnread) ...[
                       const Gap(12),
                       Container(
                         margin: const EdgeInsets.only(top: 6),
-                        width: 8,
-                        height: 8,
+                        width: 10,
+                        height: 10,
                         decoration: const BoxDecoration(
                           color: AppColors.primary,
                           shape: BoxShape.circle,

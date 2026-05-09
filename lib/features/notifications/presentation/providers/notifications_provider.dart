@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/notifications_remote_datasource.dart';
 import '../../domain/entities/notification_entity.dart';
@@ -52,7 +51,6 @@ final notificationsProvider =
     >((ref) {
       final dataSource = ref.watch(notificationsRemoteDataSourceProvider);
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
-
       return NotificationsNotifier(dataSource, isAuthenticated)..load();
     });
 
@@ -68,23 +66,19 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       state = state.copyWith(isLoading: false);
       return;
     }
-
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final responses = await Future.wait([
         _dataSource.getNotifications(page: 1),
         _dataSource.getUnreadCount(),
       ]);
-
       final paginated =
           responses[0] as dynamic; // PaginatedResponse<NotificationModel>
       final count = responses[1] as int;
-
       final entities = (paginated.data as List)
           .map((m) => m.toEntity())
           .toList()
           .cast<AppNotification>();
-
       state = state.copyWith(
         notifications: entities,
         unreadCount: count,
@@ -103,14 +97,11 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         state.isLoadingMore ||
         !state.hasNextPage)
       return;
-
     state = state.copyWith(isLoadingMore: true);
     try {
       final nextPage = state.currentPage + 1;
       final res = await _dataSource.getNotifications(page: nextPage);
-
       final entities = res.data.map((m) => m.toEntity()).toList();
-
       state = state.copyWith(
         notifications: [...state.notifications, ...entities],
         isLoadingMore: false,
@@ -125,7 +116,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> markAsRead(String id) async {
     try {
       await _dataSource.markAsRead(id);
-
       // Update local state instantly
       final updatedList = state.notifications.map((n) {
         if (n.id == id && !n.isRead) {
@@ -142,7 +132,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         }
         return n;
       }).toList();
-
       state = state.copyWith(
         notifications: updatedList,
         unreadCount: (state.unreadCount - 1).clamp(0, 999), // Prevent negatives
@@ -153,7 +142,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> markAllAsRead() async {
     try {
       await _dataSource.markAllAsRead();
-
       final updatedList = state.notifications.map((n) {
         return AppNotification(
           id: n.id,
@@ -166,7 +154,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
           createdAt: n.createdAt,
         );
       }).toList();
-
       state = state.copyWith(notifications: updatedList, unreadCount: 0);
     } catch (_) {}
   }
@@ -174,11 +161,9 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> deleteNotification(String id) async {
     try {
       await _dataSource.deleteNotification(id);
-
       final wasUnread =
           state.notifications.firstWhere((n) => n.id == id).isRead == false;
       final updatedList = state.notifications.where((n) => n.id != id).toList();
-
       state = state.copyWith(
         notifications: updatedList,
         unreadCount: wasUnread
