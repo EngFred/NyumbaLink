@@ -5,13 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
+import '../providers/saved_properties_provider.dart'; // <-- Import new provider
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
@@ -24,7 +27,6 @@ class PropertyDetailPage extends ConsumerStatefulWidget {
 class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   int _currentImageIndex = 0;
 
-  // Helps format local numbers to international format for WhatsApp
   String _formatWhatsApp(String phone) {
     String formatted = phone.replaceAll(RegExp(r'\s+|-|\+'), '');
     if (formatted.startsWith('0')) {
@@ -34,10 +36,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   }
 
   void _showEnquireOptions(Property property) {
-    // 1. Fire the backend increment request in the background
     ref.read(propertyDetailProvider(widget.propertyId).notifier).enquire();
 
-    // 2. Show the real-world contact options
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
@@ -55,7 +55,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
               ),
               ListTile(
                 leading: const CircleAvatar(
-                  backgroundColor: Color(0xFF25D366), // WhatsApp Green
+                  backgroundColor: Color(0xFF25D366),
                   child: Icon(
                     Icons.chat_bubble_outline,
                     color: Colors.white,
@@ -106,6 +106,12 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(propertyDetailProvider(widget.propertyId));
 
+    // <-- Watch the saved provider to see if THIS property is saved
+    final isSaved = ref
+        .watch(savedPropertiesProvider)
+        .savedList
+        .any((p) => p.id == widget.propertyId);
+
     if (state.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -137,9 +143,38 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
             ),
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: IconButton(
+                icon: Icon(
+                  isSaved
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: isSaved ? AppColors.error : AppColors.textPrimary,
+                ),
+                onPressed: () {
+                  // <-- Toggle save state
+                  ref
+                      .read(savedPropertiesProvider.notifier)
+                      .toggleSave(property);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isSaved ? 'Removed from saved' : 'Saved to favorites!',
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        // Removed bottom 100 padding since we use bottomNavigationBar now
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -282,8 +317,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           ],
         ),
       ),
-
-      // Moved from bottomSheet to bottomNavigationBar wrapped in SafeArea
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),

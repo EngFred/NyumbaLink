@@ -8,6 +8,7 @@ import '../../features/bookings/presentation/pages/my_bookings_page.dart';
 import '../../features/properties/presentation/pages/browse_page.dart';
 import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/hostel_rooms_page.dart';
+import '../../features/properties/presentation/pages/saved_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 import '../widgets/main_shell.dart';
@@ -50,7 +51,8 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/saved',
           name: 'saved',
-          builder: (context, state) => const _PlaceholderPage(label: 'Saved'),
+          builder: (context, state) =>
+              const SavedPage(), // <-- REPLACE PLACEHOLDER WITH REAL PAGE
         ),
         GoRoute(
           path: '/bookings',
@@ -116,20 +118,4 @@ Widget _slideUpTransition(
     ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
     child: child,
   );
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.label});
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          '$label — coming soon',
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-      ),
-    );
-  }
 }
