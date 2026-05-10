@@ -4,9 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/favorites_remote_datasource.dart';
+import '../../data/mappers/property_mapper.dart';
 import '../../domain/entities/property_entities.dart';
 
-/// A lightweight entity stored locally — avoids serialising the full Property object.
 class SavedProperty {
   const SavedProperty({
     required this.id,
@@ -75,12 +75,37 @@ class SavedPropertiesState {
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
+//
+// This provider watches authProvider. Riverpod recreates it whenever
+// isAuthenticated changes — including when checkAuthStatus() completes on
+// app start for an already-logged-in user. We use that moment to decide
+// whether to just read local (guest) or do a full bidirectional sync
+// (authenticated). This means sync happens automatically for:
+//   - A user who is already logged in when the app starts
+//   - A user who just logged in or registered
+// No manual trigger from auth_provider is needed for the already-logged-in case.
 
 final savedPropertiesProvider =
     StateNotifierProvider<SavedPropertiesNotifier, SavedPropertiesState>((ref) {
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
       final remoteDataSource = ref.watch(favoritesRemoteDataSourceProvider);
-      return SavedPropertiesNotifier(isAuthenticated, remoteDataSource)..load();
+      final notifier = SavedPropertiesNotifier(
+        isAuthenticated,
+        remoteDataSource,
+      );
+
+      if (isAuthenticated) {
+        // Authenticated: bidirectional sync — push local to server, then pull
+        // server back to local so both are always consistent, regardless of
+        // whether the user just logged in or was already logged in from a
+        // previous session.
+        notifier.syncGuestData();
+      } else {
+        // Guest: just read local storage.
+        notifier.load();
+      }
+
+      return notifier;
     });
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
@@ -95,11 +120,6 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   static const _key = 'nyumbalink_saved_properties';
 
   // ── Read ──────────────────────────────────────────────────────────────────
-  //
-  // SharedPreferences is ALWAYS the single source of truth for the UI.
-  // The remote API is never read for display purposes — only written to
-  // (toggle / sync) as a fire-and-forget side-effect when the user is
-  // authenticated.
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true);
@@ -118,7 +138,7 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     }
   }
 
-  // ── Write ─────────────────────────────────────────────────────────────────
+  // ── Toggle ────────────────────────────────────────────────────────────────
 
   Future<void> toggleSave(Property property) async {
     final prefs = await SharedPreferences.getInstance();
@@ -137,11 +157,9 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     }
 
     await prefs.setStringList(_key, data);
-
-    // Refresh UI from local immediately — no waiting on network.
     await load();
 
-    // Fire-and-forget: keep the server in sync when logged in.
+    // Fire-and-forget server sync when logged in.
     if (_isAuthenticated) {
       _remoteDataSource.toggleFavorite(property.id).catchError((_) {});
     }
@@ -150,29 +168,49 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   bool isSaved(String propertyId) =>
       state.savedList.any((p) => p.id == propertyId);
 
-  // ── Sync ──────────────────────────────────────────────────────────────────
+  // ── Bidirectional sync ────────────────────────────────────────────────────
   //
-  // Called once by AuthProvider right after a successful login / registration.
-  // Pushes every locally saved property ID to the backend so the user's
-  // favourites are available on other devices.
-  // Local storage is NOT cleared — it remains the display source of truth.
+  // Step 1 — Push: local IDs → POST /favorites/sync (idempotent, ON CONFLICT
+  //          DO NOTHING). Links any guest-saved properties to the account.
+  //
+  // Step 2 — Pull: GET /favorites → overwrite local storage with the server's
+  //          authoritative merged list. This is what keeps local and server
+  //          from diverging across sessions and devices.
+  //
+  // Called automatically by the provider on every authenticated init.
+  // Also called by auth_provider after login/register (harmless duplicate —
+  // both operations are idempotent).
 
   Future<void> syncGuestData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_key) ?? [];
-    if (data.isEmpty) return;
-
-    final ids = data
-        .map(
-          (e) =>
-              SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>).id,
-        )
-        .toList();
-
     try {
-      await _remoteDataSource.syncFavorites(ids);
+      final prefs = await SharedPreferences.getInstance();
+
+      // Step 1: push local → server
+      final localData = prefs.getStringList(_key) ?? [];
+      if (localData.isNotEmpty) {
+        final localIds = localData
+            .map(
+              (e) => SavedProperty.fromJson(
+                jsonDecode(e) as Map<String, dynamic>,
+              ).id,
+            )
+            .toList();
+        await _remoteDataSource.syncFavorites(localIds).catchError((_) {});
+      }
+
+      // Step 2: pull server → local (overwrites with authoritative merged list)
+      final remoteModels = await _remoteDataSource.getFavorites();
+      final merged = remoteModels
+          .map(
+            (m) => jsonEncode(SavedProperty.fromDomain(m.toEntity()).toJson()),
+          )
+          .toList();
+
+      await prefs.setStringList(_key, merged);
+      await load();
     } catch (_) {
-      // Sync failure is silent — the user can still use the app offline.
+      // Sync failure is silent — fall back to whatever is in local storage.
+      await load();
     }
   }
 }
