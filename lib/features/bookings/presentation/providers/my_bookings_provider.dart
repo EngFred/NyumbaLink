@@ -37,19 +37,32 @@ class MyBookingsState {
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
+//
+// Mirrors the same pattern as savedPropertiesProvider:
+// Riverpod recreates this notifier whenever isAuthenticated changes, which
+// covers app start (checkAuthStatus), login, and register — all automatically.
 
 final myBookingsProvider =
     StateNotifierProvider.autoDispose<MyBookingsNotifier, MyBookingsState>((
       ref,
     ) {
-      // isAuthenticated is passed so the notifier knows which cancellation
-      // endpoint to call. It is no longer used for reads — those always
-      // come from SharedPreferences.
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
-      return MyBookingsNotifier(
+      final notifier = MyBookingsNotifier(
         ref.watch(bookingRepositoryProvider),
         isAuthenticated,
-      )..load();
+      );
+
+      if (isAuthenticated) {
+        // Authenticated: pull server statuses into local, then display.
+        // This keeps CONFIRMED / COMPLETED / CANCELLED states from the admin
+        // in sync without requiring the user to log out and back in.
+        notifier.syncAndLoad();
+      } else {
+        // Guest: just read local storage.
+        notifier.load();
+      }
+
+      return notifier;
     });
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
@@ -59,23 +72,35 @@ class MyBookingsNotifier extends StateNotifier<MyBookingsState> {
     : super(const MyBookingsState());
 
   final BookingRepository _repository;
-
-  // Only used to decide WHICH cancellation endpoint to hit —
-  // never used to decide where to READ bookings from.
   final bool _isAuthenticated;
 
-  // ── Load ──────────────────────────────────────────────────────────────────
-  //
-  // Always reads from SharedPreferences via the repository.
-  // No remote read is ever performed here.
+  // ── Read from local (always) ──────────────────────────────────────────────
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      // isAuthenticated = false forces the repository to read from local
-      // storage. Since we changed the repository to always read locally,
-      // this flag is effectively ignored — but we pass false explicitly
-      // to make the intent clear and stay interface-compatible.
+      final bookings = await _repository.getMyBookings(false);
+      state = state.copyWith(isLoading: false, bookings: bookings);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  // ── Sync server → local, then display ────────────────────────────────────
+  //
+  // Pulls the authoritative server list, merges statuses into local storage,
+  // then reads from local for display. Called on every authenticated init so
+  // status changes made by the admin (CONFIRMED, COMPLETED, CANCELLED) are
+  // always visible without a logout/login cycle.
+
+  Future<void> syncAndLoad() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _repository.syncFromServer();
+    } catch (_) {
+      // Sync failure is silent — fall through to read whatever is in local.
+    }
+    try {
       final bookings = await _repository.getMyBookings(false);
       state = state.copyWith(isLoading: false, bookings: bookings);
     } catch (e) {
@@ -84,21 +109,30 @@ class MyBookingsNotifier extends StateNotifier<MyBookingsState> {
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────
-  //
-  // The token parameter is used only for guest cancellations.
-  // Authenticated users cancel via /cancel-mine (no token needed).
-  // After a successful API call the local record is updated by the
-  // repository, then we reload from local storage.
 
   Future<void> cancelBooking(String id, String token) async {
     state = state.copyWith(isCancelling: true, clearError: true);
     try {
       await _repository.cancelBooking(id, token, _isAuthenticated);
-      // Reload from local — the repository already marked it cancelled there.
       final bookings = await _repository.getMyBookings(false);
       state = state.copyWith(isCancelling: false, bookings: bookings);
     } catch (e) {
-      state = state.copyWith(isCancelling: false, error: e.toString());
+      final message = e.toString();
+
+      // If the server says the booking is already in a terminal state,
+      // sync from server so local reflects the true status, then clear
+      // the cancelling overlay without showing a confusing error.
+      if (message.contains('COMPLETED') || message.contains('CANCELLED')) {
+        try {
+          await _repository.syncFromServer();
+          final bookings = await _repository.getMyBookings(false);
+          state = state.copyWith(isCancelling: false, bookings: bookings);
+        } catch (_) {
+          state = state.copyWith(isCancelling: false);
+        }
+      } else {
+        state = state.copyWith(isCancelling: false, error: message);
+      }
     }
   }
 }

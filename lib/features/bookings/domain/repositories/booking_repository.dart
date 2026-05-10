@@ -14,4 +14,9 @@ abstract class BookingRepository {
   });
   Future<List<SavedBooking>> getMyBookings(bool isAuthenticated);
   Future<void> syncGuestData();
+
+  /// Pulls server booking statuses and merges into local storage.
+  /// Ensures CONFIRMED / COMPLETED / CANCELLED states set by admin
+  /// are reflected in the UI without requiring a logout/login cycle.
+  Future<void> syncFromServer();
 }
