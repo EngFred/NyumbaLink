@@ -36,9 +36,10 @@ extension PropertyModelX on PropertyModel {
     viewCount: viewCount,
     enquiryCount: enquiryCount,
     createdAt: createdAt,
+    numberOfRooms: numberOfRooms,
     billingCycle: billingCycle,
-    bedrooms: bedrooms,
-    bathrooms: bathrooms,
+    totalRooms: totalRooms,
+    hotelCategory: hotelCategory,
     furnishingStatus: furnishingStatus,
     floor: floor,
     totalFloors: totalFloors,
@@ -71,5 +72,7 @@ extension HostelStatsModelX on HostelStatsModel {
     reserved: reserved,
     maintenance: maintenance,
     occupancyRate: occupancyRate,
+    capacityCap: capacityCap,
+    slotsRemaining: slotsRemaining,
   );
 }

@@ -1,17 +1,13 @@
 // ── District ──────────────────────────────────────────────────────────────────
-
 class DistrictModel {
   const DistrictModel({required this.id, required this.name});
-
   final String id;
   final String name;
-
   factory DistrictModel.fromJson(Map<String, dynamic> j) =>
       DistrictModel(id: j['id'] as String, name: j['name'] as String);
 }
 
 // ── Contact ───────────────────────────────────────────────────────────────────
-
 class ContactModel {
   const ContactModel({
     required this.id,
@@ -21,14 +17,12 @@ class ContactModel {
     this.whatsapp,
     this.email,
   });
-
   final String id;
   final String name;
   final String phone;
   final String role;
   final String? whatsapp;
   final String? email;
-
   factory ContactModel.fromJson(Map<String, dynamic> j) => ContactModel(
     id: j['id'] as String,
     name: j['name'] as String,
@@ -40,18 +34,15 @@ class ContactModel {
 }
 
 // ── Property Image ────────────────────────────────────────────────────────────
-
 class PropertyImageModel {
   const PropertyImageModel({
     required this.id,
     required this.url,
     required this.publicId,
   });
-
   final String id;
   final String url;
   final String publicId;
-
   factory PropertyImageModel.fromJson(Map<String, dynamic> j) =>
       PropertyImageModel(
         id: j['id'] as String,
@@ -61,7 +52,6 @@ class PropertyImageModel {
 }
 
 // ── Property ──────────────────────────────────────────────────────────────────
-
 class PropertyModel {
   const PropertyModel({
     required this.id,
@@ -77,9 +67,10 @@ class PropertyModel {
     required this.viewCount,
     required this.enquiryCount,
     required this.createdAt,
+    required this.numberOfRooms,
     this.billingCycle,
-    this.bedrooms,
-    this.bathrooms,
+    this.totalRooms,
+    this.hotelCategory,
     this.furnishingStatus,
     this.floor,
     this.totalFloors,
@@ -88,7 +79,6 @@ class PropertyModel {
     this.lng,
     this.residentialSubtype,
   });
-
   final String id;
   final String title;
   final String description;
@@ -102,10 +92,10 @@ class PropertyModel {
   final int viewCount;
   final int enquiryCount;
   final DateTime createdAt;
-
+  final int numberOfRooms;
   final String? billingCycle;
-  final int? bedrooms;
-  final int? bathrooms;
+  final int? totalRooms;
+  final String? hotelCategory;
   final String? furnishingStatus;
   final int? floor;
   final int? totalFloors;
@@ -117,7 +107,6 @@ class PropertyModel {
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
-
   String? get thumbnailUrl => images.isNotEmpty ? images.first.url : null;
 
   factory PropertyModel.fromJson(Map<String, dynamic> j) {
@@ -126,7 +115,6 @@ class PropertyModel {
       title: j['title'] as String,
       description: j['description'] as String,
       type: j['type'] as String,
-      // Safely parse decimals (Postgres sends them as Strings to avoid float precision loss)
       price: double.parse(j['price'].toString()),
       area: j['area'] as String,
       status: j['status'] as String,
@@ -135,24 +123,21 @@ class PropertyModel {
       images: (j['images'] as List? ?? [])
           .map((e) => PropertyImageModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      // Safely parse integers
       viewCount: int.tryParse(j['viewCount']?.toString() ?? '0') ?? 0,
       enquiryCount: int.tryParse(j['enquiryCount']?.toString() ?? '0') ?? 0,
       createdAt: DateTime.parse(j['createdAt'] as String),
+      numberOfRooms: int.tryParse(j['numberOfRooms']?.toString() ?? '1') ?? 1,
       billingCycle: j['billingCycle'] as String?,
-      bedrooms: j['bedrooms'] != null
-          ? int.tryParse(j['bedrooms'].toString())
+      totalRooms: j['totalRooms'] != null
+          ? int.tryParse(j['totalRooms'].toString())
           : null,
-      bathrooms: j['bathrooms'] != null
-          ? int.tryParse(j['bathrooms'].toString())
-          : null,
+      hotelCategory: j['hotelCategory'] as String?,
       furnishingStatus: j['furnishingStatus'] as String?,
       floor: j['floor'] != null ? int.tryParse(j['floor'].toString()) : null,
       totalFloors: j['totalFloors'] != null
           ? int.tryParse(j['totalFloors'].toString())
           : null,
       amenities: (j['amenities'] as List?)?.cast<String>(),
-      // Backend uses 'latitude' and 'longitude', safely parsed
       lat: j['latitude'] != null
           ? double.tryParse(j['latitude'].toString())
           : null,
@@ -165,7 +150,6 @@ class PropertyModel {
 }
 
 // ── Hostel Room ───────────────────────────────────────────────────────────────
-
 class HostelRoomModel {
   const HostelRoomModel({
     required this.id,
@@ -178,7 +162,6 @@ class HostelRoomModel {
     this.description,
     this.amenities,
   });
-
   final String id;
   final String roomNumber;
   final String type;
@@ -188,14 +171,11 @@ class HostelRoomModel {
   final int? floor;
   final String? description;
   final List<String>? amenities;
-
   bool get isAvailable => status == 'AVAILABLE';
-
   factory HostelRoomModel.fromJson(Map<String, dynamic> j) => HostelRoomModel(
     id: j['id'] as String,
     roomNumber: j['roomNumber'] as String,
     type: j['type'] as String,
-    // Safely parse decimal price
     price: double.parse(j['price'].toString()),
     billingCycle: j['billingCycle'] as String,
     status: j['status'] as String,
@@ -206,7 +186,6 @@ class HostelRoomModel {
 }
 
 // ── Hostel Stats ──────────────────────────────────────────────────────────────
-
 class HostelStatsModel {
   const HostelStatsModel({
     required this.total,
@@ -215,14 +194,17 @@ class HostelStatsModel {
     required this.reserved,
     required this.maintenance,
     required this.occupancyRate,
+    this.capacityCap,
+    this.slotsRemaining,
   });
-
   final int total;
   final int available;
   final int occupied;
   final int reserved;
   final int maintenance;
   final double occupancyRate;
+  final int? capacityCap;
+  final int? slotsRemaining;
 
   factory HostelStatsModel.fromJson(Map<String, dynamic> j) => HostelStatsModel(
     total: int.tryParse(j['total'].toString()) ?? 0,
@@ -231,5 +213,11 @@ class HostelStatsModel {
     reserved: int.tryParse(j['reserved'].toString()) ?? 0,
     maintenance: int.tryParse(j['maintenance'].toString()) ?? 0,
     occupancyRate: double.tryParse(j['occupancyRate'].toString()) ?? 0.0,
+    capacityCap: j['capacityCap'] != null
+        ? int.tryParse(j['capacityCap'].toString())
+        : null,
+    slotsRemaining: j['slotsRemaining'] != null
+        ? int.tryParse(j['slotsRemaining'].toString())
+        : null,
   );
 }

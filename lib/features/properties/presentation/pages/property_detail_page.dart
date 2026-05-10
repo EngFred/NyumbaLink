@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,9 +16,7 @@ import '../providers/saved_properties_provider.dart';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
-
   final String propertyId;
-
   @override
   ConsumerState<PropertyDetailPage> createState() => _PropertyDetailPageState();
 }
@@ -37,7 +34,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 
   void _showEnquireOptions(Property property) {
     ref.read(propertyDetailProvider(widget.propertyId).notifier).enquire();
-
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
@@ -115,7 +111,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     if (state.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
     if (state.error != null || state.property == null) {
       return Scaffold(
         appBar: AppBar(),
@@ -296,6 +291,73 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                       ),
                     ],
                   ),
+
+                  // NEW META ROW (Rooms / Category)
+                  const Gap(16),
+                  Row(
+                    children: [
+                      if (!property.isHostel) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.grey100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.meeting_room_outlined,
+                                size: 16,
+                                color: AppColors.grey600,
+                              ),
+                              const Gap(4),
+                              Text(
+                                '${property.numberOfRooms} Room${property.numberOfRooms != 1 ? 's' : ''}',
+                                style: AppTextStyles.labelMd.copyWith(
+                                  color: AppColors.grey700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (property.hotelCategory != null) ...[
+                        const Gap(8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.grey100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_border_rounded,
+                                size: 16,
+                                color: AppColors.grey600,
+                              ),
+                              const Gap(4),
+                              Text(
+                                property.hotelCategory!,
+                                style: AppTextStyles.labelMd.copyWith(
+                                  color: AppColors.grey700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+
                   const Gap(24),
                   Text(
                     CurrencyFormatter.format(property.price),
@@ -311,7 +373,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   Text('Description', style: AppTextStyles.h3),
                   const Gap(8),
                   Text(property.description, style: AppTextStyles.bodyMd),
-
                   // ── ADDED PROPERTY REPORT BUTTON ──
                   const Gap(48),
                   Center(

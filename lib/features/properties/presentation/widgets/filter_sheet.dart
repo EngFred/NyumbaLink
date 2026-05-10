@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -19,8 +18,7 @@ class FilterSheet extends StatefulWidget {
 class _FilterSheetState extends State<FilterSheet> {
   late String? _type;
   late RangeValues _priceRange;
-  late int? _bedrooms;
-
+  late int? _numberOfRooms;
   static const double _minPrice = 0;
   static const double _maxPrice = 5000000;
 
@@ -28,7 +26,7 @@ class _FilterSheetState extends State<FilterSheet> {
   void initState() {
     super.initState();
     _type = widget.current.type;
-    _bedrooms = widget.current.bedrooms;
+    _numberOfRooms = widget.current.numberOfRooms;
     _priceRange = RangeValues(
       widget.current.minPrice ?? _minPrice,
       widget.current.maxPrice ?? _maxPrice,
@@ -142,18 +140,19 @@ class _FilterSheetState extends State<FilterSheet> {
                       onChanged: (v) => setState(() => _priceRange = v),
                     ),
                     const Gap(28),
-                    Text('Bedrooms', style: AppTextStyles.h4),
+                    Text('Rooms', style: AppTextStyles.h4),
                     const Gap(12),
                     Row(
                       children: [null, 1, 2, 3, 4].map((n) {
-                        final selected = _bedrooms == n;
+                        final selected = _numberOfRooms == n;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
                             label: Text(n == null ? 'Any' : '$n+'),
                             selected: selected,
-                            onSelected: (_) =>
-                                setState(() => _bedrooms = selected ? null : n),
+                            onSelected: (_) => setState(
+                              () => _numberOfRooms = selected ? null : n,
+                            ),
                             selectedColor: AppColors.primary,
                             backgroundColor: AppColors.grey100,
                             labelStyle: AppTextStyles.labelMd.copyWith(
@@ -192,7 +191,7 @@ class _FilterSheetState extends State<FilterSheet> {
   void _clearAll() {
     setState(() {
       _type = null;
-      _bedrooms = null;
+      _numberOfRooms = null;
       _priceRange = const RangeValues(_minPrice, _maxPrice);
     });
   }
@@ -200,7 +199,7 @@ class _FilterSheetState extends State<FilterSheet> {
   void _apply() {
     final filters = PropertyFilters(
       type: _type,
-      bedrooms: _bedrooms,
+      numberOfRooms: _numberOfRooms,
       minPrice: _priceRange.start > _minPrice ? _priceRange.start : null,
       maxPrice: _priceRange.end < _maxPrice ? _priceRange.end : null,
     );

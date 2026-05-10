@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -92,10 +91,7 @@ class PropertyCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (!property.isHostel &&
-                          (property.bedrooms != null ||
-                              property.bathrooms != null))
-                        _RoomMeta(property: property),
+                      if (!property.isHostel) _RoomMeta(property: property),
                     ],
                   ),
                 ],
@@ -110,6 +106,7 @@ class PropertyCard extends StatelessWidget {
 
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
+
   final Property property;
 
   @override
@@ -133,6 +130,7 @@ class _PropertyImage extends StatelessWidget {
 
 class _ImagePlaceholder extends StatelessWidget {
   const _ImagePlaceholder(this.type);
+
   final String type;
 
   @override
@@ -152,6 +150,7 @@ class _ImagePlaceholder extends StatelessWidget {
 
 class _TypeChip extends StatelessWidget {
   const _TypeChip({required this.type});
+
   final String type;
 
   @override
@@ -183,6 +182,7 @@ class _TypeChip extends StatelessWidget {
 
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status});
+
   final String status;
 
   @override
@@ -219,27 +219,23 @@ class _StatusBadge extends StatelessWidget {
 
 class _RoomMeta extends StatelessWidget {
   const _RoomMeta({required this.property});
+
   final Property property;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (property.bedrooms != null) ...[
-          const Icon(Icons.bed_rounded, size: 14, color: AppColors.grey500),
-          const Gap(3),
-          Text('${property.bedrooms}', style: AppTextStyles.labelSm),
-          const Gap(8),
-        ],
-        if (property.bathrooms != null) ...[
-          const Icon(
-            Icons.bathtub_outlined,
-            size: 14,
-            color: AppColors.grey500,
-          ),
-          const Gap(3),
-          Text('${property.bathrooms}', style: AppTextStyles.labelSm),
-        ],
+        const Icon(
+          Icons.meeting_room_outlined,
+          size: 14,
+          color: AppColors.grey500,
+        ),
+        const Gap(3),
+        Text(
+          '${property.numberOfRooms} Room${property.numberOfRooms != 1 ? 's' : ''}',
+          style: AppTextStyles.labelSm,
+        ),
       ],
     );
   }

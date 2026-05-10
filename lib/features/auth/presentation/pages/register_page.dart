@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -10,7 +9,6 @@ import '../providers/auth_provider.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
-
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
@@ -18,8 +16,6 @@ class RegisterPage extends ConsumerStatefulWidget {
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _phoneController =
-      TextEditingController(); // Kept for UI, but not sent to backend DTO
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -30,7 +26,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -39,7 +34,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   void _submit() async {
     if (ref.read(authProvider).isLoading) return;
-
     if (_formKey.currentState?.validate() ?? false) {
       final success = await ref
           .read(authProvider.notifier)
@@ -48,7 +42,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             _emailController.text.trim(),
             _passwordController.text,
           );
-
       if (success && mounted) {
         context.go('/browse');
       }
@@ -97,7 +90,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                 ),
                 const Gap(40),
-
                 Text('Full name', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
@@ -114,23 +106,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
                 ),
                 const Gap(20),
-
-                Text('Phone number', style: AppTextStyles.labelLg),
-                const Gap(8),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    hintText: '+256 700 000 000',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  validator: (v) =>
-                      (v?.trim().isEmpty ?? true) ? 'Phone is required' : null,
-                ),
-                const Gap(20),
-
                 Text('Email address', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
@@ -146,7 +121,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       (v?.trim().isEmpty ?? true) ? 'Email is required' : null,
                 ),
                 const Gap(20),
-
                 Text('Password', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
@@ -175,7 +149,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   },
                 ),
                 const Gap(20),
-
                 Text('Confirm password', style: AppTextStyles.labelLg),
                 const Gap(8),
                 TextFormField(
@@ -205,7 +178,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   },
                 ),
                 const Gap(40),
-
                 ElevatedButton(
                   onPressed: isLoading ? null : _submit,
                   child: isLoading
@@ -220,7 +192,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       : const Text('Create account'),
                 ),
                 const Gap(24),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

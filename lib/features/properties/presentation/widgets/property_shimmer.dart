@@ -64,6 +64,7 @@ class PropertyCardShimmer extends StatelessWidget {
 
 class _Box extends StatelessWidget {
   const _Box({required this.w, required this.h});
+
   final double w;
   final double h;
 
@@ -82,6 +83,7 @@ class _Box extends StatelessWidget {
 
 class PropertyShimmerGrid extends StatelessWidget {
   const PropertyShimmerGrid({super.key, this.count = 6});
+
   final int count;
 
   @override

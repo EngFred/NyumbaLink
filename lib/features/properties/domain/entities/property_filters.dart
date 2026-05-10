@@ -4,17 +4,19 @@ class PropertyFilters {
     this.districtId,
     this.minPrice,
     this.maxPrice,
-    this.bedrooms,
+    this.numberOfRooms,
+    this.search,
     this.status = 'AVAILABLE',
     this.page = 1,
-    this.limit = 12,
+    this.limit = 15,
   });
 
   final String? type;
   final String? districtId;
   final double? minPrice;
   final double? maxPrice;
-  final int? bedrooms;
+  final int? numberOfRooms;
+  final String? search;
   final String? status;
   final int page;
   final int limit;
@@ -24,7 +26,8 @@ class PropertyFilters {
     String? districtId,
     double? minPrice,
     double? maxPrice,
-    int? bedrooms,
+    int? numberOfRooms,
+    String? search,
     String? status,
     int? page,
     int? limit,
@@ -32,14 +35,18 @@ class PropertyFilters {
     bool clearDistrictId = false,
     bool clearMinPrice = false,
     bool clearMaxPrice = false,
-    bool clearBedrooms = false,
+    bool clearNumberOfRooms = false,
+    bool clearSearch = false,
   }) {
     return PropertyFilters(
       type: clearType ? null : (type ?? this.type),
       districtId: clearDistrictId ? null : (districtId ?? this.districtId),
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
-      bedrooms: clearBedrooms ? null : (bedrooms ?? this.bedrooms),
+      numberOfRooms: clearNumberOfRooms
+          ? null
+          : (numberOfRooms ?? this.numberOfRooms),
+      search: clearSearch ? null : (search ?? this.search),
       status: status ?? this.status,
       page: page ?? this.page,
       limit: limit ?? this.limit,
@@ -51,16 +58,20 @@ class PropertyFilters {
       districtId != null ||
       minPrice != null ||
       maxPrice != null ||
-      bedrooms != null;
+      numberOfRooms != null ||
+      (search != null && search!.isNotEmpty);
 
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{'page': page, 'limit': limit};
+
     if (type != null) map['type'] = type;
     if (districtId != null) map['districtId'] = districtId;
     if (minPrice != null) map['minPrice'] = minPrice;
     if (maxPrice != null) map['maxPrice'] = maxPrice;
-    if (bedrooms != null) map['bedrooms'] = bedrooms;
+    if (numberOfRooms != null) map['numberOfRooms'] = numberOfRooms;
+    if (search != null && search!.isNotEmpty) map['search'] = search;
     if (status != null) map['status'] = status;
+
     return map;
   }
 }

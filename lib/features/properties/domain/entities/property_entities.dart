@@ -51,9 +51,10 @@ class Property {
     required this.viewCount,
     required this.enquiryCount,
     required this.createdAt,
+    required this.numberOfRooms, // Added
     this.billingCycle,
-    this.bedrooms,
-    this.bathrooms,
+    this.totalRooms, // Added
+    this.hotelCategory, // Added
     this.furnishingStatus,
     this.floor,
     this.totalFloors,
@@ -62,7 +63,6 @@ class Property {
     this.lng,
     this.residentialSubtype,
   });
-
   final String id;
   final String title;
   final String description;
@@ -76,9 +76,10 @@ class Property {
   final int viewCount;
   final int enquiryCount;
   final DateTime createdAt;
+  final int numberOfRooms;
   final String? billingCycle;
-  final int? bedrooms;
-  final int? bathrooms;
+  final int? totalRooms;
+  final String? hotelCategory;
   final String? furnishingStatus;
   final int? floor;
   final int? totalFloors;
@@ -106,7 +107,6 @@ class HostelRoom {
     this.description,
     this.amenities,
   });
-
   final String id;
   final String roomNumber;
   final String type;
@@ -116,7 +116,6 @@ class HostelRoom {
   final int? floor;
   final String? description;
   final List<String>? amenities;
-
   bool get isAvailable => status == 'AVAILABLE';
 }
 
@@ -129,12 +128,15 @@ class HostelStats {
     required this.reserved,
     required this.maintenance,
     required this.occupancyRate,
+    this.capacityCap,
+    this.slotsRemaining,
   });
-
   final int total;
   final int available;
   final int occupied;
   final int reserved;
   final int maintenance;
   final double occupancyRate;
+  final int? capacityCap;
+  final int? slotsRemaining;
 }
