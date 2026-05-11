@@ -1,158 +1,146 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
+class _SplashPageState extends ConsumerState<SplashPage>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnim;
-  late final Animation<double> _scaleAnim;
-
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _fadeAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    );
-
-    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
-      ),
-    );
-
-    _controller.forward();
-
-    Future.delayed(AppConstants.splashDuration, () {
-      if (mounted) context.go(AppRoutes.browse);
+    // Delay bootstrap execution until after the widget tree finishes building
+    // This prevents the "Tried to modify a provider..." Riverpod crash.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bootstrap();
     });
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _bootstrap() async {
+    // Let the splash breathe for at least 2.2s while auth resolves
+    await Future.wait([
+      ref.read(authProvider.notifier).checkAuthStatus(),
+      Future.delayed(const Duration(milliseconds: 2200)),
+    ]);
+
+    if (!mounted) return;
+
+    // The API allows guest users (unauthenticated) to browse listings, view property
+    // details, submit booking requests, and file complaints.
+    // Therefore, we drop everyone directly into the Browse page.
+    context.go(AppRoutes.browse);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: Stack(
-        children: [
-          // ── Centred content ──────────────────────────────────────────────
-          Center(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: ScaleTransition(
-                scale: _scaleAnim,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Logo
-                    Image.asset(
-                      'assets/images/logo_original.png',
-                      width: 80,
-                      height: 80,
-                      errorBuilder: (_, __, ___) => const _FallbackLogo(),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // "NyumbaLink"
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Nyumba',
-                            style: AppTextStyles.brandTitle.copyWith(
-                              fontSize: 26,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Link',
-                            style: AppTextStyles.brandTitle.copyWith(
-                              fontSize: 26,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // "Uganda"
-                    Text(
-                      'Uganda',
-                      style: AppTextStyles.brandSubtitle.copyWith(
-                        fontSize: 13,
-                        letterSpacing: 1.5,
-                        color: AppColors.textHint,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, Color(0xFF1A3A6B)],
           ),
-
-          // ── Loading indicator pinned to bottom ───────────────────────────
-          Positioned(
-            bottom: 48,
-            left: 0,
-            right: 0,
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary.withOpacity(0.35),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const Spacer(flex: 2),
+              // ── Logo mark ──────────────────────────────────────────────
+              Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.home_work_rounded,
+                      size: 52,
+                      color: Colors.white,
+                    ),
+                  )
+                  .animate()
+                  .scale(
+                    begin: const Offset(0.5, 0.5),
+                    duration: 700.ms,
+                    curve: Curves.elasticOut,
+                  )
+                  .fadeIn(duration: 400.ms),
+              const SizedBox(height: 28),
+              // ── Brand name ─────────────────────────────────────────────
+              RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Nyumba',
+                          style: AppTextStyles.h1.copyWith(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'Link',
+                          style: AppTextStyles.h1.copyWith(
+                            color: Colors.white.withOpacity(0.6),
+                            fontSize: 36,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(delay: 300.ms)
+                  .fadeIn(duration: 400.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 400.ms),
+              const SizedBox(height: 8),
+              Text(
+                    'Your home, simplified.',
+                    style: AppTextStyles.bodyMd.copyWith(
+                      color: Colors.white.withOpacity(0.65),
+                      letterSpacing: 0.3,
+                    ),
+                  )
+                  .animate(delay: 500.ms)
+                  .fadeIn(duration: 400.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 400.ms),
+              const Spacer(flex: 2),
+              // ── Loading indicator ──────────────────────────────────────
+              SizedBox(
+                width: 140,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withOpacity(0.7),
+                    minHeight: 3,
                   ),
                 ),
-              ),
-            ),
+              ).animate(delay: 700.ms).fadeIn(duration: 400.ms),
+              const SizedBox(height: 48),
+            ],
           ),
-        ],
+        ),
       ),
-    );
-  }
-}
-
-class _FallbackLogo extends StatelessWidget {
-  const _FallbackLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: AppColors.primary50,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Icon(Icons.home_rounded, color: AppColors.primary, size: 48),
     );
   }
 }

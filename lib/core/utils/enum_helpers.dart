@@ -132,3 +132,14 @@ abstract final class RoomTypeHelper {
   };
   static String label(String t) => _labels[t] ?? t;
 }
+
+class ResidentialSubtypeHelper {
+  static String label(String s) => switch (s) {
+    'BUNGALOW' => 'Bungalow',
+    'MANSION' => 'Mansion',
+    'TOWNHOUSE' => 'Townhouse',
+    'VILLA' => 'Villa',
+    'DUPLEX' => 'Duplex',
+    _ => s,
+  };
+}

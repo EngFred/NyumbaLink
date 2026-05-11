@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
@@ -28,19 +29,42 @@ class MainShell extends ConsumerWidget {
 
   Widget _buildTitle(int index) {
     if (index == 0) {
-      return RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: 'Nyumba',
-              style: AppTextStyles.h3.copyWith(color: AppColors.primary),
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, Color(0xFF1A3A6B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(9),
             ),
-            TextSpan(
-              text: 'Link',
-              style: AppTextStyles.h3.copyWith(color: AppColors.accent),
+            child: const Icon(
+              Icons.home_work_rounded,
+              color: Colors.white,
+              size: 17,
             ),
-          ],
-        ),
+          ),
+          const Gap(8),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Nyumba',
+                  style: AppTextStyles.h3.copyWith(color: AppColors.primary),
+                ),
+                TextSpan(
+                  text: 'Link',
+                  style: AppTextStyles.h3.copyWith(color: AppColors.accent),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
     const titles = ['Explore', 'Saved', 'My Bookings', 'Account'];
@@ -49,7 +73,6 @@ class MainShell extends ConsumerWidget {
 
   List<Widget> _buildActions(BuildContext context, WidgetRef ref, int index) {
     final unreadCount = ref.watch(notificationsProvider).unreadCount;
-
     return [
       IconButton(
         icon: const Icon(Icons.feedback_outlined),
@@ -67,19 +90,21 @@ class MainShell extends ConsumerWidget {
             if (unreadCount > 0)
               Positioned(
                 top: 10,
-                right: 12,
+                right: 10,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  width: 17,
+                  height: 17,
                   decoration: const BoxDecoration(
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
+                  alignment: Alignment.center,
                   child: Text(
-                    unreadCount > 9 ? '9+' : unreadCount.toString(),
+                    unreadCount > 9 ? '9+' : '$unreadCount',
                     style: const TextStyle(
                       fontSize: 8,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
@@ -100,9 +125,15 @@ class MainShell extends ConsumerWidget {
       ),
       body: child,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.grey200, width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, -3),
+            ),
+          ],
         ),
         child: SafeArea(
           top: false,
@@ -200,6 +231,7 @@ class _NavItem extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                   color: color,
+                  fontFamily: AppTextStyles.h1.fontFamily,
                 ),
                 child: Text(label),
               ),

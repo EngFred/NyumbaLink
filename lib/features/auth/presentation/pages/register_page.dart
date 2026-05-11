@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_widgets.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
+
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
@@ -18,8 +20,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-
+  final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -28,7 +29,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -42,9 +43,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             _emailController.text.trim(),
             _passwordController.text,
           );
-      if (success && mounted) {
-        context.go('/browse');
-      }
+      if (success && mounted) context.go('/browse');
     }
   }
 
@@ -56,6 +55,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           SnackBar(
             content: Text(next.error!),
             backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
@@ -64,161 +68,149 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Gap(16),
-                Text('Create account', style: AppTextStyles.h1),
-                const Gap(8),
-                Text(
-                  'Join NyumbaLink and find your perfect home',
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Gap(40),
-                Text('Full name', style: AppTextStyles.labelLg),
-                const Gap(8),
-                TextFormField(
-                  controller: _nameController,
-                  keyboardType: TextInputType.name,
-                  textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.next,
-                  enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    hintText: 'John Doe',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
-                  ),
-                  validator: (v) =>
-                      (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
-                ),
-                const Gap(20),
-                Text('Email address', style: AppTextStyles.labelLg),
-                const Gap(8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  enabled: !isLoading,
-                  decoration: const InputDecoration(
-                    hintText: 'you@example.com',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  validator: (v) =>
-                      (v?.trim().isEmpty ?? true) ? 'Email is required' : null,
-                ),
-                const Gap(20),
-                Text('Password', style: AppTextStyles.labelLg),
-                const Gap(8),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.next,
-                  enabled: !isLoading,
-                  decoration: InputDecoration(
-                    hintText: '••••••••',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6)
-                      return 'Password must be at least 6 characters';
-                    return null;
-                  },
-                ),
-                const Gap(20),
-                Text('Confirm password', style: AppTextStyles.labelLg),
-                const Gap(8),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirm,
-                  textInputAction: TextInputAction.done,
-                  enabled: !isLoading,
-                  decoration: InputDecoration(
-                    hintText: '••••••••',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty)
-                      return 'Please confirm your password';
-                    if (v != _passwordController.text)
-                      return 'Passwords do not match';
-                    return null;
-                  },
-                ),
-                const Gap(40),
-                ElevatedButton(
-                  onPressed: isLoading ? null : _submit,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Create account'),
-                ),
-                const Gap(24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const AuthHero(
+            title: 'Create account',
+            subtitle: 'Find your perfect home in Uganda',
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
                   children: [
-                    Text(
-                      'Already have an account? ',
-                      style: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: isLoading
+                    AuthSection(
+                          children: [
+                            AuthField(
+                              controller: _nameController,
+                              label: 'Full Name',
+                              hint: 'John Doe',
+                              icon: Icons.person_outline_rounded,
+                              capitalization: TextCapitalization.words,
+                              action: TextInputAction.next,
+                              enabled: !isLoading,
+                              validator: (v) => (v?.trim().isEmpty ?? true)
+                                  ? 'Name is required'
+                                  : null,
+                            ),
+                            const FieldDivider(),
+                            AuthField(
+                              controller: _emailController,
+                              label: 'Email Address',
+                              hint: 'you@example.com',
+                              icon: Icons.email_outlined,
+                              inputType: TextInputType.emailAddress,
+                              action: TextInputAction.next,
+                              enabled: !isLoading,
+                              validator: (v) => (v?.trim().isEmpty ?? true)
+                                  ? 'Email is required'
+                                  : null,
+                            ),
+                          ],
+                        )
+                        .animate()
+                        .fadeIn(duration: 300.ms)
+                        .slideY(begin: 0.05, end: 0),
+
+                    const Gap(16),
+
+                    AuthSection(
+                          children: [
+                            AuthField(
+                              controller: _passwordController,
+                              label: 'Password',
+                              hint: 'At least 6 characters',
+                              icon: Icons.lock_outline_rounded,
+                              obscureText: _obscurePassword,
+                              action: TextInputAction.next,
+                              enabled: !isLoading,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  size: 20,
+                                  color: AppColors.grey500,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) {
+                                  return 'Password is required';
+                                }
+                                if (v.length < 6) {
+                                  return 'At least 6 characters';
+                                }
+                                return null;
+                              },
+                            ),
+                            FieldDivider(),
+                            AuthField(
+                              controller: _confirmController,
+                              label: 'Confirm Password',
+                              hint: 'Re-enter your password',
+                              icon: Icons.lock_outline_rounded,
+                              obscureText: _obscureConfirm,
+                              action: TextInputAction.done,
+                              enabled: !isLoading,
+                              onFieldSubmitted: (_) => _submit(),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirm
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  size: 20,
+                                  color: AppColors.grey500,
+                                ),
+                                onPressed: () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm,
+                                ),
+                              ),
+                              validator: (v) {
+                                if (v != _passwordController.text) {
+                                  return 'Passwords do not match';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        )
+                        .animate(delay: 60.ms)
+                        .fadeIn(duration: 300.ms)
+                        .slideY(begin: 0.05, end: 0),
+
+                    const Gap(24),
+
+                    SubmitButton(
+                          isLoading: isLoading,
+                          label: 'Create Account',
+                          icon: Icons.person_add_rounded,
+                          onPressed: _submit,
+                        )
+                        .animate(delay: 120.ms)
+                        .fadeIn(duration: 300.ms)
+                        .slideY(begin: 0.05, end: 0),
+
+                    const Gap(28),
+
+                    AuthFooterLink(
+                      message: 'Already have an account? ',
+                      linkText: 'Sign in',
+                      onTap: isLoading
                           ? null
                           : () => context.go(AppRoutes.login),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Sign in'),
-                    ),
+                    ).animate(delay: 160.ms).fadeIn(duration: 300.ms),
                   ],
                 ),
-                const Gap(32),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

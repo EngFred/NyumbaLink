@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -18,16 +19,12 @@ class NotificationsPage extends ConsumerStatefulWidget {
 }
 
 class _NotificationsPageState extends ConsumerState<NotificationsPage> {
-  final _scrollController = ScrollController();
+  final _scrollCtrl = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-
-    // ── AUTO-REFRESH ON OPEN ──
-    // This ensures that every time the user navigates to this page,
-    // it fetches the latest notifications silently in the background.
+    _scrollCtrl.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationsProvider.notifier).load();
     });
@@ -35,215 +32,247 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 200) {
       ref.read(notificationsProvider.notifier).fetchNextPage();
-    }
-  }
-
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'BOOKING_CONFIRMED':
-        return Icons.check_circle_outline_rounded;
-      case 'BOOKING_CANCELLED':
-        return Icons.cancel_outlined;
-      case 'COMPLAINT_UPDATED':
-        return Icons.support_agent_rounded;
-      case 'NEW_PROPERTY':
-        return Icons.home_work_outlined;
-      case 'PASSWORD_CHANGED':
-        return Icons.lock_outline_rounded;
-      case 'SYSTEM_ALERT':
-        return Icons.campaign_outlined;
-      default:
-        return Icons.notifications_none_rounded;
-    }
-  }
-
-  Color _getColorForType(String type) {
-    switch (type) {
-      case 'BOOKING_CONFIRMED':
-        return AppColors.success;
-      case 'BOOKING_CANCELLED':
-        return AppColors.error;
-      case 'COMPLAINT_UPDATED':
-        return AppColors.info;
-      case 'NEW_PROPERTY':
-        return AppColors.primary;
-      case 'SYSTEM_ALERT':
-        return AppColors.accent;
-      default:
-        return AppColors.textPrimary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final notifState = ref.watch(notificationsProvider);
-
-    if (!authState.isAuthenticated) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Notifications')),
-        body: _buildUnauthenticatedView(context),
-      );
-    }
+    final isAuth = ref.watch(authProvider).isAuthenticated;
+    final state = ref.watch(notificationsProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.pop(),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Notifications', style: AppTextStyles.h4),
+            if (isAuth && state.unreadCount > 0)
+              Text(
+                '${state.unreadCount} unread',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+          ],
+        ),
         actions: [
-          // Explicit refresh button for better UX control
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-            onPressed: () => ref.read(notificationsProvider.notifier).load(),
-          ),
-          if (notifState.unreadCount > 0)
-            TextButton(
-              onPressed: () =>
-                  ref.read(notificationsProvider.notifier).markAllAsRead(),
-              child: const Text('Mark all read'),
+          if (isAuth) ...[
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'Refresh',
+              onPressed: () => ref.read(notificationsProvider.notifier).load(),
             ),
+            if (state.unreadCount > 0)
+              TextButton(
+                onPressed: () =>
+                    ref.read(notificationsProvider.notifier).markAllAsRead(),
+                child: Text(
+                  'Read all',
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+          ],
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppColors.grey200),
+        ),
       ),
-      body: _buildAuthenticatedView(notifState),
+      body: isAuth
+          ? _AuthenticatedBody(scrollCtrl: _scrollCtrl, state: state)
+          : const _UnauthenticatedBody(),
     );
   }
+}
 
-  Widget _buildAuthenticatedView(NotificationsState state) {
+// ── Authenticated body ────────────────────────────────────────────────────────
+
+class _AuthenticatedBody extends ConsumerWidget {
+  const _AuthenticatedBody({required this.scrollCtrl, required this.state});
+
+  final ScrollController scrollCtrl;
+  final NotificationsState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     if (state.isLoading && state.notifications.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const _NotificationsSkeleton();
     }
 
     if (state.error != null && state.notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            const Gap(16),
-            Text(
-              state.error!,
-              style: AppTextStyles.bodySm,
-              textAlign: TextAlign.center,
-            ),
-            const Gap(16),
-            ElevatedButton(
-              onPressed: () => ref.read(notificationsProvider.notifier).load(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+      return _ErrorState(
+        message: state.error!,
+        onRetry: () => ref.read(notificationsProvider.notifier).load(),
       );
     }
 
     if (state.notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.notifications_off_outlined,
-              size: 64,
-              color: AppColors.grey300,
-            ),
-            const Gap(16),
-            Text('All caught up!', style: AppTextStyles.h3),
-            const Gap(8),
-            Text(
-              'You have no notifications at the moment.',
-              style: AppTextStyles.bodySm,
-            ),
-          ],
-        ),
-      );
+      return const _EmptyState();
     }
 
     return RefreshIndicator(
+      color: AppColors.primary,
       onRefresh: () => ref.read(notificationsProvider.notifier).load(),
-      child: ListView.separated(
-        controller: _scrollController,
-        // Remove outer padding to allow edge-to-edge premium design
+      child: ListView.builder(
+        controller: scrollCtrl,
         padding: EdgeInsets.zero,
         itemCount: state.notifications.length + (state.isLoadingMore ? 1 : 0),
-        // Premium subtle divider indented to align with the text
-        separatorBuilder: (_, __) => const Divider(
-          height: 1,
-          thickness: 1,
-          color: AppColors.grey200,
-          indent: 84, // 20 padding + 48 avatar + 16 gap
-        ),
         itemBuilder: (context, index) {
           if (index >= state.notifications.length) {
             return const Padding(
               padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
             );
           }
 
           final n = state.notifications[index];
-          final color = _getColorForType(n.type);
-          final isUnread = !n.isRead;
+          return _NotificationTile(
+                notification: n,
+                onTap: () {
+                  if (!n.isRead) {
+                    ref.read(notificationsProvider.notifier).markAsRead(n.id);
+                  }
+                  if (n.data?['propertyId'] != null) {
+                    context.push(
+                      AppRoutes.propertyDetailPath(
+                        n.data!['propertyId'].toString(),
+                      ),
+                    );
+                  }
+                },
+                onDismiss: () => ref
+                    .read(notificationsProvider.notifier)
+                    .deleteNotification(n.id),
+              )
+              .animate(
+                delay: Duration(milliseconds: index < 6 ? index * 45 : 0),
+              )
+              .fadeIn(duration: 260.ms)
+              .slideX(begin: 0.03, end: 0, duration: 260.ms);
+        },
+      ),
+    );
+  }
+}
 
-          return Dismissible(
-            key: Key(n.id),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 24),
+// ── Notification tile ─────────────────────────────────────────────────────────
+
+class _NotificationTile extends StatelessWidget {
+  const _NotificationTile({
+    required this.notification,
+    required this.onTap,
+    required this.onDismiss,
+  });
+
+  final dynamic notification; // AppNotification
+  final VoidCallback onTap;
+  final VoidCallback onDismiss;
+
+  static IconData _iconFor(String type) => switch (type) {
+    'BOOKING_CONFIRMED' => Icons.check_circle_outline_rounded,
+    'BOOKING_CANCELLED' => Icons.cancel_outlined,
+    'COMPLAINT_UPDATED' => Icons.support_agent_rounded,
+    'NEW_PROPERTY' => Icons.home_work_outlined,
+    'PASSWORD_CHANGED' => Icons.lock_outline_rounded,
+    'SYSTEM_ALERT' => Icons.campaign_outlined,
+    _ => Icons.notifications_none_rounded,
+  };
+
+  static Color _colorFor(String type) => switch (type) {
+    'BOOKING_CONFIRMED' => AppColors.success,
+    'BOOKING_CANCELLED' => AppColors.error,
+    'COMPLAINT_UPDATED' => AppColors.info,
+    'NEW_PROPERTY' => AppColors.primary,
+    'SYSTEM_ALERT' => AppColors.accent,
+    _ => AppColors.grey500,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final type = notification.type as String;
+    final isUnread = !(notification.isRead as bool);
+    final color = _colorFor(type);
+    final createdAt = notification.createdAt as DateTime;
+
+    return Dismissible(
+      key: Key(notification.id as String),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        color: AppColors.error.withOpacity(0.08),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.delete_outline_rounded,
               color: AppColors.error,
-              child: const Icon(Icons.delete_outline, color: Colors.white),
+              size: 22,
             ),
-            onDismissed: (_) {
-              ref.read(notificationsProvider.notifier).deleteNotification(n.id);
-            },
-            child: InkWell(
-              onTap: () {
-                if (isUnread) {
-                  ref.read(notificationsProvider.notifier).markAsRead(n.id);
-                }
-                // Deep link handling
-                if (n.data != null && n.data!['propertyId'] != null) {
-                  context.push(
-                    AppRoutes.propertyDetailPath(
-                      n.data!['propertyId'].toString(),
-                    ),
-                  );
-                }
-              },
-              child: Container(
-                // Premium background: subtle blue tint if unread, white if read
-                color: isUnread
-                    ? AppColors.primary50.withOpacity(0.4)
-                    : AppColors.surface,
+            const Gap(3),
+            Text(
+              'Delete',
+              style: AppTextStyles.labelSm.copyWith(color: AppColors.error),
+            ),
+          ],
+        ),
+      ),
+      onDismissed: (_) => onDismiss(),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          color: isUnread
+              ? AppColors.primary50.withOpacity(0.35)
+              : AppColors.surface,
+          child: Column(
+            children: [
+              Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Premium larger avatar
+                    // Icon with colored background
                     Container(
-                      height: 48,
-                      width: 48,
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        _getIconForType(n.type),
-                        color: color,
-                        size: 24,
-                      ),
+                      child: Icon(_iconFor(type), color: color, size: 22),
                     ),
-                    const Gap(16),
+
+                    const Gap(14),
+
+                    // Content
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,18 +282,17 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  n.title,
+                                  notification.title as String,
                                   style: AppTextStyles.labelLg.copyWith(
                                     fontWeight: isUnread
                                         ? FontWeight.w700
                                         : FontWeight.w500,
-                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                               ),
                               const Gap(8),
                               Text(
-                                timeago.format(n.createdAt, locale: 'en_short'),
+                                timeago.format(createdAt, locale: 'en_short'),
                                 style: AppTextStyles.caption.copyWith(
                                   color: isUnread
                                       ? AppColors.primary
@@ -278,83 +306,284 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                           ),
                           const Gap(4),
                           Text(
-                            n.message,
+                            notification.message as String,
                             style: AppTextStyles.bodySm.copyWith(
                               color: isUnread
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
+                              height: 1.4,
                             ),
                           ),
                         ],
                       ),
                     ),
+
+                    // Unread dot
                     if (isUnread) ...[
-                      const Gap(12),
-                      Container(
-                        margin: const EdgeInsets.only(top: 6),
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                      const Gap(8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Container(
+                          width: 9,
+                          height: 9,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-            ),
-          );
-        },
+              const Divider(height: 1, color: AppColors.grey100, indent: 76),
+            ],
+          ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildUnauthenticatedView(BuildContext context) {
+// ── Unauthenticated body ──────────────────────────────────────────────────────
+
+class _UnauthenticatedBody extends StatelessWidget {
+  const _UnauthenticatedBody();
+
+  @override
+  Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+                  width: 96,
+                  height: 96,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.notifications_active_outlined,
+                    size: 46,
+                    color: AppColors.primary,
+                  ),
+                )
+                .animate()
+                .scale(
+                  begin: const Offset(0.7, 0.7),
+                  duration: 500.ms,
+                  curve: Curves.elasticOut,
+                )
+                .fadeIn(duration: 300.ms),
+
+            const Gap(28),
+
+            Text(
+              'Stay in the loop',
+              style: AppTextStyles.h2,
+              textAlign: TextAlign.center,
+            ).animate(delay: 150.ms).fadeIn(duration: 300.ms),
+
+            const Gap(12),
+
+            Text(
+              'Sign in to receive instant alerts when your bookings are approved or when agents respond.',
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ).animate(delay: 220.ms).fadeIn(duration: 300.ms),
+
+            const Gap(40),
+
+            ElevatedButton.icon(
+              onPressed: () => context.push(AppRoutes.login),
+              icon: const Icon(Icons.login_rounded, size: 18),
+              label: const Text('Sign In'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+              ),
+            ).animate(delay: 300.ms).fadeIn(duration: 300.ms),
+
+            const Gap(12),
+
+            OutlinedButton(
+              onPressed: () => context.push(AppRoutes.register),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+              ),
+              child: const Text('Create an Account'),
+            ).animate(delay: 360.ms).fadeIn(duration: 300.ms),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+                width: 90,
+                height: 90,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.notifications_off_outlined,
+                  size: 44,
+                  color: AppColors.primary200,
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1.0, 1.0),
+                end: const Offset(1.05, 1.05),
+                duration: 1800.ms,
+                curve: Curves.easeInOut,
+              ),
+          const Gap(24),
+          Text("You're all caught up!", style: AppTextStyles.h3),
+          const Gap(8),
+          Text(
+            'No new notifications at the moment.',
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Error state ───────────────────────────────────────────────────────────────
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
               decoration: const BoxDecoration(
-                color: AppColors.primary50,
+                color: AppColors.errorLight,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.notifications_active_outlined,
-                size: 64,
-                color: AppColors.primary,
+                Icons.wifi_off_rounded,
+                size: 38,
+                color: AppColors.error,
               ),
             ),
-            const Gap(32),
+            const Gap(20),
+            Text('Could not load notifications', style: AppTextStyles.h3),
+            const Gap(8),
             Text(
-              'Stay in the loop',
-              style: AppTextStyles.h1,
-              textAlign: TextAlign.center,
-            ),
-            const Gap(16),
-            Text(
-              'Sign in to receive instant alerts when your booking requests are approved, or when landlords reply to your complaints.',
-              style: AppTextStyles.bodyLg.copyWith(
+              message,
+              style: AppTextStyles.bodySm.copyWith(
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const Gap(48),
-            ElevatedButton(
-              onPressed: () => context.push(AppRoutes.login),
-              child: const Text('Sign in'),
-            ),
-            const Gap(16),
-            OutlinedButton(
-              onPressed: () => context.push(AppRoutes.register),
-              child: const Text('Create an account'),
-            ),
+            const Gap(24),
+            ElevatedButton(onPressed: onRetry, child: const Text('Try Again')),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+class _NotificationsSkeleton extends StatelessWidget {
+  const _NotificationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        7,
+        (i) =>
+            Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: const BoxDecoration(
+                          color: AppColors.grey200,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const Gap(14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 14,
+                              width: 200,
+                              decoration: BoxDecoration(
+                                color: AppColors.grey200,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            const Gap(8),
+                            Container(
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: AppColors.grey200,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            const Gap(4),
+                            Container(
+                              height: 12,
+                              width: 160,
+                              decoration: BoxDecoration(
+                                color: AppColors.grey200,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                .animate(delay: Duration(milliseconds: i * 60))
+                .shimmer(duration: 1200.ms, color: AppColors.grey100),
       ),
     );
   }
