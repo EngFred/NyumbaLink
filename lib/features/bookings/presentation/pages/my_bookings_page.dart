@@ -12,11 +12,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/my_bookings_provider.dart';
 
 // ── Filter Enum ───────────────────────────────────────────────────────────────
-
 enum _BookingFilter { all, active, cancelled }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
-
 class MyBookingsPage extends ConsumerStatefulWidget {
   const MyBookingsPage({super.key});
 
@@ -213,10 +211,8 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
-
 class _BookingsHeader extends StatelessWidget {
   const _BookingsHeader({required this.total, required this.isAuthenticated});
-
   final int total;
   final bool isAuthenticated;
 
@@ -269,7 +265,6 @@ class _BookingsHeader extends StatelessWidget {
 }
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
-
 class _BookingFilterBar extends StatelessWidget {
   const _BookingFilterBar({
     required this.selected,
@@ -312,6 +307,7 @@ class _BookingFilterBar extends StatelessWidget {
         children: _BookingFilter.values.map((f) {
           final isSel = selected == f;
           final color = _color(f);
+
           return Expanded(
             child: GestureDetector(
               onTap: () => onSelected(f),
@@ -365,7 +361,6 @@ class _BookingFilterBar extends StatelessWidget {
 }
 
 // ── Booking Card ──────────────────────────────────────────────────────────────
-
 class _BookingCard extends StatelessWidget {
   const _BookingCard({
     required this.booking,
@@ -397,7 +392,6 @@ class _BookingCard extends StatelessWidget {
           children: [
             // ── Status strip ───────────────────────────────────────────────
             Container(width: 5, color: _statusColor),
-
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -423,7 +417,6 @@ class _BookingCard extends StatelessWidget {
                         _StatusBadge(isCancelled: booking.isCancelled as bool),
                       ],
                     ),
-
                     const Gap(10),
 
                     // Row 2: Property title
@@ -540,7 +533,6 @@ class _BookingCard extends StatelessWidget {
 }
 
 // ── Token Section ─────────────────────────────────────────────────────────────
-
 class _TokenSection extends StatelessWidget {
   const _TokenSection({required this.token, required this.isAuthenticated});
 
@@ -581,6 +573,7 @@ class _TokenSection extends StatelessWidget {
         ],
       );
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -603,7 +596,6 @@ class _TokenSection extends StatelessWidget {
 }
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
-
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.isCancelled});
 
@@ -646,7 +638,6 @@ class _StatusBadge extends StatelessWidget {
 }
 
 // ── Dismiss Background ────────────────────────────────────────────────────────
-
 class _DismissBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -677,7 +668,6 @@ class _DismissBackground extends StatelessWidget {
 }
 
 // ── Guest Banner ──────────────────────────────────────────────────────────────
-
 class _GuestBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -758,7 +748,6 @@ class _GuestBanner extends StatelessWidget {
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
-
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.isAuthenticated});
 
@@ -823,7 +812,6 @@ class _EmptyState extends StatelessWidget {
 }
 
 // ── Error State ───────────────────────────────────────────────────────────────
-
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message, required this.onRetry});
 
@@ -871,48 +859,47 @@ class _ErrorState extends StatelessWidget {
 }
 
 // ── Loading Skeleton ──────────────────────────────────────────────────────────
-
 class _BookingsSkeleton extends StatelessWidget {
   const _BookingsSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return ListView(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Header skeleton
-          Container(
-            height: 36,
-            margin: const EdgeInsets.only(bottom: 16),
+      physics:
+          const NeverScrollableScrollPhysics(), // Prevents scrolling the skeleton
+      children: [
+        // Header skeleton
+        Container(
+          height: 36,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: AppColors.grey200,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        // Filter bar skeleton
+        Container(
+          height: 58,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: AppColors.grey200,
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        // Card skeletons
+        ...List.generate(
+          4,
+          (i) => Container(
+            height: 130,
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: AppColors.grey200,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-          // Filter bar skeleton
-          Container(
-            height: 58,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: AppColors.grey200,
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          // Card skeletons
-          ...List.generate(
-            4,
-            (i) => Container(
-              height: 130,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: AppColors.grey200,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
