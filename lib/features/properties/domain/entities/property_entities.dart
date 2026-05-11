@@ -61,7 +61,6 @@ class Property {
     this.amenities,
     this.lat,
     this.lng,
-    this.residentialSubtype,
   });
   final String id;
   final String title;
@@ -86,7 +85,6 @@ class Property {
   final List<String>? amenities;
   final double? lat;
   final double? lng;
-  final String? residentialSubtype;
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';

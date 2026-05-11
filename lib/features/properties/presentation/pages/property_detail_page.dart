@@ -733,14 +733,6 @@ class _MetaChipsRow extends StatelessWidget {
         ),
       );
     }
-    if (property.residentialSubtype != null) {
-      chips.add(
-        _MetaChip(
-          icon: Icons.home_outlined,
-          label: ResidentialSubtypeHelper.label(property.residentialSubtype!),
-        ),
-      );
-    }
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
@@ -963,15 +955,6 @@ class _DetailsGrid extends StatelessWidget {
         value: PropertyTypeHelper.label(property.type),
       ),
     );
-    if (property.residentialSubtype != null) {
-      rows.add(
-        _DetailRowData(
-          icon: Icons.home_outlined,
-          label: 'Subtype',
-          value: ResidentialSubtypeHelper.label(property.residentialSubtype!),
-        ),
-      );
-    }
     if (property.billingCycle != null) {
       rows.add(
         _DetailRowData(

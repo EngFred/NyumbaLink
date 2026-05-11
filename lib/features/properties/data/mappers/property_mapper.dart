@@ -46,7 +46,6 @@ extension PropertyModelX on PropertyModel {
     amenities: amenities,
     lat: lat,
     lng: lng,
-    residentialSubtype: residentialSubtype,
   );
 }
 
