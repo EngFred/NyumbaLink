@@ -1,4 +1,4 @@
-package com.nyumbalink.nyumbalink
+package com.rentora.app
 
 import io.flutter.embedding.android.FlutterActivity
 
