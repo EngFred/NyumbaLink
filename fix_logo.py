@@ -26,8 +26,8 @@ if __name__ == "__main__":
             exit(1)
 
     print("\nGenerating padded logo files...\n")
-    pad(ICON_SRC,   OUT_ICON,   scale=0.63)
-    pad(SPLASH_SRC, OUT_SPLASH, scale=0.38)
+    pad(ICON_SRC,   OUT_ICON,   scale=0.72)
+    pad(SPLASH_SRC, OUT_SPLASH, scale=0.55)
 
     print("\n✅  Done. Now run:")
     print("    dart run flutter_native_splash:create")
