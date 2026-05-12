@@ -18,7 +18,7 @@ extension ContactModelX on ContactModel {
 
 extension PropertyImageModelX on PropertyImageModel {
   PropertyImage toEntity() =>
-      PropertyImage(id: id, url: url, publicId: publicId);
+      PropertyImage(id: id, url: url, publicId: publicId, isPrimary: isPrimary);
 }
 
 extension PropertyModelX on PropertyModel {
@@ -37,12 +37,15 @@ extension PropertyModelX on PropertyModel {
     enquiryCount: enquiryCount,
     createdAt: createdAt,
     numberOfRooms: numberOfRooms,
+    parkingAvailable: parkingAvailable,
     billingCycle: billingCycle,
     totalRooms: totalRooms,
     hotelCategory: hotelCategory,
     furnishingStatus: furnishingStatus,
     floor: floor,
-    totalFloors: totalFloors,
+    address: address,
+    securityDeposit: securityDeposit,
+    availableFrom: availableFrom,
     amenities: amenities,
     lat: lat,
     lng: lng,

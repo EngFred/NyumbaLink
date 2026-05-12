@@ -11,7 +11,7 @@ final bookingsLocalDataSourceProvider = Provider<BookingsLocalDataSource>((
 });
 
 class BookingsLocalDataSource {
-  static const _savedBookingsKey = 'nyumbalink_saved_bookings';
+  static const _savedBookingsKey = 'rentora_saved_bookings';
 
   /// Upserts a list of bookings into local storage (used after remote sync).
   /// Preserves existing local entries that aren't in the remote list.

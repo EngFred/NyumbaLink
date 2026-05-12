@@ -9,8 +9,8 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 });
 
 class AuthLocalDataSource {
-  static const _tokenKey = 'nyumbalink_jwt_token';
-  static const _userKey = 'nyumbalink_user_data';
+  static const _tokenKey = 'rentora_jwt_token';
+  static const _userKey = 'rentora_user_data';
 
   Future<void> saveAuthData(String token, AuthUserModel user) async {
     final prefs = await SharedPreferences.getInstance();

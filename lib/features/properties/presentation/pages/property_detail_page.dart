@@ -709,14 +709,6 @@ class _MetaChipsRow extends StatelessWidget {
         ),
       );
     }
-    if (property.totalFloors != null) {
-      chips.add(
-        _MetaChip(
-          icon: Icons.apartment_outlined,
-          label: '${property.totalFloors} Floors',
-        ),
-      );
-    }
     if (property.hotelCategory != null) {
       chips.add(
         _MetaChip(
@@ -978,8 +970,7 @@ class _DetailsGrid extends StatelessWidget {
         _DetailRowData(
           icon: Icons.layers_outlined,
           label: 'Floor',
-          value:
-              '${property.floor}${property.totalFloors != null ? ' of ${property.totalFloors}' : ''}',
+          value: '${property.floor}',
         ),
       );
     }

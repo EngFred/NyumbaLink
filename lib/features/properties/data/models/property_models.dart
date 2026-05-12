@@ -3,6 +3,7 @@ class DistrictModel {
   const DistrictModel({required this.id, required this.name});
   final String id;
   final String name;
+
   factory DistrictModel.fromJson(Map<String, dynamic> j) =>
       DistrictModel(id: j['id'] as String, name: j['name'] as String);
 }
@@ -23,6 +24,7 @@ class ContactModel {
   final String role;
   final String? whatsapp;
   final String? email;
+
   factory ContactModel.fromJson(Map<String, dynamic> j) => ContactModel(
     id: j['id'] as String,
     name: j['name'] as String,
@@ -39,15 +41,19 @@ class PropertyImageModel {
     required this.id,
     required this.url,
     required this.publicId,
+    required this.isPrimary,
   });
   final String id;
   final String url;
   final String publicId;
+  final bool isPrimary;
+
   factory PropertyImageModel.fromJson(Map<String, dynamic> j) =>
       PropertyImageModel(
         id: j['id'] as String,
         url: j['url'] as String,
         publicId: j['publicId'] as String,
+        isPrimary: (j['isPrimary'] as bool?) ?? false,
       );
 }
 
@@ -68,17 +74,20 @@ class PropertyModel {
     required this.enquiryCount,
     required this.createdAt,
     required this.numberOfRooms,
+    required this.parkingAvailable,
     this.billingCycle,
     this.totalRooms,
     this.hotelCategory,
     this.furnishingStatus,
     this.floor,
-    this.totalFloors,
+    this.address,
+    this.securityDeposit,
+    this.availableFrom,
     this.amenities,
     this.lat,
     this.lng,
-    this.residentialSubtype,
   });
+
   final String id;
   final String title;
   final String description;
@@ -93,21 +102,32 @@ class PropertyModel {
   final int enquiryCount;
   final DateTime createdAt;
   final int numberOfRooms;
+  final bool parkingAvailable;
   final String? billingCycle;
   final int? totalRooms;
   final String? hotelCategory;
+
+  // ── Backed by the `furnishing` column on the backend ───────────────────
   final String? furnishingStatus;
+
   final int? floor;
-  final int? totalFloors;
+  final String? address;
+  final double? securityDeposit;
+  final DateTime? availableFrom;
   final List<String>? amenities;
   final double? lat;
   final double? lng;
-  final String? residentialSubtype;
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
-  String? get thumbnailUrl => images.isNotEmpty ? images.first.url : null;
+
+  /// Returns the image flagged as primary, falling back to the first image.
+  String? get thumbnailUrl {
+    if (images.isEmpty) return null;
+    final primary = images.where((i) => i.isPrimary).firstOrNull;
+    return (primary ?? images.first).url;
+  }
 
   factory PropertyModel.fromJson(Map<String, dynamic> j) {
     return PropertyModel(
@@ -127,15 +147,21 @@ class PropertyModel {
       enquiryCount: int.tryParse(j['enquiryCount']?.toString() ?? '0') ?? 0,
       createdAt: DateTime.parse(j['createdAt'] as String),
       numberOfRooms: int.tryParse(j['numberOfRooms']?.toString() ?? '1') ?? 1,
+      parkingAvailable: (j['parkingAvailable'] as bool?) ?? false,
       billingCycle: j['billingCycle'] as String?,
       totalRooms: j['totalRooms'] != null
           ? int.tryParse(j['totalRooms'].toString())
           : null,
       hotelCategory: j['hotelCategory'] as String?,
-      furnishingStatus: j['furnishingStatus'] as String?,
+      // Backend column is `furnishing` — not `furnishingStatus`
+      furnishingStatus: j['furnishing'] as String?,
       floor: j['floor'] != null ? int.tryParse(j['floor'].toString()) : null,
-      totalFloors: j['totalFloors'] != null
-          ? int.tryParse(j['totalFloors'].toString())
+      address: j['address'] as String?,
+      securityDeposit: j['securityDeposit'] != null
+          ? double.tryParse(j['securityDeposit'].toString())
+          : null,
+      availableFrom: j['availableFrom'] != null
+          ? DateTime.tryParse(j['availableFrom'] as String)
           : null,
       amenities: (j['amenities'] as List?)?.cast<String>(),
       lat: j['latitude'] != null
@@ -144,7 +170,6 @@ class PropertyModel {
       lng: j['longitude'] != null
           ? double.tryParse(j['longitude'].toString())
           : null,
-      residentialSubtype: j['residentialSubtype'] as String?,
     );
   }
 }
@@ -171,7 +196,9 @@ class HostelRoomModel {
   final int? floor;
   final String? description;
   final List<String>? amenities;
+
   bool get isAvailable => status == 'AVAILABLE';
+
   factory HostelRoomModel.fromJson(Map<String, dynamic> j) => HostelRoomModel(
     id: j['id'] as String,
     roomNumber: j['roomNumber'] as String,

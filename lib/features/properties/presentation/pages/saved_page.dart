@@ -538,12 +538,20 @@ class _SavedPropertyAdapter {
       district: District(id: '', name: districtName),
       contact: const Contact(id: '', name: '', phone: '', role: ''),
       images: s.thumbnailUrl != null
-          ? [PropertyImage(id: '', url: s.thumbnailUrl!, publicId: '')]
+          ? [
+              PropertyImage(
+                id: '',
+                url: s.thumbnailUrl!,
+                publicId: '',
+                isPrimary: true,
+              ),
+            ]
           : [],
       viewCount: 0,
       enquiryCount: 0,
       createdAt: DateTime.now(),
       numberOfRooms: 1,
+      parkingAvailable: false,
     );
   }
 }
