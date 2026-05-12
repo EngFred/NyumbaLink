@@ -29,42 +29,10 @@ class MainShell extends ConsumerWidget {
 
   Widget _buildTitle(int index) {
     if (index == 0) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, Color(0xFF1A3A6B)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: const Icon(
-              Icons.home_work_rounded,
-              color: Colors.white,
-              size: 17,
-            ),
-          ),
-          const Gap(8),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Nyumba',
-                  style: AppTextStyles.h3.copyWith(color: AppColors.primary),
-                ),
-                TextSpan(
-                  text: 'Link',
-                  style: AppTextStyles.h3.copyWith(color: AppColors.accent),
-                ),
-              ],
-            ),
-          ),
-        ],
+      return Image.asset(
+        'assets/images/new_logo.png',
+        height: 50,
+        fit: BoxFit.contain,
       );
     }
     const titles = ['Explore', 'Saved', 'My Bookings', 'Account'];

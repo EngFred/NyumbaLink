@@ -3,10 +3,10 @@ abstract final class AppConstants {
 
   // ─── API ──────────────────────────────────────────────────────────────────
   static const String baseUrl =
-      'https://rentfinda-api-production.up.railway.app/api/v1';
+      'https://rentora-houselink-api-production.up.railway.app/api/v1';
 
   // ─── App ──────────────────────────────────────────────────────────────────
-  static const String appName = 'NyumbaLink';
+  static const String appName = 'Rentora';
   static const String appTagline = 'Find your perfect home in Uganda';
 
   // ─── Pagination ───────────────────────────────────────────────────────────
