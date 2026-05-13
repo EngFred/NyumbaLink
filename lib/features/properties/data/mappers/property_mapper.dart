@@ -38,6 +38,8 @@ extension PropertyModelX on PropertyModel {
     createdAt: createdAt,
     numberOfRooms: numberOfRooms,
     parkingAvailable: parkingAvailable,
+    isFeatured: isFeatured,
+    featuredUntil: featuredUntil,
     billingCycle: billingCycle,
     totalRooms: totalRooms,
     hotelCategory: hotelCategory,

@@ -8,6 +8,9 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
 import '../../domain/entities/property_entities.dart';
 
+/// Gold accent used for all featured UI across the properties feature.
+const _kFeaturedGold = Color(0xFFD4A017);
+
 /// Pure-presentation property card — zero provider dependencies.
 /// The parent is responsible for wiring [isSaved] and [onSaveTap].
 class PropertyCard extends StatefulWidget {
@@ -143,7 +146,7 @@ class _ImageHero extends StatelessWidget {
         children: [
           _PropertyImage(property: property),
 
-          // Bottom gradient — makes white price text readable
+          // Bottom gradient
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -169,6 +172,10 @@ class _ImageHero extends StatelessWidget {
               ],
             ),
           ),
+
+          // Featured badge — bottom-left of image area, above price overlay
+          if (property.isFeatured)
+            const Positioned(top: 12, left: 12, child: _FeaturedBadge()),
 
           // Bottom row: price + status pill
           Positioned(
@@ -206,6 +213,39 @@ class _ImageHero extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Featured Badge ────────────────────────────────────────────────────────────
+
+class _FeaturedBadge extends StatelessWidget {
+  const _FeaturedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: _kFeaturedGold,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _kFeaturedGold.withOpacity(0.4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Text(
+        '★ Featured',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
       ),
     );
   }

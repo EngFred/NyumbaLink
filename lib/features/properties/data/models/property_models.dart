@@ -75,6 +75,8 @@ class PropertyModel {
     required this.createdAt,
     required this.numberOfRooms,
     required this.parkingAvailable,
+    this.isFeatured = false,
+    this.featuredUntil,
     this.billingCycle,
     this.totalRooms,
     this.hotelCategory,
@@ -103,13 +105,12 @@ class PropertyModel {
   final DateTime createdAt;
   final int numberOfRooms;
   final bool parkingAvailable;
+  final bool isFeatured;
+  final String? featuredUntil;
   final String? billingCycle;
   final int? totalRooms;
   final String? hotelCategory;
-
-  // ── Backed by the `furnishing` column on the backend ───────────────────
   final String? furnishingStatus;
-
   final int? floor;
   final String? address;
   final double? securityDeposit;
@@ -122,7 +123,6 @@ class PropertyModel {
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
 
-  /// Returns the image flagged as primary, falling back to the first image.
   String? get thumbnailUrl {
     if (images.isEmpty) return null;
     final primary = images.where((i) => i.isPrimary).firstOrNull;
@@ -148,12 +148,13 @@ class PropertyModel {
       createdAt: DateTime.parse(j['createdAt'] as String),
       numberOfRooms: int.tryParse(j['numberOfRooms']?.toString() ?? '1') ?? 1,
       parkingAvailable: (j['parkingAvailable'] as bool?) ?? false,
+      isFeatured: (j['isFeatured'] as bool?) ?? false,
+      featuredUntil: j['featuredUntil'] as String?,
       billingCycle: j['billingCycle'] as String?,
       totalRooms: j['totalRooms'] != null
           ? int.tryParse(j['totalRooms'].toString())
           : null,
       hotelCategory: j['hotelCategory'] as String?,
-      // Backend column is `furnishing` — not `furnishingStatus`
       furnishingStatus: j['furnishing'] as String?,
       floor: j['floor'] != null ? int.tryParse(j['floor'].toString()) : null,
       address: j['address'] as String?,

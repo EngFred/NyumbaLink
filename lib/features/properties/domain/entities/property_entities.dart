@@ -55,6 +55,8 @@ class Property {
     required this.createdAt,
     required this.numberOfRooms,
     required this.parkingAvailable,
+    this.isFeatured = false,
+    this.featuredUntil,
     this.billingCycle,
     this.totalRooms,
     this.hotelCategory,
@@ -84,14 +86,13 @@ class Property {
   final int numberOfRooms;
   final bool parkingAvailable;
 
+  // ── Featured ────────────────────────────────────────────────────────────
+  final bool isFeatured;
+  final String? featuredUntil;
+
   // ── Type-conditional fields ─────────────────────────────────────────────
-  /// Null for HOSTEL (billing lives on each HostelRoom instead).
   final String? billingCycle;
-
-  /// HOSTEL only: max number of HostelRoom entries allowed.
   final int? totalRooms;
-
-  /// HOTEL_LODGE only: tier / service-level category.
   final String? hotelCategory;
 
   // ── Optional property details ───────────────────────────────────────────
@@ -109,11 +110,72 @@ class Property {
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
 
-  /// Returns the image flagged as primary, falling back to the first image.
   String? get thumbnailUrl {
     if (images.isEmpty) return null;
     final primary = images.where((i) => i.isPrimary).firstOrNull;
     return (primary ?? images.first).url;
+  }
+
+  Property copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? type,
+    double? price,
+    String? area,
+    String? status,
+    District? district,
+    Contact? contact,
+    List<PropertyImage>? images,
+    int? viewCount,
+    int? enquiryCount,
+    DateTime? createdAt,
+    int? numberOfRooms,
+    bool? parkingAvailable,
+    bool? isFeatured,
+    String? featuredUntil,
+    String? billingCycle,
+    int? totalRooms,
+    String? hotelCategory,
+    String? furnishingStatus,
+    int? floor,
+    String? address,
+    double? securityDeposit,
+    DateTime? availableFrom,
+    List<String>? amenities,
+    double? lat,
+    double? lng,
+  }) {
+    return Property(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      price: price ?? this.price,
+      area: area ?? this.area,
+      status: status ?? this.status,
+      district: district ?? this.district,
+      contact: contact ?? this.contact,
+      images: images ?? this.images,
+      viewCount: viewCount ?? this.viewCount,
+      enquiryCount: enquiryCount ?? this.enquiryCount,
+      createdAt: createdAt ?? this.createdAt,
+      numberOfRooms: numberOfRooms ?? this.numberOfRooms,
+      parkingAvailable: parkingAvailable ?? this.parkingAvailable,
+      isFeatured: isFeatured ?? this.isFeatured,
+      featuredUntil: featuredUntil ?? this.featuredUntil,
+      billingCycle: billingCycle ?? this.billingCycle,
+      totalRooms: totalRooms ?? this.totalRooms,
+      hotelCategory: hotelCategory ?? this.hotelCategory,
+      furnishingStatus: furnishingStatus ?? this.furnishingStatus,
+      floor: floor ?? this.floor,
+      address: address ?? this.address,
+      securityDeposit: securityDeposit ?? this.securityDeposit,
+      availableFrom: availableFrom ?? this.availableFrom,
+      amenities: amenities ?? this.amenities,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+    );
   }
 }
 

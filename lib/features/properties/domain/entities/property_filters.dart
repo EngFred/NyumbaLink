@@ -7,6 +7,7 @@ class PropertyFilters {
     this.numberOfRooms,
     this.search,
     this.status = 'AVAILABLE',
+    this.isFeatured,
     this.page = 1,
     this.limit = 15,
   });
@@ -18,6 +19,7 @@ class PropertyFilters {
   final int? numberOfRooms;
   final String? search;
   final String? status;
+  final bool? isFeatured;
   final int page;
   final int limit;
 
@@ -29,6 +31,7 @@ class PropertyFilters {
     int? numberOfRooms,
     String? search,
     String? status,
+    bool? isFeatured,
     int? page,
     int? limit,
     bool clearType = false,
@@ -37,6 +40,7 @@ class PropertyFilters {
     bool clearMaxPrice = false,
     bool clearNumberOfRooms = false,
     bool clearSearch = false,
+    bool clearIsFeatured = false,
   }) {
     return PropertyFilters(
       type: clearType ? null : (type ?? this.type),
@@ -48,6 +52,7 @@ class PropertyFilters {
           : (numberOfRooms ?? this.numberOfRooms),
       search: clearSearch ? null : (search ?? this.search),
       status: status ?? this.status,
+      isFeatured: clearIsFeatured ? null : (isFeatured ?? this.isFeatured),
       page: page ?? this.page,
       limit: limit ?? this.limit,
     );
@@ -71,6 +76,7 @@ class PropertyFilters {
     if (numberOfRooms != null) map['numberOfRooms'] = numberOfRooms;
     if (search != null && search!.isNotEmpty) map['search'] = search;
     if (status != null) map['status'] = status;
+    if (isFeatured != null) map['isFeatured'] = isFeatured;
 
     return map;
   }

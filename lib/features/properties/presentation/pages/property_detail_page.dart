@@ -528,9 +528,15 @@ class _PropertyContentState extends State<_PropertyContent> {
           // Handle
           const _SheetHandle(),
 
+          // ── Featured banner ─────────────────────────────────────────────
+          if (p.isFeatured)
+            const _FeaturedListingBanner()
+                .animate(delay: 30.ms)
+                .fadeIn(duration: 280.ms),
+
           // Title + Location
           Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1456,6 +1462,37 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
         backgroundDecoration: const BoxDecoration(color: Colors.black),
         loadingBuilder: (_, __) => const Center(
           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Featured listing banner ───────────────────────────────────────────────────
+
+class _FeaturedListingBanner extends StatelessWidget {
+  const _FeaturedListingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [Color(0xFFD4A017), Color(0xFFF0C040)],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: const Text(
+        '★   Featured Listing',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
         ),
       ),
     );
