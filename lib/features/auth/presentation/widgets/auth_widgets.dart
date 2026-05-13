@@ -22,7 +22,10 @@ class AuthHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, Color(0xFF1A3A6B)],
+          // ── Shifted lighter: sky blue → brand primary ──────────────
+          // The lighter top gives the dark logo elements strong contrast
+          // while still graduating into the familiar brand blue
+          colors: [Color(0xFF5BA8F5), AppColors.primary],
         ),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
       ),
@@ -36,7 +39,7 @@ class AuthHero extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withOpacity(0.20),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -50,6 +53,7 @@ class AuthHero extends StatelessWidget {
 
           // Brand mark
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Image.asset(
                 'assets/images/no_bg.png',
@@ -62,7 +66,9 @@ class AuthHero extends StatelessWidget {
                 'Rentora',
                 style: AppTextStyles.labelLg.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  letterSpacing: 0.4,
                 ),
               ),
             ],
@@ -81,7 +87,7 @@ class AuthHero extends StatelessWidget {
           Text(
             subtitle,
             style: AppTextStyles.bodyMd.copyWith(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withOpacity(0.75),
             ),
           ),
         ],

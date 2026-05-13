@@ -263,6 +263,8 @@ class _FilterButton extends StatelessWidget {
 // Sealed item types for the ListView
 sealed class _ListItem {}
 
+class _FeaturedShimmerItem extends _ListItem {} // ← NEW
+
 class _FeaturedCarouselItem extends _ListItem {}
 
 class _ResultsHeaderItem extends _ListItem {
@@ -311,13 +313,20 @@ class _ListView extends ConsumerWidget {
     }
 
     final featuredState = ref.watch(featuredPropertiesProvider);
+    final isFeaturedLoading = featuredState.isLoading;
     final hasFeaturedCarousel =
-        !featuredState.isLoading && featuredState.properties.isNotEmpty;
+        !isFeaturedLoading && featuredState.properties.isNotEmpty;
 
     // Build flat items list
     final items = <_ListItem>[];
 
-    if (hasFeaturedCarousel) items.add(_FeaturedCarouselItem());
+    // Show shimmer while featured data is in flight, real carousel once ready
+    if (isFeaturedLoading) {
+      items.add(_FeaturedShimmerItem());
+    } else if (hasFeaturedCarousel) {
+      items.add(_FeaturedCarouselItem());
+    }
+
     items.add(_ResultsHeaderItem(state.total));
 
     bool addedFeaturedDivider = false;
@@ -349,12 +358,20 @@ class _ListView extends ConsumerWidget {
           final item = items[index];
 
           return switch (item) {
+            // ── Featured carousel shimmer ──────────────────────────────────
+            _FeaturedShimmerItem() => const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: FeaturedCarouselShimmer(),
+            ),
+
+            // ── Featured carousel (real data) ──────────────────────────────
             _FeaturedCarouselItem() => Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: _FeaturedCarouselSection(
                 properties: featuredState.properties,
               ),
             ),
+
             _ResultsHeaderItem(:final total) => _ResultsHeader(total: total),
             _SectionDividerItem(:final isFeatured) => _SectionLabel(
               isFeatured: isFeatured,
