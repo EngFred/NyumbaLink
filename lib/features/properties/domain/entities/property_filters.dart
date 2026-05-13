@@ -2,6 +2,7 @@ class PropertyFilters {
   const PropertyFilters({
     this.type,
     this.districtId,
+    this.universityId,
     this.minPrice,
     this.maxPrice,
     this.numberOfRooms,
@@ -14,6 +15,7 @@ class PropertyFilters {
 
   final String? type;
   final String? districtId;
+  final String? universityId;
   final double? minPrice;
   final double? maxPrice;
   final int? numberOfRooms;
@@ -26,6 +28,7 @@ class PropertyFilters {
   PropertyFilters copyWith({
     String? type,
     String? districtId,
+    String? universityId,
     double? minPrice,
     double? maxPrice,
     int? numberOfRooms,
@@ -36,6 +39,7 @@ class PropertyFilters {
     int? limit,
     bool clearType = false,
     bool clearDistrictId = false,
+    bool clearUniversityId = false,
     bool clearMinPrice = false,
     bool clearMaxPrice = false,
     bool clearNumberOfRooms = false,
@@ -45,6 +49,9 @@ class PropertyFilters {
     return PropertyFilters(
       type: clearType ? null : (type ?? this.type),
       districtId: clearDistrictId ? null : (districtId ?? this.districtId),
+      universityId: clearUniversityId
+          ? null
+          : (universityId ?? this.universityId),
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
       maxPrice: clearMaxPrice ? null : (maxPrice ?? this.maxPrice),
       numberOfRooms: clearNumberOfRooms
@@ -61,6 +68,7 @@ class PropertyFilters {
   bool get hasActiveFilters =>
       type != null ||
       districtId != null ||
+      universityId != null ||
       minPrice != null ||
       maxPrice != null ||
       numberOfRooms != null ||
@@ -71,6 +79,7 @@ class PropertyFilters {
 
     if (type != null) map['type'] = type;
     if (districtId != null) map['districtId'] = districtId;
+    if (universityId != null) map['universityId'] = universityId;
     if (minPrice != null) map['minPrice'] = minPrice;
     if (maxPrice != null) map['maxPrice'] = maxPrice;
     if (numberOfRooms != null) map['numberOfRooms'] = numberOfRooms;

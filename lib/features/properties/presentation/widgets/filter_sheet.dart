@@ -1,32 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/enum_helpers.dart';
+import '../../../universities/domain/entities/university.dart';
+import '../../../universities/presentation/providers/universities_provider.dart';
 import '../../domain/entities/property_filters.dart';
 
-class FilterSheet extends StatefulWidget {
+class FilterSheet extends ConsumerStatefulWidget {
   const FilterSheet({super.key, required this.current});
   final PropertyFilters current;
 
   @override
-  State<FilterSheet> createState() => _FilterSheetState();
+  ConsumerState<FilterSheet> createState() => _FilterSheetState();
 }
 
-class _FilterSheetState extends State<FilterSheet> {
+class _FilterSheetState extends ConsumerState<FilterSheet> {
   late String? _type;
+  late String? _universityId;
   late RangeValues _priceRange;
   late int? _numberOfRooms;
 
   static const double _minPrice = 0;
   static const double _maxPrice = 5_000_000;
 
+  // University section is relevant for HOSTEL or when no type is selected
+  bool get _showUniversitySection => _type == null || _type == 'HOSTEL';
+
   int get _activeCount {
     int n = 0;
     if (_type != null) n++;
     if (_numberOfRooms != null) n++;
+    if (_universityId != null) n++;
     if (_priceRange.start > _minPrice || _priceRange.end < _maxPrice) n++;
     return n;
   }
@@ -35,6 +43,7 @@ class _FilterSheetState extends State<FilterSheet> {
   void initState() {
     super.initState();
     _type = widget.current.type;
+    _universityId = widget.current.universityId;
     _numberOfRooms = widget.current.numberOfRooms;
     _priceRange = RangeValues(
       widget.current.minPrice ?? _minPrice,
@@ -44,6 +53,8 @@ class _FilterSheetState extends State<FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final universitiesAsync = ref.watch(universitiesProvider);
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.75,
@@ -68,12 +79,63 @@ class _FilterSheetState extends State<FilterSheet> {
                     vertical: 24,
                   ),
                   children: [
-                    _Label('Property Type'),
+                    // ── Property Type ──────────────────────────────────────
+                    const _Label('Property Type'),
                     const Gap(12),
                     _TypeGrid(
                       selected: _type,
-                      onSelect: (t) => setState(() => _type = t),
+                      onSelect: (t) => setState(() {
+                        _type = t;
+                        // Clear university if switching away from HOSTEL
+                        if (t != null && t != 'HOSTEL') {
+                          _universityId = null;
+                        }
+                      }),
                     ),
+
+                    // ── University (HOSTEL only) ───────────────────────────
+                    if (_showUniversitySection) ...[
+                      const Gap(28),
+                      Row(
+                        children: [
+                          const Expanded(child: _Label('Near University')),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Hostel listings only',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(12),
+                      universitiesAsync.when(
+                        loading: () => const _UniversityLoadingRow(),
+                        error: (_, __) => Text(
+                          'Could not load universities.',
+                          style: AppTextStyles.bodySm.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        data: (universities) => _UniversityGrid(
+                          universities: universities,
+                          selected: _universityId,
+                          onSelect: (id) => setState(() => _universityId = id),
+                        ),
+                      ),
+                    ],
+
+                    // ── Price Range ────────────────────────────────────────
                     const Gap(28),
                     _PriceSection(
                       range: _priceRange,
@@ -81,8 +143,10 @@ class _FilterSheetState extends State<FilterSheet> {
                       max: _maxPrice,
                       onChanged: (v) => setState(() => _priceRange = v),
                     ),
+
+                    // ── Rooms ──────────────────────────────────────────────
                     const Gap(28),
-                    _Label('Bedrooms / Rooms'),
+                    const _Label('Bedrooms / Rooms'),
                     const Gap(12),
                     _RoomsRow(
                       selected: _numberOfRooms,
@@ -102,15 +166,17 @@ class _FilterSheetState extends State<FilterSheet> {
 
   void _clearAll() => setState(() {
     _type = null;
+    _universityId = null;
     _numberOfRooms = null;
     _priceRange = const RangeValues(_minPrice, _maxPrice);
   });
 
   void _apply() {
-    // Merge into current filters — preserves search & districtId
     final result = widget.current.copyWith(
       type: _type,
       clearType: _type == null,
+      universityId: _universityId,
+      clearUniversityId: _universityId == null,
       numberOfRooms: _numberOfRooms,
       clearNumberOfRooms: _numberOfRooms == null,
       minPrice: _priceRange.start > _minPrice ? _priceRange.start : null,
@@ -122,7 +188,91 @@ class _FilterSheetState extends State<FilterSheet> {
   }
 }
 
-// ── Sheet sub-widgets ─────────────────────────────────────────────────────────
+// ── University grid ───────────────────────────────────────────────────────────
+
+class _UniversityGrid extends StatelessWidget {
+  const _UniversityGrid({
+    required this.universities,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<University> universities;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: universities.map((u) {
+        final isSelected = selected == u.id;
+        return GestureDetector(
+          onTap: () => onSelect(isSelected ? null : u.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : AppColors.grey100,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected ? null : Border.all(color: AppColors.grey200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  u.shortName ?? u.name,
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+                if (u.shortName != null) ...[
+                  const Gap(2),
+                  Text(
+                    u.name,
+                    style: AppTextStyles.caption.copyWith(
+                      color: isSelected
+                          ? Colors.white70
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _UniversityLoadingRow extends StatelessWidget {
+  const _UniversityLoadingRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: List.generate(
+        6,
+        (_) => Container(
+          width: 80,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppColors.grey200,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Sheet sub-widgets (unchanged) ─────────────────────────────────────────────
 
 class _Handle extends StatelessWidget {
   @override
