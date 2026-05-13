@@ -26,17 +26,17 @@ void main() {
 
   runApp(
     // ProviderScope is the Riverpod root — must wrap the entire app.
-    const ProviderScope(child: NyumbaLinkApp()),
+    const ProviderScope(child: RentoraApp()),
   );
 }
 
-class NyumbaLinkApp extends StatelessWidget {
-  const NyumbaLinkApp({super.key});
+class RentoraApp extends StatelessWidget {
+  const RentoraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'NyumbaLink',
+      title: 'Rentora',
       debugShowCheckedModeBanner: false,
 
       // Theme

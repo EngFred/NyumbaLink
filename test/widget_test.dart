@@ -12,7 +12,7 @@ import 'package:rentora/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const NyumbaLinkApp());
+    await tester.pumpWidget(const RentoraApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

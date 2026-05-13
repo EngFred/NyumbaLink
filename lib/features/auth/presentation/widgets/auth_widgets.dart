@@ -51,37 +51,18 @@ class AuthHero extends StatelessWidget {
           // Brand mark
           Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.home_work_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
+              Image.asset(
+                'assets/images/no_bg.png',
+                width: 60,
+                height: 60,
+                fit: BoxFit.contain,
               ),
-              const Gap(10),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Nyumba',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Link',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
+              const Gap(5),
+              Text(
+                'Rentora',
+                style: AppTextStyles.labelLg.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
