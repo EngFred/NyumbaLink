@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/currency_formatter.dart';
-import '../../../../core/utils/enum_helpers.dart';
-import '../../../universities/domain/entities/university.dart';
-import '../../../universities/presentation/providers/universities_provider.dart';
-import '../../domain/entities/property_filters.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/currency_formatter.dart';
+import '../../../../../core/utils/enum_helpers.dart';
+import '../../../../universities/domain/entities/university.dart';
+import '../../../../universities/presentation/providers/universities_provider.dart';
+import '../../../domain/entities/property_filters.dart';
 
 class FilterSheet extends ConsumerStatefulWidget {
   const FilterSheet({super.key, required this.current});
@@ -272,7 +272,7 @@ class _UniversityLoadingRow extends StatelessWidget {
   }
 }
 
-// ── Sheet sub-widgets (unchanged) ─────────────────────────────────────────────
+// ── Sheet sub-widgets ─────────────────────────────────────────────
 
 class _Handle extends StatelessWidget {
   @override

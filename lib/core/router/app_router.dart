@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/account/presentation/pages/account_page.dart'; // <-- IMPORT
+import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_profile_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -9,7 +9,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/bookings/presentation/pages/booking_page.dart';
 import '../../features/bookings/presentation/pages/my_bookings_page.dart';
 import '../../features/complaints/presentation/pages/complaint_page.dart';
-import '../../features/notifications/presentation/pages/notifications_page.dart'; // <-- IMPORT
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/properties/presentation/pages/browse_page.dart';
 import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/hostel_rooms_page.dart';

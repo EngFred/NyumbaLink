@@ -3,10 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/account/presentation/widgets/change-password/pw_field.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../widgets/change-password/pw_section.dart';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
   const ChangePasswordPage({super.key});
@@ -174,12 +176,12 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             const Gap(28),
 
             // ── Current password ─────────────────────────────────────────
-            _PwSection(
+            PwSection(
                   number: '01',
                   title: 'Current Password',
                   icon: Icons.lock_open_outlined,
                   children: [
-                    _PwField(
+                    PwField(
                       controller: _currentCtrl,
                       label: 'Current Password',
                       hint: 'Enter your current password',
@@ -199,12 +201,12 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             const Gap(16),
 
             // ── New password ─────────────────────────────────────────────
-            _PwSection(
+            PwSection(
                   number: '02',
                   title: 'New Password',
                   icon: Icons.lock_outline_rounded,
                   children: [
-                    _PwField(
+                    PwField(
                       controller: _newCtrl,
                       label: 'New Password',
                       hint: 'At least 6 characters',
@@ -262,7 +264,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                       indent: 16,
                       endIndent: 16,
                     ),
-                    _PwField(
+                    PwField(
                       controller: _confirmCtrl,
                       label: 'Confirm New Password',
                       hint: 'Re-enter your new password',
@@ -306,153 +308,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PwSection extends StatelessWidget {
-  const _PwSection({
-    required this.number,
-    required this.title,
-    required this.icon,
-    required this.children,
-  });
-
-  final String number;
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    number,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const Gap(10),
-                Icon(icon, size: 17, color: AppColors.primary),
-                const Gap(6),
-                Text(title, style: AppTextStyles.h4),
-              ],
-            ),
-          ),
-          const Gap(4),
-          const Divider(color: AppColors.grey100, height: 1),
-          ...children,
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-}
-
-class _PwField extends StatelessWidget {
-  const _PwField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.obscure,
-    required this.enabled,
-    required this.onToggle,
-    this.onChanged,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final bool obscure;
-  final bool enabled;
-  final VoidCallback onToggle;
-  final ValueChanged<String>? onChanged;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.labelSm.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-              letterSpacing: 0.3,
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: controller,
-                  obscureText: obscure,
-                  enabled: enabled,
-                  onChanged: onChanged,
-                  style: AppTextStyles.bodyMd,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    isDense: true,
-                  ),
-                  validator: validator,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  size: 20,
-                  color: AppColors.grey500,
-                ),
-                onPressed: onToggle,
-                padding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-        ],
       ),
     );
   }

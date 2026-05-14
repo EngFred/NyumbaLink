@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/account/presentation/widgets/edit-profile/form_section.dart';
+import 'package:rentora/features/account/presentation/widgets/edit-profile/profile_field.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -170,12 +172,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             const Gap(32),
 
             // ── Fields card ──────────────────────────────────────────────
-            _FormSection(
+            FormSection(
                   number: '01',
                   title: 'Personal Info',
                   icon: Icons.person_outline_rounded,
                   children: [
-                    _ProfileField(
+                    ProfileField(
                       controller: _nameController,
                       label: 'Full Name',
                       hint: 'John Doe',
@@ -192,7 +194,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       indent: 16,
                       endIndent: 16,
                     ),
-                    _ProfileField(
+                    ProfileField(
                       controller: _emailController,
                       label: 'Email Address',
                       hint: 'you@example.com',
@@ -237,142 +239,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _FormSection extends StatelessWidget {
-  const _FormSection({
-    required this.number,
-    required this.title,
-    required this.icon,
-    required this.children,
-  });
-
-  final String number;
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    number,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const Gap(10),
-                Icon(icon, size: 17, color: AppColors.primary),
-                const Gap(6),
-                Text(title, style: AppTextStyles.h4),
-              ],
-            ),
-          ),
-          const Gap(4),
-          const Divider(color: AppColors.grey100, height: 1),
-          ...children,
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileField extends StatelessWidget {
-  const _ProfileField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-    required this.icon,
-    required this.enabled,
-    this.inputType,
-    this.capitalization = TextCapitalization.none,
-    this.validator,
-  });
-
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-  final IconData icon;
-  final bool enabled;
-  final TextInputType? inputType;
-  final TextCapitalization capitalization;
-  final FormFieldValidator<String>? validator;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 13, color: AppColors.primary),
-              const Gap(5),
-              Text(
-                label,
-                style: AppTextStyles.labelSm.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
-          TextFormField(
-            controller: controller,
-            enabled: enabled,
-            keyboardType: inputType,
-            textCapitalization: capitalization,
-            style: AppTextStyles.bodyMd,
-            decoration: InputDecoration(
-              hintText: hint,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              isDense: true,
-            ),
-            validator: validator,
-          ),
-          const SizedBox(height: 6),
-        ],
       ),
     );
   }

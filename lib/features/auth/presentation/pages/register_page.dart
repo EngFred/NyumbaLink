@@ -3,10 +3,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
+import 'package:rentora/features/auth/presentation/widgets/auth_footer_link.dart';
+import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
+import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
+import 'package:rentora/features/auth/presentation/widgets/field_divider.dart';
+import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/auth_widgets.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -149,7 +154,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 return null;
                               },
                             ),
-                            FieldDivider(),
+                            const FieldDivider(),
                             AuthField(
                               controller: _confirmController,
                               label: 'Confirm Password',
