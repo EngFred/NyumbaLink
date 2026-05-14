@@ -34,11 +34,13 @@ class FeaturedPropertiesState {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
+// Not autoDispose: featured properties are a small, stable dataset shared
+// across the app. Keeping this provider alive avoids re-fetching (and
+// re-showing the shimmer) every time the user returns to the Browse tab.
 final featuredPropertiesProvider =
-    StateNotifierProvider.autoDispose<
-      FeaturedPropertiesNotifier,
-      FeaturedPropertiesState
-    >((ref) {
+    StateNotifierProvider<FeaturedPropertiesNotifier, FeaturedPropertiesState>((
+      ref,
+    ) {
       return FeaturedPropertiesNotifier(ref.watch(getPropertiesUseCaseProvider))
         ..load();
     });
@@ -63,7 +65,10 @@ class FeaturedPropertiesNotifier
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final res = await _getProperties(_featuredFilters);
-      state = state.copyWith(properties: res.data, isLoading: false);
+      // Shuffle so the carousel order is different on every cold load,
+      // giving all featured landlords equal first-position exposure.
+      final shuffled = List<Property>.from(res.data)..shuffle();
+      state = state.copyWith(properties: shuffled, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
