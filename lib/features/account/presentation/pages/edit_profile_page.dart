@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/features/account/presentation/widgets/edit-profile/profile_field.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_section_card.dart';
@@ -69,6 +68,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         AppSnackbar.error(context, next.error!);
       }
     });
+
     final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
@@ -149,6 +149,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   curve: Curves.easeOut,
                 ),
             const Gap(32),
+
             // ── Fields card ──────────────────────────────────────────────
             AppSectionCard(
                   number: '01',
@@ -178,11 +179,33 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       label: 'Email Address',
                       hint: 'you@example.com',
                       icon: Icons.email_outlined,
-                      enabled: !isLoading,
+                      enabled:
+                          false, // Locked down to preserve identity safety mapping
                       inputType: TextInputType.emailAddress,
-                      validator: (v) => !(v?.contains('@') ?? false)
-                          ? 'Enter a valid email'
-                          : null,
+                    ),
+                    // Contextual non-editable informative notice block
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.lock_outline_rounded,
+                            size: 13,
+                            color: AppColors.textHint.withOpacity(0.8),
+                          ),
+                          const Gap(6),
+                          Expanded(
+                            child: Text(
+                              'Email address edit is currently not available.',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textHint,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 )
@@ -190,6 +213,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
             const Gap(32),
+
             // ── Save button ──────────────────────────────────────────────
             ElevatedButton(
               onPressed: isLoading ? null : _submit,
