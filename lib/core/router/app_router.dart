@@ -45,6 +45,22 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
+
+    // ─────────────────────────────────────────────────────────────
+    // DEEP LINK SUPPORT - This handles links like /p/property-id
+    // ─────────────────────────────────────────────────────────────
+    GoRoute(
+      path: '/p/:id',
+      name: 'propertyDeepLink',
+      redirect: (context, state) {
+        final id = state.pathParameters['id'];
+        if (id != null && id.isNotEmpty) {
+          return '/properties/$id'; // Redirect to actual property detail route
+        }
+        return AppRoutes.browse; // Fallback
+      },
+    ),
+
     ShellRoute(
       builder: (context, state, child) => MainShell(child: child),
       routes: [
@@ -70,6 +86,8 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+
+    // Property Detail Route (used by deep link redirect)
     GoRoute(
       path: AppRoutes.propertyDetail,
       name: 'propertyDetail',
@@ -81,6 +99,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: AppRoutes.hostelRooms,
       name: 'hostelRooms',
@@ -93,6 +112,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: AppRoutes.booking,
       name: 'booking',
@@ -111,6 +131,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/complaint',
       name: 'complaint',
@@ -126,6 +147,7 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
     GoRoute(
       path: '/notifications',
       name: 'notifications',
@@ -135,6 +157,7 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
+
     GoRoute(
       path: '/edit-profile',
       name: 'editProfile',
@@ -144,6 +167,7 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
+
     GoRoute(
       path: '/change-password',
       name: 'changePassword',

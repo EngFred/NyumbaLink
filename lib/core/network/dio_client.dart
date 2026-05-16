@@ -59,7 +59,7 @@ Dio _buildDio() {
 
 void debugLog(String msg) {
   // ignore: avoid_print
-  print('[NyumbaLink] $msg');
+  print('[Rentora] $msg');
 }
 
 // ── Helper: map DioException → AppException ───────────────────────────────────

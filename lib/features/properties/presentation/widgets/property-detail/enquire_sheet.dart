@@ -106,7 +106,7 @@ class EnquireSheet extends StatelessWidget {
                   context.pop();
                   final url = Uri.parse(
                     'https://wa.me/${formatWhatsApp(waPhone)}'
-                    '?text=Hi, I am inquiring about: ${property.title} on NyumbaLink.',
+                    '?text=Hi, I am inquiring about: ${property.title} on Rentora Houselink.',
                   );
                   if (await canLaunchUrl(url)) {
                     launchUrl(url, mode: LaunchMode.externalApplication);
