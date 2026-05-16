@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/currency_formatter.dart';
@@ -21,7 +20,6 @@ class PropertyCard extends StatefulWidget {
     this.isSaved = false,
     this.onSaveTap,
   });
-
   final Property property;
   final VoidCallback onTap;
   final bool isSaved;
@@ -77,14 +75,12 @@ class _PropertyCardState extends State<PropertyCard>
 }
 
 // ── Body ──────────────────────────────────────────────────────────────────────
-
 class _CardBody extends StatelessWidget {
   const _CardBody({
     required this.property,
     required this.isSaved,
     this.onSaveTap,
   });
-
   final Property property;
   final bool isSaved;
   final VoidCallback? onSaveTap;
@@ -125,14 +121,12 @@ class _CardBody extends StatelessWidget {
 }
 
 // ── Hero Image ────────────────────────────────────────────────────────────────
-
 class _ImageHero extends StatelessWidget {
   const _ImageHero({
     required this.property,
     required this.isSaved,
     this.onSaveTap,
   });
-
   final Property property;
   final bool isSaved;
   final VoidCallback? onSaveTap;
@@ -145,7 +139,6 @@ class _ImageHero extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           _PropertyImage(property: property),
-
           // Bottom gradient
           const DecoratedBox(
             decoration: BoxDecoration(
@@ -157,8 +150,7 @@ class _ImageHero extends StatelessWidget {
               ),
             ),
           ),
-
-          // Top row: type badge + save button
+          // Top row: type badge/featured badge + save button
           Positioned(
             top: 12,
             left: 12,
@@ -166,17 +158,15 @@ class _ImageHero extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _TypeBadge(type: property.type),
+                if (property.isFeatured)
+                  const _FeaturedBadge()
+                else
+                  _TypeBadge(type: property.type),
                 if (onSaveTap != null)
                   _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
               ],
             ),
           ),
-
-          // Featured badge — bottom-left of image area, above price overlay
-          if (property.isFeatured)
-            const Positioned(top: 12, left: 12, child: _FeaturedBadge()),
-
           // Bottom row: price + status pill
           Positioned(
             bottom: 12,
@@ -219,14 +209,12 @@ class _ImageHero extends StatelessWidget {
 }
 
 // ── Featured Badge ────────────────────────────────────────────────────────────
-
 class _FeaturedBadge extends StatelessWidget {
   const _FeaturedBadge();
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: _kFeaturedGold,
         borderRadius: BorderRadius.circular(20),
@@ -254,7 +242,6 @@ class _FeaturedBadge extends StatelessWidget {
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return property.thumbnailUrl != null
@@ -272,7 +259,6 @@ class _PropertyImage extends StatelessWidget {
 class _Fallback extends StatelessWidget {
   const _Fallback(this.type);
   final String type;
-
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -297,7 +283,6 @@ class _Fallback extends StatelessWidget {
 class _TypeBadge extends StatelessWidget {
   const _TypeBadge({required this.type});
   final String type;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -329,7 +314,6 @@ class _SaveButton extends StatelessWidget {
   const _SaveButton({required this.isSaved, required this.onTap});
   final bool isSaved;
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -362,7 +346,6 @@ class _SaveButton extends StatelessWidget {
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
-
   @override
   Widget build(BuildContext context) {
     final isAvailable = status == 'AVAILABLE';
@@ -401,11 +384,9 @@ class _StatusPill extends StatelessWidget {
 }
 
 // ── Info Section ──────────────────────────────────────────────────────────────
-
 class _CardInfo extends StatelessWidget {
   const _CardInfo({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -451,7 +432,6 @@ class _CardInfo extends StatelessWidget {
 class _MetaRow extends StatelessWidget {
   const _MetaRow({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -479,7 +459,6 @@ class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.icon, required this.label});
   final IconData icon;
   final String label;
-
   @override
   Widget build(BuildContext context) {
     return Container(

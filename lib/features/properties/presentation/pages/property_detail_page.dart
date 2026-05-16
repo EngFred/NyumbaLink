@@ -9,7 +9,6 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/full_screen_gallery.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_carousel.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_content.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -97,6 +96,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     }
 
     final property = state.property!;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -126,6 +126,20 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
+                    icon: Icons.share_outlined,
+                    iconColor: Colors.white,
+                    onTap: () {
+                      // Platform share integration placeholder
+                      AppSnackbar.success(
+                        context,
+                        'Sharing link generation initialized',
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: CircleHeroButton(
                     icon: isSaved
                         ? Icons.favorite_rounded
                         : Icons.favorite_border_rounded,
@@ -134,7 +148,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                       ref
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(property);
-
                       if (isSaved) {
                         AppSnackbar.error(
                           context,

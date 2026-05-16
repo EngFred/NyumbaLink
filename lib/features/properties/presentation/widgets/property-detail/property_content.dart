@@ -5,10 +5,8 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/description_section.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/details_grid.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/engagement_stats.dart';
-import 'package:rentora/features/properties/presentation/widgets/property-detail/featured_listing_banner.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/meta_chips_row.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/sheet_handle.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
@@ -45,47 +43,67 @@ class _PropertyContentState extends State<PropertyContent> {
           // Handle
           const SheetHandle(),
 
-          // ── Featured banner ─────────────────────────────────────────────
-          if (p.isFeatured)
-            const FeaturedListingBanner()
-                .animate(delay: 30.ms)
-                .fadeIn(duration: 280.ms),
-
-          // Title + Location
+          // Title + Location (with Premium Featured Left Border integration)
           Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(p.title, style: AppTextStyles.h1),
-                    const Gap(6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_rounded,
-                          size: 16,
-                          color: AppColors.accent,
-                        ),
-                        const Gap(4),
-                        Expanded(
-                          child: Text(
-                            '${p.area}, ${p.district.name}',
-                            style: AppTextStyles.bodyMd.copyWith(
-                              color: AppColors.textSecondary,
+                child: Container(
+                  padding: p.isFeatured
+                      ? const EdgeInsets.only(left: 14)
+                      : EdgeInsets.zero,
+                  decoration: p.isFeatured
+                      ? const BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: Color(0xFFD4A017),
+                              width: 3.5,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (p.isFeatured) ...[
+                        const Text(
+                          '★ FEATURED LISTING',
+                          style: TextStyle(
+                            color: Color(0xFFD4A017),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.1,
                           ),
                         ),
+                        const Gap(4),
                       ],
-                    ),
-                  ],
+                      Text(p.title, style: AppTextStyles.h1),
+                      const Gap(6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 16,
+                            color: AppColors.accent,
+                          ),
+                          const Gap(4),
+                          Expanded(
+                            child: Text(
+                              '${p.area.trim()}, ${p.district.name}',
+                              style: AppTextStyles.bodyMd.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               )
               .animate(delay: 60.ms)
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, end: 0, duration: 300.ms),
-
           const Gap(16),
 
           // Meta chips
@@ -93,7 +111,6 @@ class _PropertyContentState extends State<PropertyContent> {
             MetaChipsRow(
               property: p,
             ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-
           const Gap(16),
 
           // Divider
@@ -103,7 +120,6 @@ class _PropertyContentState extends State<PropertyContent> {
             height: 1,
             color: AppColors.grey200,
           ),
-
           const Gap(20),
 
           // Description
@@ -173,8 +189,83 @@ class _PropertyContentState extends State<PropertyContent> {
               ),
             ),
           ),
+          const Gap(24),
 
-          const Gap(32),
+          // ── Similar Properties (Coming Soon) ───────────────────────────
+          const Divider(
+            indent: 20,
+            endIndent: 20,
+            height: 1,
+            color: AppColors.grey200,
+          ),
+          const Gap(24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Similar Properties', style: AppTextStyles.h3),
+                const Gap(4),
+                Text(
+                  'More matching recommendations around ${p.district.name}.',
+                  style: AppTextStyles.bodySm.copyWith(
+                    color: AppColors.grey500,
+                  ),
+                ),
+                const Gap(16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.grey200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.06),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.insights_rounded,
+                          size: 24,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const Gap(12),
+                      Text(
+                        'Recommendation Engine Coming Soon',
+                        style: AppTextStyles.bodyMd.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Gap(4),
+                      Text(
+                        'We are finalizing a smart matchmaking layout to suggest similar properties across this area.',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textHint,
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ).animate(delay: 300.ms).fadeIn(duration: 350.ms),
+
+          const Gap(48),
         ],
       ),
     );

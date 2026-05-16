@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/results_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/search_bar.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -24,7 +23,6 @@ const kFeaturedGold = Color(0xFFD4A017);
 
 class BrowsePage extends ConsumerStatefulWidget {
   const BrowsePage({super.key});
-
   @override
   ConsumerState<BrowsePage> createState() => _BrowsePageState();
 }
@@ -187,10 +185,15 @@ class _ListView extends ConsumerWidget {
         onButtonTap: onClearFilters,
       );
     }
+
     final featuredState = ref.watch(featuredPropertiesProvider);
     final isFeaturedLoading = featuredState.isLoading;
     final hasFeaturedCarousel =
         !isFeaturedLoading && featuredState.properties.isNotEmpty;
+
+    final nonFeaturedProperties = state.properties
+        .where((p) => !p.isFeatured)
+        .toList();
 
     final items = <_ListItem>[];
     if (isFeaturedLoading) {
@@ -198,20 +201,16 @@ class _ListView extends ConsumerWidget {
     } else if (hasFeaturedCarousel) {
       items.add(_FeaturedCarouselItem());
     }
+
     items.add(_ResultsHeaderItem(state.total));
-    bool addedFeaturedDivider = false;
-    bool addedAllDivider = false;
-    for (var i = 0; i < state.properties.length; i++) {
-      final p = state.properties[i];
-      if (p.isFeatured && !addedFeaturedDivider) {
-        items.add(_SectionDividerItem(isFeatured: true));
-        addedFeaturedDivider = true;
-      } else if (!p.isFeatured && !addedAllDivider) {
-        items.add(_SectionDividerItem(isFeatured: false));
-        addedAllDivider = true;
+
+    if (nonFeaturedProperties.isNotEmpty) {
+      items.add(_SectionDividerItem(isFeatured: false));
+      for (var i = 0; i < nonFeaturedProperties.length; i++) {
+        items.add(_PropertyItem(nonFeaturedProperties[i], i));
       }
-      items.add(_PropertyItem(p, i));
     }
+
     items.add(_FooterItem());
 
     return RefreshIndicator(
@@ -241,7 +240,7 @@ class _ListView extends ConsumerWidget {
             ),
             _PropertyItem(:final property, :final index) => Padding(
               padding: EdgeInsets.only(
-                bottom: index < state.properties.length - 1 ? 16 : 0,
+                bottom: index < nonFeaturedProperties.length - 1 ? 16 : 0,
               ),
               child: RepaintBoundary(
                 child: Consumer(
