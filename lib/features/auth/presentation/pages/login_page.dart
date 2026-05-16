@@ -129,7 +129,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: isLoading ? null : () {},
+                        onPressed: isLoading
+                            ? null
+                            : () => context.push('/forgot-password'),
                         child: Text(
                           'Forgot password?',
                           style: AppTextStyles.labelMd.copyWith(

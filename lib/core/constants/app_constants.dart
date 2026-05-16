@@ -35,6 +35,8 @@ abstract final class AppRoutes {
   static const String booking = '/properties/:id/book';
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
 
   /// Build property detail path with a real id.
   static String propertyDetailPath(String id) => '/properties/$id';

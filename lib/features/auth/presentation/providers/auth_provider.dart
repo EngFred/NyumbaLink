@@ -25,6 +25,14 @@ final changePasswordUseCaseProvider = Provider(
   (ref) => ChangePasswordUseCase(ref.watch(authRepositoryProvider)),
 );
 
+final forgotPasswordUseCaseProvider = Provider(
+  (ref) => ForgotPasswordUseCase(ref.watch(authRepositoryProvider)),
+);
+
+final resetPasswordUseCaseProvider = Provider(
+  (ref) => ResetPasswordUseCase(ref.watch(authRepositoryProvider)),
+);
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 class AuthState {
@@ -61,6 +69,8 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
     ref.watch(checkAuthStatusUseCaseProvider),
     ref.watch(updateProfileUseCaseProvider),
     ref.watch(changePasswordUseCaseProvider),
+    ref.watch(forgotPasswordUseCaseProvider),
+    ref.watch(resetPasswordUseCaseProvider),
     ref,
   )..checkAuthStatus();
 });
@@ -75,6 +85,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     this._checkAuthStatusUseCase,
     this._updateProfileUseCase,
     this._changePasswordUseCase,
+    this._forgotPasswordUseCase,
+    this._resetPasswordUseCase,
     this._ref,
   ) : super(const AuthState());
 
@@ -84,7 +96,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final CheckAuthStatusUseCase _checkAuthStatusUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
   final ChangePasswordUseCase _changePasswordUseCase;
-
+  final ForgotPasswordUseCase _forgotPasswordUseCase;
+  final ResetPasswordUseCase _resetPasswordUseCase;
   // Ref is needed so we can reach the favorites and bookings notifiers
   // to trigger guest-data sync after login / registration.
   final Ref _ref;
@@ -171,6 +184,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _changePasswordUseCase(currentPassword, newPassword);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  // ── Forgot Password ───────────────────────────────────────────────────────
+  Future<bool> forgotPassword(String email) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _forgotPasswordUseCase(email);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  // ── Reset Password ────────────────────────────────────────────────────────
+  Future<bool> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _resetPasswordUseCase(email, otp, newPassword);
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {

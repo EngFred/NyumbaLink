@@ -64,4 +64,27 @@ class AuthRemoteDataSource {
       throw handleDioException(e);
     }
   }
+
+  Future<void> forgotPassword(String email) async {
+    try {
+      await _dio.post('/auth/forgot-password', data: {'email': email});
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
+
+  Future<void> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
+    try {
+      await _dio.post(
+        '/auth/reset-password',
+        data: {'email': email, 'otp': otp, 'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
 }

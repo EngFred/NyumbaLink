@@ -5,15 +5,17 @@ import 'package:rentora/features/account/presentation/pages/about_page.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_profile_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/bookings/presentation/pages/booking_page.dart';
 import '../../features/bookings/presentation/pages/my_bookings_page.dart';
 import '../../features/complaints/presentation/pages/complaint_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/properties/presentation/pages/browse_page.dart';
-import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/hostel_rooms_page.dart';
+import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/saved_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
@@ -46,7 +48,28 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
-
+    GoRoute(
+      path: AppRoutes.forgotPassword,
+      name: 'forgotPassword',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const ForgotPasswordPage(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.resetPassword,
+      name: 'resetPassword',
+      pageBuilder: (context, state) {
+        // Extract the email passed via the 'extra' parameter
+        final email = state.extra as String? ?? '';
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: ResetPasswordPage(email: email),
+          transitionsBuilder: _slideUpTransition,
+        );
+      },
+    ),
     GoRoute(
       path: '/p/:id',
       name: 'propertyDeepLink',
@@ -56,7 +79,6 @@ final GoRouter appRouter = GoRouter(
         return AppRoutes.browse;
       },
     ),
-
     // ── StatefulShellRoute keeps every tab alive in an IndexedStack.
     // This preserves scroll position and prevents re-fetch on tab switch.
     StatefulShellRoute.indexedStack(
@@ -101,7 +123,6 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
-
     GoRoute(
       path: AppRoutes.propertyDetail,
       name: 'propertyDetail',
@@ -113,7 +134,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: AppRoutes.hostelRooms,
       name: 'hostelRooms',
@@ -126,7 +146,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: AppRoutes.booking,
       name: 'booking',
@@ -145,7 +164,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: '/complaint',
       name: 'complaint',
@@ -161,7 +179,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
       path: '/notifications',
       name: 'notifications',
@@ -171,7 +188,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
-
     GoRoute(
       path: '/edit-profile',
       name: 'editProfile',
@@ -181,7 +197,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
-
     GoRoute(
       path: '/change-password',
       name: 'changePassword',
@@ -191,7 +206,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
-
     GoRoute(
       path: '/about',
       name: 'about',

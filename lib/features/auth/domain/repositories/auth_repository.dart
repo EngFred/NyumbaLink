@@ -9,4 +9,7 @@ abstract class AuthRepository {
 
   Future<AuthUser> updateProfile({String? name, String? email});
   Future<void> changePassword(String currentPassword, String newPassword);
+
+  Future<void> forgotPassword(String email);
+  Future<void> resetPassword(String email, String otp, String newPassword);
 }
