@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
@@ -20,9 +22,37 @@ class FeaturedCarouselSection extends StatefulWidget {
 class _FeaturedCarouselSectionState extends State<FeaturedCarouselSection> {
   final _pageCtrl = PageController(viewportFraction: 0.92);
   int _currentPage = 0;
+  Timer? _autoScrollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    // Only auto-scroll if there's more than one card.
+    if (widget.properties.length <= 1) return;
+
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_pageCtrl.hasClients) return;
+      final next = (_currentPage + 1) % widget.properties.length;
+      _pageCtrl.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _resetAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _startAutoScroll();
+  }
 
   @override
   void dispose() {
+    _autoScrollTimer?.cancel();
     _pageCtrl.dispose();
     super.dispose();
   }
@@ -64,7 +94,12 @@ class _FeaturedCarouselSectionState extends State<FeaturedCarouselSection> {
               height: 220,
               child: PageView.builder(
                 controller: _pageCtrl,
-                onPageChanged: (i) => setState(() => _currentPage = i),
+                // When the user swipes manually, update page state AND
+                // reset the timer so it doesn't immediately jump.
+                onPageChanged: (i) {
+                  setState(() => _currentPage = i);
+                  _resetAutoScroll();
+                },
                 itemCount: widget.properties.length,
                 itemBuilder: (_, i) => Padding(
                   padding: const EdgeInsets.only(right: 10),
