@@ -38,7 +38,6 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           .forgotPassword(email);
 
       if (success && mounted) {
-        // Matches the backend 200 response intent perfectly
         AppSnackbar.success(
           context,
           'If that email is registered, you will receive a reset code shortly.',
@@ -60,16 +59,6 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: Colors.white,
-          onPressed: () => context.pop(),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
       body: Column(
         children: [
           const AuthHero(

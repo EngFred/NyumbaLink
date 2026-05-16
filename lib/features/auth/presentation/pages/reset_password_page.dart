@@ -54,7 +54,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
           context,
           'Password reset successfully. You can now log in.',
         );
-        // Navigate all the way back to login
         context.go('/login');
       }
     }
@@ -72,16 +71,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: Colors.white,
-          onPressed: () => context.pop(),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
       body: Column(
         children: [
           const AuthHero(

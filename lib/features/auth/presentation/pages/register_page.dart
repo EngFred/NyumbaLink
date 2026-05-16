@@ -115,7 +115,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             AuthField(
                               controller: _passwordController,
                               label: 'Password',
-                              hint: 'At least 6 characters',
+                              hint: 'At least 8 characters',
                               icon: Icons.lock_outline_rounded,
                               obscureText: _obscurePassword,
                               action: TextInputAction.next,
@@ -136,8 +136,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 if (v == null || v.isEmpty) {
                                   return 'Password is required';
                                 }
-                                if (v.length < 6) {
-                                  return 'At least 6 characters';
+                                if (v.length < 8) {
+                                  return 'At least 8 characters';
                                 }
                                 return null;
                               },

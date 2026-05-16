@@ -183,15 +183,15 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                     PwField(
                       controller: _newCtrl,
                       label: 'New Password',
-                      hint: 'At least 6 characters',
+                      hint: 'At least 8 characters',
                       obscure: _obscureNew,
                       enabled: !isLoading,
                       onToggle: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       onChanged: (_) => setState(() {}),
                       validator: (v) {
-                        if (v == null || v.length < 6) {
-                          return 'At least 6 characters';
+                        if (v == null || v.length < 8) {
+                          return 'At least 8 characters';
                         }
                         return null;
                       },
