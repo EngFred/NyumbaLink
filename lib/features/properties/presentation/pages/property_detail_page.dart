@@ -30,14 +30,8 @@ class PropertyDetailPage extends ConsumerStatefulWidget {
 }
 
 class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
-  final _pageController = PageController();
+  // _pageController removed — HeroCarousel owns it internally now
   int _currentImageIndex = 0;
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
 
   String _formatWhatsApp(String phone) {
     String f = phone.replaceAll(RegExp(r'[\s\-\+]'), '');
@@ -181,10 +175,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 stretchModes: const [StretchMode.zoomBackground],
                 background: HeroCarousel(
                   property: property,
-                  pageController: _pageController,
-                  currentIndex: _currentImageIndex,
                   onPageChanged: (i) => setState(() => _currentImageIndex = i),
-                  onTap: () => _openGallery(property.images),
+                  onViewAllTap: () => _openGallery(property.images),
                 ),
               ),
             ),

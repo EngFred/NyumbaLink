@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -12,48 +14,105 @@ import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../core/utils/enum_helpers.dart';
 import '../../../domain/entities/property_entities.dart';
 
-class HeroCarousel extends StatelessWidget {
+class HeroCarousel extends StatefulWidget {
   const HeroCarousel({
     super.key,
     required this.property,
-    required this.pageController,
-    required this.currentIndex,
     required this.onPageChanged,
-    required this.onTap,
+    required this.onViewAllTap,
   });
 
   final Property property;
-  final PageController pageController;
-  final int currentIndex;
   final ValueChanged<int> onPageChanged;
-  final VoidCallback onTap;
+  final VoidCallback onViewAllTap;
+
+  @override
+  State<HeroCarousel> createState() => _HeroCarouselState();
+}
+
+class _HeroCarouselState extends State<HeroCarousel> {
+  late final PageController _pageCtrl;
+  int _currentIndex = 0;
+  int _direction = 1;
+  Timer? _autoScrollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageCtrl = PageController();
+    _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    if (widget.property.images.length <= 1) return;
+
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_pageCtrl.hasClients) return;
+
+      int next = _currentIndex + _direction;
+
+      if (next >= widget.property.images.length) {
+        _direction = -1;
+        next = _currentIndex + _direction;
+      }
+
+      if (next < 0) {
+        _direction = 1;
+        next = _currentIndex + _direction;
+      }
+
+      _pageCtrl.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _resetAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _pageCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int i) {
+    setState(() => _currentIndex = i);
+    _resetAutoScroll();
+    widget.onPageChanged(i);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final images = widget.property.images;
+    final hasMultiple = images.length > 1;
+
     return Stack(
       fit: StackFit.expand,
       children: [
         // ── Images ──────────────────────────────────────────────────────────
-        GestureDetector(
-          onTap: onTap,
-          child: property.images.isEmpty
-              ? HeroFallback(type: property.type)
-              : PageView.builder(
-                  controller: pageController,
-                  onPageChanged: onPageChanged,
-                  itemCount: property.images.length,
-                  itemBuilder: (_, i) => CachedNetworkImage(
-                    imageUrl: property.images[i].url,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        const ColoredBox(color: AppColors.grey100),
-                    errorWidget: (_, __, ___) =>
-                        HeroFallback(type: property.type),
-                  ),
+        images.isEmpty
+            ? HeroFallback(type: widget.property.type)
+            : PageView.builder(
+                controller: _pageCtrl,
+                onPageChanged: _onPageChanged,
+                itemCount: images.length,
+                itemBuilder: (_, i) => CachedNetworkImage(
+                  imageUrl: images[i].url,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) =>
+                      const ColoredBox(color: AppColors.grey100),
+                  errorWidget: (_, __, ___) =>
+                      HeroFallback(type: widget.property.type),
                 ),
-        ),
+              ),
 
-        // ── Top scrim (for button readability) ──────────────────────────────
+        // ── Top scrim ────────────────────────────────────────────────────────
         const Positioned(
           top: 0,
           left: 0,
@@ -70,7 +129,7 @@ class HeroCarousel extends StatelessWidget {
           ),
         ),
 
-        // ── Bottom scrim (for info readability) ──────────────────────────────
+        // ── Bottom scrim ─────────────────────────────────────────────────────
         const Positioned(
           bottom: 0,
           left: 0,
@@ -87,6 +146,48 @@ class HeroCarousel extends StatelessWidget {
           ),
         ),
 
+        // ── "View all photos" / "View photo" button ───────────────────────────
+        if (images.isNotEmpty)
+          Positioned(
+            bottom: 22,
+            right: 18,
+            child: GestureDetector(
+              onTap: widget.onViewAllTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.photo_library_outlined,
+                      color: Colors.white,
+                      size: 13,
+                    ),
+                    const Gap(5),
+                    Text(
+                      hasMultiple
+                          ? 'View all ${images.length} photos'
+                          : 'View photo',
+                      style: AppTextStyles.labelSm.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
         // ── Bottom overlay: price + badges + dots ────────────────────────────
         Positioned(
           bottom: 0,
@@ -98,11 +199,14 @@ class HeroCarousel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Dots
-                if (property.images.length > 1) ...[
-                  CarouselDots(
-                    count: property.images.length,
-                    current: currentIndex,
+                // Dots — only when multiple images; leave space for button
+                if (hasMultiple) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(right: 140),
+                    child: CarouselDots(
+                      count: images.length,
+                      current: _currentIndex,
+                    ),
                   ),
                   const Gap(14),
                 ],
@@ -111,20 +215,11 @@ class HeroCarousel extends StatelessWidget {
                 Row(
                   children: [
                     HeroBadge(
-                      icon: PropertyTypeHelper.icon(property.type),
-                      label: PropertyTypeHelper.label(property.type),
+                      icon: PropertyTypeHelper.icon(widget.property.type),
+                      label: PropertyTypeHelper.label(widget.property.type),
                     ),
                     const Gap(8),
-                    HeroStatusBadge(status: property.status),
-                    if (property.images.length > 1) ...[
-                      const Spacer(),
-                      Text(
-                        '${currentIndex + 1} / ${property.images.length}',
-                        style: AppTextStyles.caption.copyWith(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
+                    HeroStatusBadge(status: widget.property.status),
                   ],
                 ),
 
@@ -132,7 +227,7 @@ class HeroCarousel extends StatelessWidget {
 
                 // Price
                 Text(
-                  CurrencyFormatter.format(property.price),
+                  CurrencyFormatter.format(widget.property.price),
                   style: AppTextStyles.priceLg.copyWith(
                     color: Colors.white,
                     fontSize: 28,
@@ -145,7 +240,7 @@ class HeroCarousel extends StatelessWidget {
                 ),
                 const Gap(2),
                 Text(
-                  BillingCycleHelper.full(property.billingCycle),
+                  BillingCycleHelper.full(widget.property.billingCycle),
                   style: AppTextStyles.labelSm.copyWith(color: Colors.white70),
                 ),
               ],
