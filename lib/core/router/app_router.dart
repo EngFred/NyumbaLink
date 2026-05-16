@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/account/presentation/pages/about_page.dart';
 
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
@@ -174,6 +175,16 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const ChangePasswordPage(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+
+    GoRoute(
+      path: '/about',
+      name: 'about',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AboutPage(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),

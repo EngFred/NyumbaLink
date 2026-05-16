@@ -9,38 +9,55 @@ class IntroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 54,
-          height: 54,
-          decoration: BoxDecoration(
-            color: AppColors.primary50,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(
-            Icons.support_agent_rounded,
-            color: AppColors.primary,
-            size: 26,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.07),
+            AppColors.accent.withOpacity(0.04),
+          ],
         ),
-        const Gap(14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('How can we help?', style: AppTextStyles.h3),
-              const Gap(3),
-              Text(
-                'Let us know about any issue with the app or our service.',
-                style: AppTextStyles.bodySm.copyWith(
-                  color: AppColors.textSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.support_agent_rounded,
+              color: AppColors.primary,
+              size: 22,
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('How can we help?', style: AppTextStyles.h4),
+                const Gap(2),
+                Text(
+                  'Reports are reviewed within 24–48 hours.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

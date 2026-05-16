@@ -3,14 +3,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/booking_success.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/booking_text_field.dart';
+import 'package:rentora/features/bookings/presentation/widgets/book/confirm_booking_sheet.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/property_summary_card.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_error_banner.dart';
 import '../../../../core/widgets/app_info_card.dart';
 import '../../../../core/widgets/app_section_card.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -46,6 +47,10 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   final _notesController = TextEditingController();
   DateTime? _moveInDate;
 
+  // Track which fields were auto-populated from the user's account
+  bool _nameIsPrefilled = false;
+  bool _emailIsPrefilled = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,11 +58,26 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     if (user != null) {
       _nameController.text = user.name;
       _emailController.text = user.email;
+      _nameIsPrefilled = user.name.isNotEmpty;
+      _emailIsPrefilled = user.email.isNotEmpty;
     }
+    // Clear the "Auto-filled" badge once the user edits the field
+    _nameController.addListener(_onNameChanged);
+    _emailController.addListener(_onEmailChanged);
+  }
+
+  void _onNameChanged() {
+    if (_nameIsPrefilled) setState(() => _nameIsPrefilled = false);
+  }
+
+  void _onEmailChanged() {
+    if (_emailIsPrefilled) setState(() => _emailIsPrefilled = false);
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_onNameChanged);
+    _emailController.removeListener(_onEmailChanged);
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -71,6 +91,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: 'SELECT MOVE-IN DATE',
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: const ColorScheme.light(
@@ -86,25 +107,55 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     if (picked != null) setState(() => _moveInDate = picked);
   }
 
-  void _submit() {
+  /// Validates the form then shows the confirmation sheet.
+  /// The actual API call only fires after the user confirms.
+  Future<void> _onSubmitTap() async {
     if (ref.read(bookingProvider).isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_moveInDate == null) {
       AppSnackbar.error(context, 'Please select a move-in date');
       return;
     }
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ConfirmBookingSheet(
+        propertyTitle: widget.propertyTitle,
+        roomNumber: widget.roomNumber,
+        name: _nameController.text.trim(),
+        phone: '+256 ${_phoneController.text.trim()}',
+        email: _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
+        moveInDate: _moveInDate!,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+      ),
+    );
+
+    if (confirmed == true) _submitBooking();
+  }
+
+  void _submitBooking() {
     final user = ref.read(authProvider).user;
     ref
         .read(bookingProvider.notifier)
         .submitBooking(
           request: BookingRequest(
             renterName: _nameController.text.trim(),
-            renterPhone: _phoneController.text.trim(),
-            renterEmail: _emailController.text.trim(),
+            // Always submit with the +256 country code prepended
+            renterPhone: '+256${_phoneController.text.trim()}',
+            renterEmail: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             propertyId: widget.propertyId,
             hostelRoomId: widget.hostelRoomId,
             moveInDate: _moveInDate!,
-            notes: _notesController.text.trim(),
+            notes: _notesController.text.trim().isEmpty
+                ? null
+                : _notesController.text.trim(),
             userId: user?.id,
           ),
           propertyTitle: widget.propertyTitle,
@@ -114,7 +165,15 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Show errors as a snackbar regardless of where the user is scrolled
+    ref.listen<BookingState>(bookingProvider, (prev, next) {
+      if (next.error != null && prev?.error != next.error) {
+        AppSnackbar.error(context, next.error!);
+      }
+    });
+
     final state = ref.watch(bookingProvider);
+
     if (state.successResponse != null) {
       return BookingSuccess(
         propertyTitle: widget.propertyTitle,
@@ -126,6 +185,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         },
       );
     }
+
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -136,11 +198,27 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          widget.roomNumber != null
-              ? 'Book Room ${widget.roomNumber}'
-              : 'Request to Book',
-          style: AppTextStyles.h4,
+        // Two-line title: action + property name always visible
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.roomNumber != null
+                  ? 'Book Room ${widget.roomNumber}'
+                  : 'Request to Book',
+              style: AppTextStyles.h4,
+            ),
+            Text(
+              widget.propertyTitle,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -150,33 +228,52 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 100 + bottomPad),
           children: [
+            // Property summary
             PropertySummaryCard(
               title: widget.propertyTitle,
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
-            const Gap(20),
-            if (state.error != null) ...[
-              AppErrorBanner(
-                message: state.error!,
-              ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.05, end: 0),
-              const Gap(16),
-            ],
-            // ── Section 01: Your Details ──────────────────────────────────
+
+            const Gap(14),
+
+            // Required fields legend — small, unobtrusive
+            Row(
+              children: [
+                Text(
+                  '* ',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  'Required fields',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(duration: 200.ms),
+
+            const Gap(12),
+
+            // ── Section 01: Your Details ────────────────────────────────
             AppSectionCard(
                   number: '01',
                   title: 'Your Details',
                   icon: Icons.person_outline_rounded,
-                  padChildren: true, // Bookings use true inner layout padding
+                  padChildren: true,
                   children: [
                     BookingTextField(
                       controller: _nameController,
                       label: 'Full Name',
-                      hint: 'John Doe',
+                      hint: 'Your full name',
                       icon: Icons.badge_outlined,
                       enabled: !state.isLoading,
                       capitalization: TextCapitalization.words,
+                      isPrefilled: _nameIsPrefilled,
                       validator: (v) => v == null || v.trim().isEmpty
                           ? 'Name is required'
                           : null,
@@ -185,13 +282,23 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                     BookingTextField(
                       controller: _phoneController,
                       label: 'Phone Number',
-                      hint: '+256 700 000 000',
+                      // Hint reflects only the local part after +256
+                      hint: '700 000 000',
                       icon: Icons.phone_outlined,
                       enabled: !state.isLoading,
                       inputType: TextInputType.phone,
-                      validator: (v) => v == null || v.trim().length < 10
-                          ? 'Enter a valid phone number'
-                          : null,
+                      phonePrefix: '+256',
+                      maxLength: 9,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Phone number is required';
+                        }
+                        final digits = v.trim().replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 9) {
+                          return 'Enter 9 digits after +256';
+                        }
+                        return null;
+                      },
                     ),
                     const Gap(16),
                     BookingTextField(
@@ -201,6 +308,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                       icon: Icons.email_outlined,
                       enabled: !state.isLoading,
                       inputType: TextInputType.emailAddress,
+                      isPrefilled: _emailIsPrefilled,
                       isRequired: false,
                     ),
                   ],
@@ -208,8 +316,10 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 .animate(delay: 60.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05, end: 0),
+
             const Gap(16),
-            // ── Section 02: Booking Details ───────────────────────────────
+
+            // ── Section 02: Booking Details ─────────────────────────────
             AppSectionCard(
                   number: '02',
                   title: 'Booking Details',
@@ -220,6 +330,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                       selectedDate: _moveInDate,
                       enabled: !state.isLoading,
                       onTap: _selectDate,
+                      onClear: () => setState(() => _moveInDate = null),
                     ),
                     const Gap(16),
                     BookingTextField(
@@ -229,6 +340,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                       icon: Icons.notes_rounded,
                       enabled: !state.isLoading,
                       maxLines: 3,
+                      maxLength: 300,
                       isRequired: false,
                     ),
                   ],
@@ -236,7 +348,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 .animate(delay: 120.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05, end: 0),
+
             const Gap(16),
+
             const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:
@@ -247,9 +361,11 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         ),
       ),
       bottomNavigationBar: AppSubmitBar(
-        label: 'Submit Booking Request',
+        // Label change signals there's a review step — sets expectations
+        label: 'Review & Submit',
+        icon: Icons.arrow_forward_rounded,
         isLoading: state.isLoading,
-        onSubmit: _submit,
+        onSubmit: _onSubmitTap,
       ),
     );
   }

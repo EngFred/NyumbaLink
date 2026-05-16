@@ -73,8 +73,8 @@ class ProfileView extends StatelessWidget {
                         ),
                         SettingsTile(
                           icon: Icons.info_outline_rounded,
-                          label: 'About NyumbaLink',
-                          onTap: () {},
+                          label: 'About Rentora',
+                          onTap: () => context.push('/about'), // ← live
                           trailing: Text(
                             'v1.0.0',
                             style: AppTextStyles.caption.copyWith(

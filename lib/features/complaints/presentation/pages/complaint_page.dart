@@ -5,15 +5,16 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/features/complaints/presentation/widgets/category_grid.dart';
 import 'package:rentora/features/complaints/presentation/widgets/complaint_field.dart';
+import 'package:rentora/features/complaints/presentation/widgets/confirm_report_sheet.dart';
 import 'package:rentora/features/complaints/presentation/widgets/intro_header.dart';
 import 'package:rentora/features/complaints/presentation/widgets/property_context.dart';
 import 'package:rentora/features/complaints/presentation/widgets/success_view.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_error_banner.dart';
 import '../../../../core/widgets/app_info_card.dart';
 import '../../../../core/widgets/app_section_card.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_submit_bar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/complaint_entities.dart';
@@ -37,6 +38,9 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
   final _descCtrl = TextEditingController();
   late String _category;
 
+  bool _nameIsPrefilled = false;
+  bool _emailIsPrefilled = false;
+
   @override
   void initState() {
     super.initState();
@@ -45,11 +49,25 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
     if (user != null) {
       _nameCtrl.text = user.name;
       _emailCtrl.text = user.email;
+      _nameIsPrefilled = user.name.isNotEmpty;
+      _emailIsPrefilled = user.email.isNotEmpty;
     }
+    _nameCtrl.addListener(_onNameChanged);
+    _emailCtrl.addListener(_onEmailChanged);
+  }
+
+  void _onNameChanged() {
+    if (_nameIsPrefilled) setState(() => _nameIsPrefilled = false);
+  }
+
+  void _onEmailChanged() {
+    if (_emailIsPrefilled) setState(() => _emailIsPrefilled = false);
   }
 
   @override
   void dispose() {
+    _nameCtrl.removeListener(_onNameChanged);
+    _emailCtrl.removeListener(_onEmailChanged);
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
@@ -57,30 +75,57 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _onSubmitTap() async {
     if (ref.read(complaintProvider).isLoading) return;
-    if (_formKey.currentState?.validate() ?? false) {
-      final user = ref.read(authProvider).user;
-      ref
-          .read(complaintProvider.notifier)
-          .submit(
-            ComplaintRequest(
-              submitterName: _nameCtrl.text.trim(),
-              submitterPhone: _phoneCtrl.text.trim(),
-              submitterEmail: _emailCtrl.text.trim(),
-              category: _category,
-              description: _descCtrl.text.trim(),
-              propertyId: widget.propertyId,
-              userId: user?.id,
-            ),
-          );
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ConfirmReportSheet(
+        category: _category,
+        name: _nameCtrl.text.trim(),
+        phone: '+256 ${_phoneCtrl.text.trim()}',
+        email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+        description: _descCtrl.text.trim(),
+        propertyTitle: widget.propertyTitle,
+      ),
+    );
+
+    if (confirmed == true) _submitReport();
+  }
+
+  void _submitReport() {
+    final user = ref.read(authProvider).user;
+    ref
+        .read(complaintProvider.notifier)
+        .submit(
+          ComplaintRequest(
+            submitterName: _nameCtrl.text.trim(),
+            submitterPhone: '+256${_phoneCtrl.text.trim()}',
+            submitterEmail: _emailCtrl.text.trim(),
+            category: _category,
+            description: _descCtrl.text.trim(),
+            propertyId: widget.propertyId,
+            userId: user?.id,
+          ),
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Errors surface as a snackbar — visible regardless of scroll position
+    ref.listen<ComplaintState>(complaintProvider, (prev, next) {
+      if (next.error != null && prev?.error != next.error) {
+        AppSnackbar.error(context, next.error!);
+      }
+    });
+
     final state = ref.watch(complaintProvider);
     if (state.isSuccess) return SuccessView(onDone: () => context.pop());
+
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -100,33 +145,48 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 100 + bottomPad),
           children: [
-            // ── Property context card ────────────────────────────────────
+            // ── Context header ───────────────────────────────────────────
             if (widget.propertyTitle != null)
               PropertyContext(
                 title: widget.propertyTitle!,
-              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
-            if (widget.propertyTitle == null) ...[
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0)
+            else
               const IntroHeader()
                   .animate()
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.05, end: 0),
-            ],
-            if (state.error != null) ...[
-              const Gap(12),
-              AppErrorBanner(
-                message: state.error!,
-              ).animate().fadeIn(duration: 200.ms),
-            ],
-            const Gap(16),
+
+            const Gap(14),
+
+            // Required fields legend
+            Row(
+              children: [
+                Text(
+                  '* ',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  'Required fields',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(duration: 200.ms),
+
+            const Gap(12),
+
             // ── Section 01: Category ─────────────────────────────────────
             AppSectionCard(
                   number: '01',
                   title: 'Issue Category',
                   icon: Icons.category_outlined,
-                  padChildren:
-                      false, // Complaints manage their own padding structures
+                  padChildren: false,
                   children: [
                     CategoryGrid(
                       selected: _category,
@@ -138,45 +198,58 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 60.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
+
             const Gap(16),
-            // ── Section 02: Your details ─────────────────────────────────
+
+            // ── Section 02: Your Details ─────────────────────────────────
             AppSectionCard(
                   number: '02',
                   title: 'Your Details',
                   icon: Icons.person_outline_rounded,
-                  padChildren: false,
+                  padChildren: true,
                   children: [
                     ComplaintField(
                       controller: _nameCtrl,
                       label: 'Full Name',
-                      hint: 'John Doe',
+                      hint: 'Your full name',
                       icon: Icons.badge_outlined,
                       enabled: !state.isLoading,
                       capitalization: TextCapitalization.words,
+                      isPrefilled: _nameIsPrefilled,
                       validator: (v) => (v?.trim().length ?? 0) < 2
                           ? 'Name must be at least 2 characters'
                           : null,
                     ),
-                    const _Divider(),
+                    const Gap(16),
                     ComplaintField(
                       controller: _phoneCtrl,
                       label: 'Phone Number',
-                      hint: '+256 700 000 000',
+                      hint: '700 000 000',
                       icon: Icons.phone_outlined,
                       enabled: !state.isLoading,
                       inputType: TextInputType.phone,
-                      validator: (v) => (v?.trim().isEmpty ?? true)
-                          ? 'Phone number is required'
-                          : null,
+                      phonePrefix: '+256',
+                      maxLength: 9,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Phone number is required';
+                        }
+                        final digits = v.trim().replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 9) {
+                          return 'Enter 9 digits after +256';
+                        }
+                        return null;
+                      },
                     ),
-                    const _Divider(),
+                    const Gap(16),
                     ComplaintField(
                       controller: _emailCtrl,
-                      label: 'Email (optional)',
+                      label: 'Email Address',
                       hint: 'you@example.com',
                       icon: Icons.email_outlined,
                       enabled: !state.isLoading,
                       inputType: TextInputType.emailAddress,
+                      isPrefilled: _emailIsPrefilled,
                       isRequired: false,
                     ),
                   ],
@@ -184,13 +257,15 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 100.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
+
             const Gap(16),
+
             // ── Section 03: Description ──────────────────────────────────
             AppSectionCard(
                   number: '03',
                   title: 'Description',
                   icon: Icons.notes_rounded,
-                  padChildren: false,
+                  padChildren: true,
                   children: [
                     ComplaintField(
                       controller: _descCtrl,
@@ -200,6 +275,7 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                       icon: Icons.edit_note_rounded,
                       enabled: !state.isLoading,
                       maxLines: 5,
+                      maxLength: 600,
                       validator: (v) => (v?.trim().length ?? 0) < 10
                           ? 'Please provide at least 10 characters'
                           : null,
@@ -209,31 +285,24 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 140.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
+
             const Gap(16),
+
             const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:
-                  'Our administrative team reviews all reports within 24–48 hours. We take every concern seriously.',
+                  'Our administrative team reviews all reports within 24–48 hours. '
+                  'We take every concern seriously.',
             ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
           ],
         ),
       ),
       bottomNavigationBar: AppSubmitBar(
-        label: 'Submit Report',
+        label: 'Review & Submit',
+        icon: Icons.arrow_forward_rounded,
         isLoading: state.isLoading,
-        onSubmit: _submit,
+        onSubmit: _onSubmitTap,
       ),
     );
   }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-  @override
-  Widget build(BuildContext context) => const Divider(
-    height: 1,
-    color: AppColors.grey100,
-    indent: 16,
-    endIndent: 16,
-  );
 }

@@ -11,11 +11,17 @@ class DatePickerField extends StatelessWidget {
     required this.selectedDate,
     required this.enabled,
     required this.onTap,
+    this.onClear,
   });
 
   final DateTime? selectedDate;
   final bool enabled;
   final VoidCallback onTap;
+
+  /// Optional — when provided, a small ✕ icon appears on the selected state
+  /// so users can reset and choose a different date without navigating the
+  /// calendar month by month.
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +55,7 @@ class DatePickerField extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: hasDate
-                    ? AppColors.primary.withOpacity(0.4)
+                    ? AppColors.primary.withOpacity(0.35)
                     : AppColors.grey300,
                 width: hasDate ? 1.5 : 1.0,
               ),
@@ -75,25 +81,48 @@ class DatePickerField extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (hasDate)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Change',
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: Colors.white,
-                        fontSize: 10,
+                if (hasDate) ...[
+                  // Change pill
+                  GestureDetector(
+                    onTap: enabled ? onTap : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Change',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
-                  )
-                else
+                  ),
+                  // Clear button — only shown when onClear is wired up
+                  if (onClear != null) ...[
+                    const Gap(6),
+                    GestureDetector(
+                      onTap: enabled ? onClear : null,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: AppColors.grey200,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 11,
+                          color: AppColors.grey600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ] else
                   const Icon(
                     Icons.chevron_right_rounded,
                     size: 18,
