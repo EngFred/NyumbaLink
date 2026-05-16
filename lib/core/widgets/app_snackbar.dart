@@ -1,26 +1,47 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import 'package:toastification/toastification.dart';
 
-/// Replaces the repeated SnackBar configuration across 8+ files.
+/// Replaces standard bottom SnackBars with ultra-premium top toast notifications.
+/// Pure drop-in replacement—zero breaking changes across your feature files.
 abstract class AppSnackbar {
   static void success(BuildContext context, String message) =>
-      _show(context, message, AppColors.success);
+      _show(context, message, ToastificationType.success);
 
   static void error(BuildContext context, String message) =>
-      _show(context, message, AppColors.error);
+      _show(context, message, ToastificationType.error);
 
   static void info(BuildContext context, String message) =>
-      _show(context, message, AppColors.grey700);
+      _show(context, message, ToastificationType.info);
 
-  static void _show(BuildContext context, String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+  static void _show(
+    BuildContext context,
+    String message,
+    ToastificationType type,
+  ) {
+    toastification.show(
+      context: context,
+      type: type,
+      style: ToastificationStyle
+          .minimal, // Sleek modern design with a thin status accent line
+      alignment:
+          Alignment.topCenter, // Anchors the pop-up directly to the top center
+      autoCloseDuration: const Duration(seconds: 4),
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ), // Elegant spacing from top notches
+      title: Text(
+        message,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+        ),
       ),
+      borderRadius: BorderRadius.circular(14),
+      showProgressBar: false,
+      direction: TextDirection.ltr,
+      animationDuration: const Duration(milliseconds: 350),
     );
   }
 }

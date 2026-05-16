@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:toastification/toastification.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
@@ -35,15 +35,15 @@ class RentoraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Rentora',
-      debugShowCheckedModeBanner: false,
-
-      // Theme
-      theme: AppTheme.light,
-
-      // Navigation
-      routerConfig: appRouter,
+    return ToastificationWrapper(
+      child: MaterialApp.router(
+        title: 'Rentora',
+        debugShowCheckedModeBanner: false,
+        // Theme
+        theme: AppTheme.light,
+        // Navigation
+        routerConfig: appRouter,
+      ),
     );
   }
 }
