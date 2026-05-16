@@ -1,8 +1,8 @@
+import 'dart:ui'; // Required for ImageFilter
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentora/features/account/presentation/widgets/account/guest_view.dart';
 import 'package:rentora/features/account/presentation/widgets/account/profile_view.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -53,16 +53,63 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
-    if (auth.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+
+    // Determine the baseline content layer
+    final Widget baseContent;
     if (auth.isAuthenticated && auth.user != null) {
-      return ProfileView(
+      baseContent = ProfileView(
         user: auth.user!,
         initials: _initials(auth.user!.name),
         onLogout: () => _confirmLogout(context, ref),
       );
+    } else {
+      baseContent = const GuestView();
     }
-    return const GuestView();
+
+    return Stack(
+      children: [
+        // ── Main Content Layer ──────────────────────────────────────────────
+        baseContent,
+
+        // ── Premium Loading Overlay Layer ───────────────────────────────────
+        if (auth.isLoading)
+          Positioned.fill(
+            child: AbsorbPointer(
+              absorbing:
+                  true, // Thoroughly blocks all taps on the underlying view
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                      0.25,
+                    ), // Smooth, dark overlay tint
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const CircularProgressIndicator(
+                          color: AppColors.primary,
+                          strokeWidth: 3.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
