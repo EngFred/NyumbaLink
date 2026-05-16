@@ -24,13 +24,14 @@ final updateProfileUseCaseProvider = Provider(
 final changePasswordUseCaseProvider = Provider(
   (ref) => ChangePasswordUseCase(ref.watch(authRepositoryProvider)),
 );
-
 final forgotPasswordUseCaseProvider = Provider(
   (ref) => ForgotPasswordUseCase(ref.watch(authRepositoryProvider)),
 );
-
 final resetPasswordUseCaseProvider = Provider(
   (ref) => ResetPasswordUseCase(ref.watch(authRepositoryProvider)),
+);
+final deleteAccountUseCaseProvider = Provider(
+  (ref) => DeleteAccountUseCase(ref.watch(authRepositoryProvider)),
 );
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
     ref.watch(changePasswordUseCaseProvider),
     ref.watch(forgotPasswordUseCaseProvider),
     ref.watch(resetPasswordUseCaseProvider),
+    ref.watch(deleteAccountUseCaseProvider),
     ref,
   )..checkAuthStatus();
 });
@@ -87,6 +89,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     this._changePasswordUseCase,
     this._forgotPasswordUseCase,
     this._resetPasswordUseCase,
+    this._deleteAccountUseCase,
     this._ref,
   ) : super(const AuthState());
 
@@ -98,11 +101,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final ChangePasswordUseCase _changePasswordUseCase;
   final ForgotPasswordUseCase _forgotPasswordUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
-  // Ref is needed so we can reach the favorites and bookings notifiers
-  // to trigger guest-data sync after login / registration.
+  final DeleteAccountUseCase _deleteAccountUseCase;
   final Ref _ref;
-
-  // ── Check status ──────────────────────────────────────────────────────────
 
   Future<void> checkAuthStatus() async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -114,38 +114,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ── Login ─────────────────────────────────────────────────────────────────
-
   Future<bool> login(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final response = await _loginUseCase(email, password);
       state = state.copyWith(user: response.user, isLoading: false);
-
-      // Push any locally saved guest data to the server now that we
-      // have a valid session. Both calls are fire-and-forget — a sync
-      // failure must never block the login flow.
       _syncGuestData();
-
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
   }
-
-  // ── Register ──────────────────────────────────────────────────────────────
 
   Future<bool> register(String name, String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final response = await _registerUseCase(name, email, password);
       state = state.copyWith(user: response.user, isLoading: false);
-
-      // Same as login — sync any guest data the user accumulated before
-      // creating their account.
       _syncGuestData();
-
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -153,15 +140,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ── Logout ────────────────────────────────────────────────────────────────
-
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
     await _logoutUseCase();
     state = state.copyWith(clearUser: true, isLoading: false);
   }
-
-  // ── Update profile ────────────────────────────────────────────────────────
 
   Future<bool> updateProfile(String name, String email) async {
     state = state.copyWith(isLoading: true, clearError: true);
@@ -174,8 +157,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
-
-  // ── Change password ───────────────────────────────────────────────────────
 
   Future<bool> changePassword(
     String currentPassword,
@@ -192,7 +173,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ── Forgot Password ───────────────────────────────────────────────────────
   Future<bool> forgotPassword(String email) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -205,7 +185,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ── Reset Password ────────────────────────────────────────────────────────
   Future<bool> resetPassword(
     String email,
     String otp,
@@ -222,25 +201,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // ── Private: sync guest data ──────────────────────────────────────────────
-  //
-  // Called immediately after a successful login or registration.
-  //
-  // Favorites: pushes locally saved property IDs to POST /favorites/sync
-  // Bookings:  links locally stored bookings to the account via
-  //            POST /bookings/sync (using cancellation tokens as proof)
-  //
-  // Both are fire-and-forget — errors are swallowed so a backend hiccup
-  // can never prevent the user from reaching the home screen.
+  /// Requests account deletion, then clears the local session.
+  /// Returns true on success. The caller should navigate to the login screen.
+  Future<bool> deleteAccount() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _deleteAccountUseCase();
+      // Clear user from state — same effect as logout from the UI's perspective
+      state = state.copyWith(clearUser: true, isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 
   void _syncGuestData() {
-    // Favorites
     _ref
         .read(savedPropertiesProvider.notifier)
         .syncGuestData()
         .catchError((_) {});
-
-    // Bookings
     _ref.read(bookingRepositoryProvider).syncGuestData().catchError((_) {});
   }
 }

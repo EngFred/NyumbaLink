@@ -12,4 +12,7 @@ abstract class AuthRepository {
 
   Future<void> forgotPassword(String email);
   Future<void> resetPassword(String email, String otp, String newPassword);
+
+  /// Schedules permanent account deletion. Clears local session data.
+  Future<void> deleteAccount();
 }

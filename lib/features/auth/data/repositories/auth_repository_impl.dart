@@ -4,7 +4,7 @@ import '../../domain/entities/auth_entities.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../models/auth_models.dart'; // Needed for casting to save locally
+import '../models/auth_models.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(
@@ -66,7 +66,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final updatedUser = await _remoteDataSource.updateProfile(data);
 
-    // We must also update the local cache so the UI reflects it instantly
     final token = await _localDataSource.getToken();
     if (token != null) {
       await _localDataSource.saveAuthData(token, updatedUser);
@@ -95,5 +94,13 @@ class AuthRepositoryImpl implements AuthRepository {
     String newPassword,
   ) async {
     await _remoteDataSource.resetPassword(email, otp, newPassword);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    // Hit the server first (it blacklists the token there)
+    await _remoteDataSource.deleteAccount();
+    // Then clear local cache so the app treats this as a full logout
+    await _localDataSource.clearAuthData();
   }
 }

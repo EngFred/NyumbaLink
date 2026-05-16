@@ -87,4 +87,15 @@ class AuthRemoteDataSource {
       throw handleDioException(e);
     }
   }
+
+  /// Schedules permanent account deletion (30-day grace period).
+  /// The server immediately invalidates the token, so the local session
+  /// must be cleared after this call.
+  Future<void> deleteAccount() async {
+    try {
+      await _dio.delete('/users/me');
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
 }
