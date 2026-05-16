@@ -22,6 +22,7 @@ class FeaturedCarouselSection extends StatefulWidget {
 class _FeaturedCarouselSectionState extends State<FeaturedCarouselSection> {
   final _pageCtrl = PageController(viewportFraction: 0.92);
   int _currentPage = 0;
+  int _direction = 1; // 1 = forward, -1 = backward
   Timer? _autoScrollTimer;
 
   @override
@@ -31,12 +32,25 @@ class _FeaturedCarouselSectionState extends State<FeaturedCarouselSection> {
   }
 
   void _startAutoScroll() {
-    // Only auto-scroll if there's more than one card.
     if (widget.properties.length <= 1) return;
 
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       if (!mounted || !_pageCtrl.hasClients) return;
-      final next = (_currentPage + 1) % widget.properties.length;
+
+      int next = _currentPage + _direction;
+
+      // Hit the last page → flip to going backward
+      if (next >= widget.properties.length) {
+        _direction = -1;
+        next = _currentPage + _direction; // one step back from the end
+      }
+
+      // Hit the first page → flip to going forward
+      if (next < 0) {
+        _direction = 1;
+        next = _currentPage + _direction; // one step forward from the start
+      }
+
       _pageCtrl.animateToPage(
         next,
         duration: const Duration(milliseconds: 600),
@@ -94,8 +108,6 @@ class _FeaturedCarouselSectionState extends State<FeaturedCarouselSection> {
               height: 220,
               child: PageView.builder(
                 controller: _pageCtrl,
-                // When the user swipes manually, update page state AND
-                // reset the timer so it doesn't immediately jump.
                 onPageChanged: (i) {
                   setState(() => _currentPage = i);
                   _resetAutoScroll();
