@@ -49,6 +49,8 @@ dependencies:
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   smooth_page_indicator: ^2.0.1
+  share_plus: ^13.1.0
+  app_links: ^7.0.0
 
 dev_dependencies:
   flutter_test:

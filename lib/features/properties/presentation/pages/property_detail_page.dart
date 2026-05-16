@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/circle_hero_button.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/cta_bar.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/detail_skeleton.dart';
@@ -12,10 +13,13 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_error_state.dart';
-import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 import '../providers/saved_properties_provider.dart';
+
+/// Public base URL for the admin/web portal.
+/// This is the URL that gets shared — anyone with or without the app can open it.
+const _kPublicBaseUrl = 'https://rentora-houselink-admin.vercel.app';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
@@ -62,6 +66,19 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
       builder: (_) =>
           EnquireSheet(property: property, formatWhatsApp: _formatWhatsApp),
     );
+  }
+
+  /// Shares a property using the native share sheet.
+  /// The URL points to the public web page — works for recipients who don't have
+  /// the app installed (opens in browser) and those who do (deep link opens the app).
+  void _shareProperty(Property property) {
+    final publicUrl = '$_kPublicBaseUrl/p/${property.id}';
+    final shareText =
+        '${property.title}\n'
+        '${property.area}, ${property.district.name}\n\n'
+        '$publicUrl';
+
+    Share.share(shareText, subject: property.title);
   }
 
   @override
@@ -128,13 +145,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   child: CircleHeroButton(
                     icon: Icons.share_outlined,
                     iconColor: Colors.white,
-                    onTap: () {
-                      // Platform share integration placeholder
-                      AppSnackbar.success(
-                        context,
-                        'Sharing link generation initialized',
-                      );
-                    },
+                    onTap: () => _shareProperty(property),
                   ),
                 ),
                 Padding(
@@ -149,14 +160,16 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(property);
                       if (isSaved) {
-                        AppSnackbar.error(
-                          context,
-                          'Removed from saved collection',
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Removed from saved collection'),
+                          ),
                         );
                       } else {
-                        AppSnackbar.success(
-                          context,
-                          'Added to saved collection!',
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Added to saved collection!'),
+                          ),
                         );
                       }
                     },

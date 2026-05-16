@@ -9,6 +9,8 @@ class PropertyFilters {
     this.search,
     this.status = 'AVAILABLE',
     this.isFeatured,
+    this.sortBy,
+    this.sortOrder,
     this.page = 1,
     this.limit = 15,
   });
@@ -22,6 +24,16 @@ class PropertyFilters {
   final String? search;
   final String? status;
   final bool? isFeatured;
+
+  /// Field to sort results by.
+  /// Allowed values: 'createdAt' | 'price' | 'viewCount' | 'enquiryCount'
+  /// Default on the backend is 'createdAt'.
+  /// Pass 'viewCount' to get "most popular" listings.
+  final String? sortBy;
+
+  /// Sort direction: 'ASC' | 'DESC'. Backend defaults to 'DESC'.
+  final String? sortOrder;
+
   final int page;
   final int limit;
 
@@ -35,6 +47,8 @@ class PropertyFilters {
     String? search,
     String? status,
     bool? isFeatured,
+    String? sortBy,
+    String? sortOrder,
     int? page,
     int? limit,
     bool clearType = false,
@@ -45,6 +59,8 @@ class PropertyFilters {
     bool clearNumberOfRooms = false,
     bool clearSearch = false,
     bool clearIsFeatured = false,
+    bool clearSortBy = false,
+    bool clearSortOrder = false,
   }) {
     return PropertyFilters(
       type: clearType ? null : (type ?? this.type),
@@ -60,6 +76,8 @@ class PropertyFilters {
       search: clearSearch ? null : (search ?? this.search),
       status: status ?? this.status,
       isFeatured: clearIsFeatured ? null : (isFeatured ?? this.isFeatured),
+      sortBy: clearSortBy ? null : (sortBy ?? this.sortBy),
+      sortOrder: clearSortOrder ? null : (sortOrder ?? this.sortOrder),
       page: page ?? this.page,
       limit: limit ?? this.limit,
     );
@@ -86,6 +104,8 @@ class PropertyFilters {
     if (search != null && search!.isNotEmpty) map['search'] = search;
     if (status != null) map['status'] = status;
     if (isFeatured != null) map['isFeatured'] = isFeatured;
+    if (sortBy != null) map['sortBy'] = sortBy;
+    if (sortOrder != null) map['sortOrder'] = sortOrder;
 
     return map;
   }

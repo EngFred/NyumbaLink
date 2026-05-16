@@ -7,6 +7,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/engagement_stats.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/meta_chips_row.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/sheet_handle.dart';
+import 'package:rentora/features/properties/presentation/widgets/property-detail/similar_properties_section.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
@@ -191,7 +192,7 @@ class _PropertyContentState extends State<PropertyContent> {
           ),
           const Gap(24),
 
-          // ── Similar Properties (Coming Soon) ───────────────────────────
+          // ── Similar Properties ─────────────────────────────────────────────
           const Divider(
             indent: 20,
             endIndent: 20,
@@ -199,70 +200,8 @@ class _PropertyContentState extends State<PropertyContent> {
             color: AppColors.grey200,
           ),
           const Gap(24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Similar Properties', style: AppTextStyles.h3),
-                const Gap(4),
-                Text(
-                  'More matching recommendations around ${p.district.name}.',
-                  style: AppTextStyles.bodySm.copyWith(
-                    color: AppColors.grey500,
-                  ),
-                ),
-                const Gap(16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.grey200),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.06),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.insights_rounded,
-                          size: 24,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const Gap(12),
-                      Text(
-                        'Recommendation Engine Coming Soon',
-                        style: AppTextStyles.bodyMd.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Gap(4),
-                      Text(
-                        'We are finalizing a smart matchmaking layout to suggest similar properties across this area.',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textHint,
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          SimilarPropertiesSection(
+            property: p,
           ).animate(delay: 300.ms).fadeIn(duration: 350.ms),
 
           const Gap(48),
