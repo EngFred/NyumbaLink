@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-
-class InfoCard extends StatelessWidget {
-  const InfoCard({super.key, required this.icon, required this.message});
-
+/// Replaces: InfoCard in bookings/book/ and complaints/
+class AppInfoCard extends StatelessWidget {
+  const AppInfoCard({super.key, required this.icon, required this.message});
   final IconData icon;
   final String message;
 

@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
-class PwSection extends StatelessWidget {
-  const PwSection({
+/// Replaces: FormSection (edit-profile), FormSection (bookings),
+///           PwSection, ComplaintSection — all structurally identical.
+///
+/// [padChildren] = true  → wraps children in 16/12/16/16 padding (booking forms).
+/// [padChildren] = false → children manage their own padding (profile/password/complaint).
+class AppSectionCard extends StatelessWidget {
+  const AppSectionCard({
     super.key,
     required this.number,
     required this.title,
     required this.icon,
     required this.children,
+    this.padChildren = false,
   });
 
   final String number;
   final String title;
   final IconData icon;
   final List<Widget> children;
+  final bool padChildren;
 
   @override
   Widget build(BuildContext context) {
@@ -64,8 +71,18 @@ class PwSection extends StatelessWidget {
           ),
           const Gap(4),
           const Divider(color: AppColors.grey100, height: 1),
-          ...children,
-          const SizedBox(height: 4),
+          if (padChildren)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              ),
+            )
+          else ...[
+            ...children,
+            const SizedBox(height: 4),
+          ],
         ],
       ),
     );

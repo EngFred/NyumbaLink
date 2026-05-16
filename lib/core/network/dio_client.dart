@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rentora/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
@@ -29,9 +30,7 @@ Dio _buildDio() {
     InterceptorsWrapper(
       onRequest: (options, handler) async {
         final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString(
-          'nyumbalink_jwt_token',
-        ); // Matches AuthLocalDataSource key
+        final token = prefs.getString(AuthLocalDataSource.tokenKey);
 
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
@@ -88,9 +87,8 @@ AppException handleDioException(DioException e) {
         }
       }
 
-      // If unauthorized, we could potentially trigger a global logout here
       if (status == 401) {
-        return ServerException(msg, statusCode: status); // Handled by UI
+        return ServerException(msg, statusCode: status);
       }
 
       if (status == 404) return NotFoundException(msg);

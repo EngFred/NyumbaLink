@@ -3,8 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/properties/presentation/widgets/saved-properties/dismiss_background.dart';
-import 'package:rentora/features/properties/presentation/widgets/saved-properties/empty_state.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/guest_banner.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/saved_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/saved_property_card.dart';
@@ -13,11 +11,11 @@ import 'package:rentora/features/properties/presentation/widgets/saved-propertie
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_dismiss_background.dart';
+import '../../../../core/widgets/app_empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/saved_properties_provider.dart';
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 class SavedPage extends ConsumerWidget {
   const SavedPage({super.key});
@@ -27,16 +25,18 @@ class SavedPage extends ConsumerWidget {
     final state = ref.watch(savedPropertiesProvider);
     final isAuthenticated = ref.watch(authProvider).isAuthenticated;
 
-    // Loading
     if (state.isLoading) return const SavedSkeleton();
 
-    // Empty — authenticated
     if (state.savedList.isEmpty && isAuthenticated) {
-      return const EmptyState();
+      return const AppEmptyState(
+        icon: Icons.favorite_border_rounded,
+        title: 'No saved spaces yet',
+        subtitle:
+            'Tap the heart icon on properties to quickly pin your options here.',
+      );
     }
 
     final list = state.savedList;
-
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: isAuthenticated
@@ -51,7 +51,6 @@ class SavedPage extends ConsumerWidget {
               isAuthenticated: isAuthenticated,
             ).animate().fadeIn(duration: 300.ms),
           ),
-
           // ── Guest banner ──────────────────────────────────────────────────
           if (!isAuthenticated)
             SliverToBoxAdapter(
@@ -60,7 +59,6 @@ class SavedPage extends ConsumerWidget {
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.05, end: 0, duration: 300.ms),
             ),
-
           // ── Empty guest ───────────────────────────────────────────────────
           if (list.isEmpty)
             SliverFillRemaining(
@@ -86,15 +84,17 @@ class SavedPage extends ConsumerWidget {
                   return Dismissible(
                     key: ValueKey(property.id),
                     direction: DismissDirection.endToStart,
-                    background: const DismissBackground(),
+                    background: const AppDismissBackground(
+                      icon: Icons.favorite_border_rounded,
+                      label: 'Remove',
+                    ),
                     confirmDismiss: (_) async {
                       await ref
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(
-                            // Build a minimal Property from SavedProperty
                             _SavedPropertyAdapter.toProperty(property),
                           );
-                      return false; // Let the state update handle removal
+                      return false;
                     },
                     child:
                         SavedPropertyCard(
@@ -122,9 +122,6 @@ class SavedPage extends ConsumerWidget {
     );
   }
 }
-
-// ── Adapter: SavedProperty → minimal Property ────────────────────────────────
-// (needed for toggleSave which expects a full Property)
 
 class _SavedPropertyAdapter {
   static Property toProperty(SavedProperty s) {

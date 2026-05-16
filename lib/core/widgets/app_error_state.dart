@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+/// Replaces: ErrorState in browse/, bookings/, notifications/
+class AppErrorState extends StatelessWidget {
+  const AppErrorState({
+    super.key,
+    required this.onRetry,
+    this.title = 'Something went wrong',
+    this.message = 'Check your connection and try again.',
+    this.buttonLabel = 'Try Again',
+  });
 
-class ErrorState extends StatelessWidget {
-  const ErrorState({super.key, required this.onRetry});
-  final Future<void> Function() onRetry;
+  final VoidCallback onRetry;
+  final String title;
+  final String message;
+  final String buttonLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -17,41 +27,30 @@ class ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 80,
+              height: 80,
               decoration: const BoxDecoration(
                 color: AppColors.errorLight,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.wifi_off_rounded,
-                size: 42,
+                size: 38,
                 color: AppColors.error,
               ),
             ),
             const Gap(20),
-            Text(
-              "Couldn't load properties",
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
+            Text(title, style: AppTextStyles.h3, textAlign: TextAlign.center),
             const Gap(8),
             Text(
-              'Check your connection and try again.',
+              message,
               style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             const Gap(24),
-            ElevatedButton(
-              onPressed: onRetry,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-              ),
-              child: const Text('Try Again'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: Text(buttonLabel)),
           ],
         ),
       ),

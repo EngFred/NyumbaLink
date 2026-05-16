@@ -3,13 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:rentora/features/notifications/presentation/widgets/empty_state.dart';
-import 'package:rentora/features/notifications/presentation/widgets/error_state.dart';
 import 'package:rentora/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:rentora/features/notifications/presentation/widgets/notifications_skeleton.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 
 class AuthenticatedBody extends ConsumerWidget {
   const AuthenticatedBody({
@@ -17,7 +17,6 @@ class AuthenticatedBody extends ConsumerWidget {
     required this.scrollCtrl,
     required this.state,
   });
-
   final ScrollController scrollCtrl;
   final NotificationsState state;
 
@@ -28,14 +27,19 @@ class AuthenticatedBody extends ConsumerWidget {
     }
 
     if (state.error != null && state.notifications.isEmpty) {
-      return ErrorState(
+      return AppErrorState(
         message: state.error!,
         onRetry: () => ref.read(notificationsProvider.notifier).load(),
       );
     }
 
     if (state.notifications.isEmpty) {
-      return const EmptyState();
+      return const AppEmptyState(
+        icon: Icons.notifications_none_rounded,
+        title: 'All caught up!',
+        subtitle:
+            'When you get messages, updates or alerts, they will appear right here.',
+      );
     }
 
     return RefreshIndicator(
@@ -57,7 +61,6 @@ class AuthenticatedBody extends ConsumerWidget {
               ),
             );
           }
-
           final n = state.notifications[index];
           return NotificationTile(
                 notification: n,

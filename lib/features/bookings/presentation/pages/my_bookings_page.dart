@@ -7,19 +7,16 @@ import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookin
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_filter_bar.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_Header.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_skeleton.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/dismiss_background.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/empty_state.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/error_state.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/guest_banner.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_dismiss_background.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/my_bookings_provider.dart';
 
-// ── Filter Enum ───────────────────────────────────────────────────────────────
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 class MyBookingsPage extends ConsumerStatefulWidget {
   const MyBookingsPage({super.key});
 
@@ -76,7 +73,7 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
 
     // ── Error (empty list) ───────────────────────────────────────────────────
     if (state.error != null && state.bookings.isEmpty) {
-      return ErrorState(
+      return AppErrorState(
         message: state.error!,
         onRetry: () => ref.read(myBookingsProvider.notifier).load(),
       );
@@ -105,7 +102,6 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                   isAuthenticated: isAuthenticated,
                 ).animate().fadeIn(duration: 300.ms),
               ),
-
               // ── Guest Banner ───────────────────────────────────────────────
               if (!isAuthenticated)
                 SliverToBoxAdapter(
@@ -114,7 +110,6 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                       .fadeIn(duration: 300.ms)
                       .slideY(begin: 0.04, end: 0),
                 ),
-
               // ── Filter bar (only when there are bookings) ──────────────────
               if (state.bookings.isNotEmpty)
                 SliverToBoxAdapter(
@@ -124,11 +119,18 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                     onSelected: (f) => setState(() => _filter = f),
                   ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
                 ),
-
               // ── Empty state ────────────────────────────────────────────────
               if (state.bookings.isEmpty)
                 SliverFillRemaining(
-                  child: EmptyState(isAuthenticated: isAuthenticated),
+                  child: AppEmptyState(
+                    icon: Icons.receipt_long_rounded,
+                    title: isAuthenticated
+                        ? 'No bookings found'
+                        : 'Sign in to view bookings',
+                    subtitle: isAuthenticated
+                        ? 'Your schedule requests and active applications will pop up right here.'
+                        : 'Keep tabs on your scheduled property visits and active rental leases.',
+                  ),
                 )
               else if (filtered.isEmpty)
                 SliverFillRemaining(
@@ -170,7 +172,10 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                         direction: booking.isCancelled
                             ? DismissDirection.none
                             : DismissDirection.endToStart,
-                        background: const DismissBackground(),
+                        background: const AppDismissBackground(
+                          icon: Icons.cancel_outlined,
+                          label: 'Cancel',
+                        ),
                         confirmDismiss: (_) async {
                           _showCancelDialog(
                             booking.id,
@@ -201,7 +206,6 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
             ],
           ),
         ),
-
         // ── Cancelling overlay ───────────────────────────────────────────────
         if (state.isCancelling)
           Container(

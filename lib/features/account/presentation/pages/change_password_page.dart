@@ -7,8 +7,9 @@ import 'package:rentora/features/account/presentation/widgets/change-password/pw
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_section_card.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../widgets/change-password/pw_section.dart';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
   const ChangePasswordPage({super.key});
@@ -22,12 +23,10 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
-
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
 
-  // Simple strength from 0–4
   int get _strength {
     final v = _newCtrl.text;
     int s = 0;
@@ -71,17 +70,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
           .read(authProvider.notifier)
           .changePassword(_currentCtrl.text, _newCtrl.text);
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Password changed successfully'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.success(context, 'Password changed successfully');
         context.pop();
       }
     }
@@ -91,22 +80,10 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.error != null && next.error != prev?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.error(context, next.error!);
       }
     });
-
     final isLoading = ref.watch(authProvider).isLoading;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -162,7 +139,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                   curve: Curves.elasticOut,
                 )
                 .fadeIn(duration: 300.ms),
-
             const Gap(12),
             Center(
               child: Text(
@@ -172,14 +148,13 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 ),
               ),
             ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-
             const Gap(28),
-
             // ── Current password ─────────────────────────────────────────
-            PwSection(
+            AppSectionCard(
                   number: '01',
                   title: 'Current Password',
                   icon: Icons.lock_open_outlined,
+                  padChildren: false,
                   children: [
                     PwField(
                       controller: _currentCtrl,
@@ -197,14 +172,13 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 .animate(delay: 80.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(16),
-
             // ── New password ─────────────────────────────────────────────
-            PwSection(
+            AppSectionCard(
                   number: '02',
                   title: 'New Password',
                   icon: Icons.lock_outline_rounded,
+                  padChildren: false,
                   children: [
                     PwField(
                       controller: _newCtrl,
@@ -222,7 +196,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                         return null;
                       },
                     ),
-                    // Strength indicator
                     if (_newCtrl.text.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -280,9 +253,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 .animate(delay: 130.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(32),
-
             ElevatedButton(
               onPressed: isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(

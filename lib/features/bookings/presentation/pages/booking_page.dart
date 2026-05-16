@@ -3,23 +3,22 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/account/presentation/widgets/edit-profile/form_section.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/booking_success.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/booking_text_field.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/error_banner.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/info_card.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/property_summary_card.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/submit_bar.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_error_banner.dart';
+import '../../../../core/widgets/app_info_card.dart';
+import '../../../../core/widgets/app_section_card.dart';
+import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/app_submit_bar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../properties/presentation/providers/properties_provider.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_provider.dart';
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({
@@ -91,17 +90,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     if (ref.read(bookingProvider).isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_moveInDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please select a move-in date'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.error,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      AppSnackbar.error(context, 'Please select a move-in date');
       return;
     }
     final user = ref.read(authProvider).user;
@@ -126,7 +115,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(bookingProvider);
-
     if (state.successResponse != null) {
       return BookingSuccess(
         propertyTitle: widget.propertyTitle,
@@ -138,7 +126,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         },
       );
     }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -169,21 +156,19 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               title: widget.propertyTitle,
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
-
             const Gap(20),
-
             if (state.error != null) ...[
-              ErrorBanner(
+              AppErrorBanner(
                 message: state.error!,
               ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.05, end: 0),
               const Gap(16),
             ],
-
             // ── Section 01: Your Details ──────────────────────────────────
-            FormSection(
+            AppSectionCard(
                   number: '01',
                   title: 'Your Details',
                   icon: Icons.person_outline_rounded,
+                  padChildren: true, // Bookings use true inner layout padding
                   children: [
                     BookingTextField(
                       controller: _nameController,
@@ -223,14 +208,13 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 .animate(delay: 60.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05, end: 0),
-
             const Gap(16),
-
             // ── Section 02: Booking Details ───────────────────────────────
-            FormSection(
+            AppSectionCard(
                   number: '02',
                   title: 'Booking Details',
                   icon: Icons.calendar_month_outlined,
+                  padChildren: true,
                   children: [
                     DatePickerField(
                       selectedDate: _moveInDate,
@@ -252,10 +236,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 .animate(delay: 120.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05, end: 0),
-
             const Gap(16),
-
-            const InfoCard(
+            const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:
                   'Your request will be reviewed by the property contact. '
@@ -264,7 +246,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           ],
         ),
       ),
-      bottomNavigationBar: SubmitBar(
+      bottomNavigationBar: AppSubmitBar(
+        label: 'Submit Booking Request',
         isLoading: state.isLoading,
         onSubmit: _submit,
       ),

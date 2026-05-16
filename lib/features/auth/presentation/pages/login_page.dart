@@ -12,6 +12,7 @@ import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -48,22 +49,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.error(context, next.error!);
       }
     });
-
     final isLoading = ref.watch(authProvider).isLoading;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -73,7 +62,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             title: 'Welcome back',
             subtitle: 'Sign in to continue your search',
           ),
-
           // ── Form body ─────────────────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
@@ -103,9 +91,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     const Gap(16),
-
                     // ── Password ───────────────────────────────────────
                     AuthSection(
                           children: [
@@ -139,7 +125,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     // ── Forgot password ────────────────────────────────
                     Align(
                       alignment: Alignment.centerRight,
@@ -153,9 +138,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                     ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-
                     const Gap(8),
-
                     // ── Submit ─────────────────────────────────────────
                     SubmitButton(
                           isLoading: isLoading,
@@ -166,9 +149,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate(delay: 140.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     const Gap(28),
-
                     // ── Register link ──────────────────────────────────
                     AuthFooterLink(
                       message: "Don't have an account? ",

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import '../theme/app_colors.dart';
 
-import '../../../../core/theme/app_colors.dart';
-
-class SubmitBar extends StatelessWidget {
-  const SubmitBar({super.key, required this.isLoading, required this.onSubmit});
+/// Replaces: SubmitBar in bookings/book/ and complaints/
+class AppSubmitBar extends StatelessWidget {
+  const AppSubmitBar({
+    super.key,
+    required this.isLoading,
+    required this.onSubmit,
+    this.label = 'Submit',
+    this.icon = Icons.send_rounded,
+  });
 
   final bool isLoading;
   final VoidCallback onSubmit;
+  final String label;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +44,9 @@ class SubmitBar extends StatelessWidget {
                     color: Colors.white,
                   ),
                 )
-              : const Row(
+              : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.send_rounded, size: 18),
-                    Gap(10),
-                    Text('Submit Report'),
-                  ],
+                  children: [Icon(icon, size: 18), const Gap(10), Text(label)],
                 ),
         ),
       ),

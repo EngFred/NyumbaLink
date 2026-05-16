@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,19 +6,19 @@ import 'package:rentora/features/properties/presentation/widgets/browse/results_
 import 'package:rentora/features/properties/presentation/widgets/browse/search_bar.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_state.dart';
 import '../../domain/entities/property_entities.dart';
 import '../../domain/entities/property_filters.dart';
 import '../providers/featured_properties_provider.dart';
 import '../providers/properties_provider.dart';
 import '../providers/saved_properties_provider.dart';
-import '../widgets/browse/empty_state.dart';
-import '../widgets/browse/error_state.dart';
 import '../widgets/browse/featured_carousel_section.dart';
-import '../widgets/browse/section_label.dart';
 import '../widgets/browse/filter_sheet.dart';
 import '../widgets/browse/property_card.dart';
 import '../widgets/browse/property_shimmer.dart';
 import '../widgets/browse/property_type_filter_bar.dart';
+import '../widgets/browse/section_label.dart';
 
 const kFeaturedGold = Color(0xFFD4A017);
 
@@ -96,7 +95,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(propertiesProvider);
     final filters = state.filters;
-
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -138,9 +136,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
   }
 }
 
-// ── List ──────────────────────────────────────────────────────────────────────
-
-// Sealed item types for the ListView
 sealed class _ListItem {}
 
 class _FeaturedShimmerItem extends _ListItem {}
@@ -173,7 +168,6 @@ class _ListView extends ConsumerWidget {
     required this.onRefresh,
     required this.onClearFilters,
   });
-
   final PropertiesState state;
   final ScrollController scrollController;
   final Future<void> Function() onRefresh;
@@ -182,36 +176,31 @@ class _ListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.error != null && state.properties.isEmpty) {
-      return ErrorState(onRetry: onRefresh);
+      return AppErrorState(onRetry: onRefresh);
     }
-
     if (state.properties.isEmpty) {
-      return EmptyState(
-        hasFilters: state.filters.hasActiveFilters,
-        onClear: onClearFilters,
+      return AppEmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'No matching properties',
+        subtitle: 'Try adjustments or reset current filters to start over.',
+        buttonLabel: 'Reset All Filters',
+        onButtonTap: onClearFilters,
       );
     }
-
     final featuredState = ref.watch(featuredPropertiesProvider);
     final isFeaturedLoading = featuredState.isLoading;
     final hasFeaturedCarousel =
         !isFeaturedLoading && featuredState.properties.isNotEmpty;
 
-    // Build flat items list
     final items = <_ListItem>[];
-
-    // Show shimmer while featured data is in flight, real carousel once ready
     if (isFeaturedLoading) {
       items.add(_FeaturedShimmerItem());
     } else if (hasFeaturedCarousel) {
       items.add(_FeaturedCarouselItem());
     }
-
     items.add(_ResultsHeaderItem(state.total));
-
     bool addedFeaturedDivider = false;
     bool addedAllDivider = false;
-
     for (var i = 0; i < state.properties.length; i++) {
       final p = state.properties[i];
       if (p.isFeatured && !addedFeaturedDivider) {
@@ -223,7 +212,6 @@ class _ListView extends ConsumerWidget {
       }
       items.add(_PropertyItem(p, i));
     }
-
     items.add(_FooterItem());
 
     return RefreshIndicator(
@@ -236,22 +224,17 @@ class _ListView extends ConsumerWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
-
           return switch (item) {
-            // ── Featured carousel shimmer ──────────────────────────────────
             _FeaturedShimmerItem() => const Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: FeaturedCarouselShimmer(),
             ),
-
-            // ── Featured carousel (real data) ──────────────────────────────
             _FeaturedCarouselItem() => Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: FeaturedCarouselSection(
                 properties: featuredState.properties,
               ),
             ),
-
             _ResultsHeaderItem(:final total) => ResultsHeader(total: total),
             _SectionDividerItem(:final isFeatured) => SectionLabel(
               isFeatured: isFeatured,

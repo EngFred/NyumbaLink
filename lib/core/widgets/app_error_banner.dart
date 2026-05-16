@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-
-class ErrorBanner extends StatelessWidget {
-  const ErrorBanner({super.key, required this.message});
+/// Replaces: ErrorBanner in bookings/book/ and complaints/
+class AppErrorBanner extends StatelessWidget {
+  const AppErrorBanner({super.key, required this.message});
   final String message;
 
   @override

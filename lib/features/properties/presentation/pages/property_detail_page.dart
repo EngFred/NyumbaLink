@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/circle_hero_button.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/cta_bar.dart';
-import 'package:rentora/features/properties/presentation/widgets/property-detail/detail_error.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/detail_skeleton.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/enquire_sheet.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/full_screen_gallery.dart';
@@ -13,11 +12,11 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_error_state.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 import '../providers/saved_properties_provider.dart';
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
@@ -75,16 +74,29 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         .any((p) => p.id == widget.propertyId);
 
     if (state.isLoading) return const DetailSkeleton();
+
     if (state.error != null || state.property == null) {
-      return DetailError(
-        error: state.error,
-        onRetry: () =>
-            ref.read(propertyDetailProvider(widget.propertyId).notifier).load(),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            color: AppColors.textPrimary,
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: AppErrorState(
+          message: state.error ?? 'Failed to load property details.',
+          onRetry: () => ref
+              .read(propertyDetailProvider(widget.propertyId).notifier)
+              .load(),
+        ),
       );
     }
 
     final property = state.property!;
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -122,22 +134,18 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                       ref
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(property);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isSaved ? 'Removed from saved' : 'Added to saved',
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 1),
-                          backgroundColor: isSaved
-                              ? AppColors.grey700
-                              : AppColors.success,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          margin: const EdgeInsets.all(16),
-                        ),
-                      );
+
+                      if (isSaved) {
+                        AppSnackbar.error(
+                          context,
+                          'Removed from saved collection',
+                        );
+                      } else {
+                        AppSnackbar.success(
+                          context,
+                          'Added to saved collection!',
+                        );
+                      }
                     },
                   ),
                 ),
@@ -154,7 +162,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 ),
               ),
             ),
-
             // ── Content ─────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: PropertyContent(

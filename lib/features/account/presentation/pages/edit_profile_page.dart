@@ -3,11 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/account/presentation/widgets/edit-profile/form_section.dart';
 import 'package:rentora/features/account/presentation/widgets/edit-profile/profile_field.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_section_card.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -55,17 +56,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             _emailController.text.trim(),
           );
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profile updated successfully'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.success(context, 'Profile updated successfully');
         context.pop();
       }
     }
@@ -75,20 +66,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.error != null && next.error != prev?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.error(context, next.error!);
       }
     });
-
     final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
@@ -168,14 +148,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   duration: 350.ms,
                   curve: Curves.easeOut,
                 ),
-
             const Gap(32),
-
             // ── Fields card ──────────────────────────────────────────────
-            FormSection(
+            AppSectionCard(
                   number: '01',
                   title: 'Personal Info',
                   icon: Icons.person_outline_rounded,
+                  padChildren: false,
                   children: [
                     ProfileField(
                       controller: _nameController,
@@ -210,9 +189,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 .animate(delay: 80.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(32),
-
             // ── Save button ──────────────────────────────────────────────
             ElevatedButton(
               onPressed: isLoading ? null : _submit,

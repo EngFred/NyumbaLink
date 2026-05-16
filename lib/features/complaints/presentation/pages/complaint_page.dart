@@ -3,18 +3,18 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/error_banner.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/info_card.dart';
 import 'package:rentora/features/complaints/presentation/widgets/category_grid.dart';
 import 'package:rentora/features/complaints/presentation/widgets/complaint_field.dart';
-import 'package:rentora/features/complaints/presentation/widgets/complaint_section.dart';
 import 'package:rentora/features/complaints/presentation/widgets/intro_header.dart';
 import 'package:rentora/features/complaints/presentation/widgets/property_context.dart';
-import 'package:rentora/features/complaints/presentation/widgets/submit_bar.dart';
 import 'package:rentora/features/complaints/presentation/widgets/success_view.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/app_error_banner.dart';
+import '../../../../core/widgets/app_info_card.dart';
+import '../../../../core/widgets/app_section_card.dart';
+import '../../../../core/widgets/app_submit_bar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/complaint_entities.dart';
 import '../providers/complaint_provider.dart';
@@ -35,28 +35,7 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-
   late String _category;
-
-  // static const _categories = {
-  //   'PROPERTY_CONDITION': 'Property Condition',
-  //   'CONTACT_CONDUCT': 'Agent / Owner Conduct',
-  //   'PRICING': 'Pricing / Hidden Charges',
-  //   'BOOKING': 'Booking Issue',
-  //   'APP_ISSUE': 'App Bug / Technical Issue',
-  //   'GENERAL': 'General Feedback',
-  //   'OTHER': 'Other',
-  // };
-
-  // static const _categoryIcons = {
-  //   'PROPERTY_CONDITION': Icons.home_repair_service_outlined,
-  //   'CONTACT_CONDUCT': Icons.person_off_outlined,
-  //   'PRICING': Icons.price_change_outlined,
-  //   'BOOKING': Icons.receipt_long_outlined,
-  //   'APP_ISSUE': Icons.bug_report_outlined,
-  //   'GENERAL': Icons.feedback_outlined,
-  //   'OTHER': Icons.more_horiz_rounded,
-  // };
 
   @override
   void initState() {
@@ -101,9 +80,7 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(complaintProvider);
-
     if (state.isSuccess) return SuccessView(onDone: () => context.pop());
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -130,28 +107,26 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
               PropertyContext(
                 title: widget.propertyTitle!,
               ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
-
             if (widget.propertyTitle == null) ...[
               const IntroHeader()
                   .animate()
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.05, end: 0),
             ],
-
             if (state.error != null) ...[
               const Gap(12),
-              ErrorBanner(
+              AppErrorBanner(
                 message: state.error!,
               ).animate().fadeIn(duration: 200.ms),
             ],
-
             const Gap(16),
-
             // ── Section 01: Category ─────────────────────────────────────
-            ComplaintSection(
+            AppSectionCard(
                   number: '01',
                   title: 'Issue Category',
                   icon: Icons.category_outlined,
+                  padChildren:
+                      false, // Complaints manage their own padding structures
                   children: [
                     CategoryGrid(
                       selected: _category,
@@ -163,14 +138,13 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 60.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(16),
-
             // ── Section 02: Your details ─────────────────────────────────
-            ComplaintSection(
+            AppSectionCard(
                   number: '02',
                   title: 'Your Details',
                   icon: Icons.person_outline_rounded,
+                  padChildren: false,
                   children: [
                     ComplaintField(
                       controller: _nameCtrl,
@@ -210,14 +184,13 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 100.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(16),
-
             // ── Section 03: Description ──────────────────────────────────
-            ComplaintSection(
+            AppSectionCard(
                   number: '03',
                   title: 'Description',
                   icon: Icons.notes_rounded,
+                  padChildren: false,
                   children: [
                     ComplaintField(
                       controller: _descCtrl,
@@ -236,10 +209,8 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
                 .animate(delay: 140.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-
             const Gap(16),
-
-            const InfoCard(
+            const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:
                   'Our administrative team reviews all reports within 24–48 hours. We take every concern seriously.',
@@ -247,7 +218,8 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
           ],
         ),
       ),
-      bottomNavigationBar: SubmitBar(
+      bottomNavigationBar: AppSubmitBar(
+        label: 'Submit Report',
         isLoading: state.isLoading,
         onSubmit: _submit,
       ),
@@ -257,7 +229,6 @@ class _ComplaintPageState extends ConsumerState<ComplaintPage> {
 
 class _Divider extends StatelessWidget {
   const _Divider();
-
   @override
   Widget build(BuildContext context) => const Divider(
     height: 1,

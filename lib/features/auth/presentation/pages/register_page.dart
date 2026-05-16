@@ -9,8 +9,10 @@ import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
 import 'package:rentora/features/auth/presentation/widgets/field_divider.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -56,22 +58,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        AppSnackbar.error(context, next.error!);
       }
     });
-
     final isLoading = ref.watch(authProvider).isLoading;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -119,9 +109,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     const Gap(16),
-
                     AuthSection(
                           children: [
                             AuthField(
@@ -188,9 +176,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     const Gap(24),
-
                     SubmitButton(
                           isLoading: isLoading,
                           label: 'Create Account',
@@ -200,9 +186,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate(delay: 120.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-
                     const Gap(28),
-
                     AuthFooterLink(
                       message: 'Already have an account? ',
                       linkText: 'Sign in',
