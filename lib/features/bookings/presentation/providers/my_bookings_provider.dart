@@ -43,9 +43,7 @@ class MyBookingsState {
 // covers app start (checkAuthStatus), login, and register — all automatically.
 
 final myBookingsProvider =
-    StateNotifierProvider.autoDispose<MyBookingsNotifier, MyBookingsState>((
-      ref,
-    ) {
+    StateNotifierProvider<MyBookingsNotifier, MyBookingsState>((ref) {
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
       final notifier = MyBookingsNotifier(
         ref.watch(bookingRepositoryProvider),

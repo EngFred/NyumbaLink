@@ -47,48 +47,61 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    // ─────────────────────────────────────────────────────────────
-    // DEEP LINK SUPPORT - This handles links like /p/property-id
-    // ─────────────────────────────────────────────────────────────
     GoRoute(
       path: '/p/:id',
       name: 'propertyDeepLink',
       redirect: (context, state) {
         final id = state.pathParameters['id'];
-        if (id != null && id.isNotEmpty) {
-          return '/properties/$id'; // Redirect to actual property detail route
-        }
-        return AppRoutes.browse; // Fallback
+        if (id != null && id.isNotEmpty) return '/properties/$id';
+        return AppRoutes.browse;
       },
     ),
 
-    ShellRoute(
-      builder: (context, state, child) => MainShell(child: child),
-      routes: [
-        GoRoute(
-          path: AppRoutes.browse,
-          name: 'browse',
-          builder: (context, state) => const BrowsePage(),
+    // ── StatefulShellRoute keeps every tab alive in an IndexedStack.
+    // This preserves scroll position and prevents re-fetch on tab switch.
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          MainShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.browse,
+              name: 'browse',
+              builder: (context, state) => const BrowsePage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/saved',
-          name: 'saved',
-          builder: (context, state) => const SavedPage(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/saved',
+              name: 'saved',
+              builder: (context, state) => const SavedPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/bookings',
-          name: 'bookings',
-          builder: (context, state) => const MyBookingsPage(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/bookings',
+              name: 'bookings',
+              builder: (context, state) => const MyBookingsPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/account',
-          name: 'account',
-          builder: (context, state) => const AccountPage(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/account',
+              name: 'account',
+              builder: (context, state) => const AccountPage(),
+            ),
+          ],
         ),
       ],
     ),
 
-    // Property Detail Route (used by deep link redirect)
     GoRoute(
       path: AppRoutes.propertyDetail,
       name: 'propertyDetail',

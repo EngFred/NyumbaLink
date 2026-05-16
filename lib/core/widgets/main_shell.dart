@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/core/widgets/nav_Item.dart';
@@ -8,23 +9,17 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
 class MainShell extends ConsumerWidget {
-  const MainShell({super.key, required this.child});
+  const MainShell({super.key, required this.navigationShell});
 
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
-  static const _tabs = ['/browse', '/saved', '/bookings', '/account'];
-
-  int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    for (int i = 0; i < _tabs.length; i++) {
-      if (location.startsWith(_tabs[i])) return i;
-    }
-    return 0;
-  }
-
-  void _onTap(BuildContext context, int index) {
-    if (_currentIndex(context) == index) return;
-    context.go(_tabs[index]);
+  void _onTap(int index) {
+    navigationShell.goBranch(
+      index,
+      // When tapping the current tab again, go back to its initial location
+      // (e.g. tapping Explore while already on Explore scrolls to top).
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   Widget _buildTitle(int index) {
@@ -84,61 +79,71 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = _currentIndex(context);
+    final currentIndex = navigationShell.currentIndex;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _buildTitle(currentIndex),
-        actions: _buildActions(context, ref, currentIndex),
-      ),
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 16,
-              offset: const Offset(0, -3),
-            ),
-          ],
+    return PopScope(
+      // Allow normal pop only when already on the Explore tab.
+      // On any other tab, intercept and jump to Explore first.
+      canPop: currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && currentIndex != 0) {
+          navigationShell.goBranch(0);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _buildTitle(currentIndex),
+          actions: _buildActions(context, ref, currentIndex),
         ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore,
-                  label: 'Explore',
-                  isActive: currentIndex == 0,
-                  onTap: () => _onTap(context, 0),
-                ),
-                NavItem(
-                  icon: Icons.favorite_border_rounded,
-                  activeIcon: Icons.favorite_rounded,
-                  label: 'Saved',
-                  isActive: currentIndex == 1,
-                  onTap: () => _onTap(context, 1),
-                ),
-                NavItem(
-                  icon: Icons.receipt_long_outlined,
-                  activeIcon: Icons.receipt_long_rounded,
-                  label: 'Bookings',
-                  isActive: currentIndex == 2,
-                  onTap: () => _onTap(context, 2),
-                ),
-                NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Account',
-                  isActive: currentIndex == 3,
-                  onTap: () => _onTap(context, 3),
-                ),
-              ],
+        body: navigationShell,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 16,
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  NavItem(
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore,
+                    label: 'Explore',
+                    isActive: currentIndex == 0,
+                    onTap: () => _onTap(0),
+                  ),
+                  NavItem(
+                    icon: Icons.favorite_border_rounded,
+                    activeIcon: Icons.favorite_rounded,
+                    label: 'Saved',
+                    isActive: currentIndex == 1,
+                    onTap: () => _onTap(1),
+                  ),
+                  NavItem(
+                    icon: Icons.receipt_long_outlined,
+                    activeIcon: Icons.receipt_long_rounded,
+                    label: 'Bookings',
+                    isActive: currentIndex == 2,
+                    onTap: () => _onTap(2),
+                  ),
+                  NavItem(
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
+                    label: 'Account',
+                    isActive: currentIndex == 3,
+                    onTap: () => _onTap(3),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
