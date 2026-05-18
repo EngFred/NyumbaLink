@@ -19,7 +19,7 @@ import '../providers/saved_properties_provider.dart';
 
 /// Public base URL for the admin/web portal.
 /// This is the URL that gets shared — anyone with or without the app can open it.
-const _kPublicBaseUrl = 'https://rentora-houselink-admin.vercel.app';
+const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});

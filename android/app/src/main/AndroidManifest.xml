@@ -29,10 +29,10 @@
                 Deep link intent filter for Rentora shared property links.
                 android:autoVerify="true" tells Android to verify ownership of the domain
                 via the assetlinks.json file hosted at:
-                https://rentora-houselink-admin.vercel.app/.well-known/assetlinks.json
+                https://rentora-houselink.vercel.app/.well-known/assetlinks.json
 
                 When verified, tapping a shared link like:
-                  https://rentora-houselink-admin.vercel.app/p/some-property-id
+                  https://rentora-houselink.vercel.app/p/some-property-id
                 will open this app directly instead of the browser.
             -->
             <intent-filter android:autoVerify="true">
@@ -41,7 +41,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="rentora-houselink-admin.vercel.app"
+                    android:host="rentora-houselink.vercel.app"
                     android:pathPrefix="/p/" />
             </intent-filter>
         </activity>
