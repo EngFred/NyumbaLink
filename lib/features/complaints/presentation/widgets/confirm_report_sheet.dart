@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:rentora/features/complaints/presentation/widgets/category_grid.dart';
 
+import 'package:rentora/features/complaints/presentation/widgets/category_grid.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Confirmation sheet — shown before the API call fires.
-// Uses red/warning tones to set the right expectation for a formal report.
-// ─────────────────────────────────────────────────────────────────────────────
 class ConfirmReportSheet extends StatelessWidget {
   const ConfirmReportSheet({
     super.key,
@@ -32,47 +28,96 @@ class ConfirmReportSheet extends StatelessWidget {
     final categoryLabel = CategoryGrid.labels[category] ?? category;
     final categoryIcon =
         CategoryGrid.icons[category] ?? Icons.feedback_outlined;
-    final descPreview = description.length > 120
-        ? '${description.substring(0, 120)}…'
-        : description;
 
-    return Padding(
+    // ── NEW PRO UX: Solid background with rounded top corners ──
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface, // Fixes transparent overlap
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
+        24,
+        12,
+        24,
         MediaQuery.of(context).padding.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.grey200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Gap(24),
+
+          Text(
+            'Confirm Report',
+            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const Gap(6),
+          Text(
+            'Please review your details before submitting.',
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+
+          const Gap(32),
+
+          // Clean, unboxed layout
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: AppColors.errorLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.fact_check_outlined,
-                  color: AppColors.error,
-                  size: 20,
-                ),
+              const Icon(
+                Icons.category_outlined,
+                size: 18,
+                color: AppColors.textHint,
               ),
               const Gap(12),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  'Category',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text('Confirm Your Report', style: AppTextStyles.h4),
-                    Text(
-                      'Please review before submitting',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(categoryIcon, size: 12, color: Colors.white),
+                          const Gap(6),
+                          Text(
+                            categoryLabel,
+                            style: AppTextStyles.labelSm.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -81,134 +126,65 @@ class ConfirmReportSheet extends StatelessWidget {
             ],
           ),
 
-          const Gap(20),
+          if (propertyTitle != null) ...[
+            const Divider(height: 24, color: AppColors.grey100),
+            _DetailRow(
+              icon: Icons.home_work_outlined,
+              label: 'Property',
+              value: propertyTitle!,
+              iconColor: AppColors.primary,
+            ),
+          ],
 
-          // Details summary card
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.grey50,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.grey200),
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(
+            icon: Icons.person_outline_rounded,
+            label: 'Name',
+            value: name,
+          ),
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(icon: Icons.phone_outlined, label: 'Phone', value: phone),
+
+          if (email != null && email!.isNotEmpty) ...[
+            const Divider(height: 24, color: AppColors.grey100),
+            _DetailRow(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: email!,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Category shown as a chip preview
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.category_outlined,
-                        size: 15,
-                        color: AppColors.grey500,
-                      ),
-                      const Gap(10),
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          'Category',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(categoryIcon, size: 11, color: Colors.white),
-                            const Gap(5),
-                            Text(
-                              categoryLabel,
-                              style: AppTextStyles.labelSm.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (propertyTitle != null) ...[
-                  _SheetDivider(),
-                  _SheetRow(
-                    icon: Icons.home_work_outlined,
-                    label: 'Property',
-                    value: propertyTitle!,
-                    iconColor: AppColors.primary,
-                  ),
-                ],
-                _SheetDivider(),
-                _SheetRow(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Name',
-                  value: name,
-                ),
-                _SheetDivider(),
-                _SheetRow(
-                  icon: Icons.phone_outlined,
-                  label: 'Phone',
-                  value: phone,
-                ),
-                if (email != null && email!.isNotEmpty) ...[
-                  _SheetDivider(),
-                  _SheetRow(
-                    icon: Icons.email_outlined,
-                    label: 'Email',
-                    value: email!,
-                  ),
-                ],
-                _SheetDivider(),
-                _SheetRow(
-                  icon: Icons.notes_rounded,
-                  label: 'Issue',
-                  value: descPreview,
-                ),
-              ],
-            ),
+          ],
+
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(
+            icon: Icons.notes_rounded,
+            label: 'Issue',
+            value: description,
           ),
 
-          const Gap(14),
+          const Gap(32),
 
-          // Irreversibility warning — appropriate for a formal complaint
+          // Information box
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warningLight,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.errorLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.error.withOpacity(0.2)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(
                   Icons.warning_amber_rounded,
-                  size: 14,
-                  color: AppColors.warning,
+                  size: 18,
+                  color: AppColors.error,
                 ),
-                const Gap(8),
+                const Gap(12),
                 Expanded(
                   child: Text(
-                    'Once submitted, this report goes to our admin team '
-                    'and cannot be undone.',
+                    'Once submitted, this report goes directly to our admin team and cannot be undone.',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.warning,
-                      fontWeight: FontWeight.w500,
+                      color: AppColors.error,
                       height: 1.4,
                     ),
                   ),
@@ -217,30 +193,40 @@ class ConfirmReportSheet extends StatelessWidget {
             ),
           ),
 
-          const Gap(20),
+          const Gap(32),
 
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.send_rounded, size: 16),
-            label: const Text('Confirm & Submit Report'),
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 52),
+              minimumSize: const Size(double.infinity, 54),
               backgroundColor: AppColors.error,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'Submit Report',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-
           const Gap(8),
-
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             style: TextButton.styleFrom(
-              minimumSize: const Size(double.infinity, 44),
-            ),
-            child: Text(
-              'Go Back & Edit',
-              style: AppTextStyles.button.copyWith(
-                color: AppColors.textSecondary,
+              minimumSize: const Size(double.infinity, 54),
+              foregroundColor: AppColors.textSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+            ),
+            child: const Text(
+              'Go Back & Edit',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -249,8 +235,8 @@ class ConfirmReportSheet extends StatelessWidget {
   }
 }
 
-class _SheetRow extends StatelessWidget {
-  const _SheetRow({
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -264,45 +250,33 @@ class _SheetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 15, color: iconColor ?? AppColors.grey500),
-          const Gap(10),
-          SizedBox(
-            width: 60,
-            child: Text(
-              label,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: iconColor ?? AppColors.textHint),
+        const Gap(12),
+        SizedBox(
+          width: 70,
+          child: Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              height: 1.3,
             ),
+            textAlign: TextAlign.right,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-}
-
-class _SheetDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => const Divider(
-    height: 1,
-    color: AppColors.grey200,
-    indent: 14,
-    endIndent: 14,
-  );
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
 
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({
@@ -16,8 +16,6 @@ class CategoryGrid extends StatelessWidget {
   final ValueChanged<String> onSelect;
   final bool isEnabled;
 
-  // Exposed as static so the confirmation sheet can reference them
-  // without duplicating data
   static const Map<String, IconData> icons = {
     'PROPERTY_CONDITION': Icons.home_repair_service_outlined,
     'CONTACT_CONDUCT': Icons.person_off_outlined,
@@ -38,7 +36,6 @@ class CategoryGrid extends StatelessWidget {
     'OTHER': 'Other',
   };
 
-  // Brief one-liners that remove the "General vs Other" ambiguity
   static const Map<String, String> descriptions = {
     'PROPERTY_CONDITION': 'Damage, maintenance or cleanliness',
     'CONTACT_CONDUCT': 'Agent or landlord behaviour',
@@ -53,40 +50,37 @@ class CategoryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final categories = icons.keys.toList();
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      child: Column(
-        children: [
-          for (int i = 0; i < categories.length; i += 2) ...[
-            if (i > 0) const Gap(8),
-            Row(
-              children: [
+    // Removed the heavy 14px padding since it's no longer constrained in a card
+    return Column(
+      children: [
+        for (int i = 0; i < categories.length; i += 2) ...[
+          if (i > 0) const Gap(12), // Slightly increased gap for breathability
+          Row(
+            children: [
+              Expanded(
+                child: _CategoryTile(
+                  category: categories[i],
+                  isSelected: selected == categories[i],
+                  isEnabled: isEnabled,
+                  onTap: () => onSelect(categories[i]),
+                ),
+              ),
+              const Gap(12),
+              if (i + 1 < categories.length)
                 Expanded(
                   child: _CategoryTile(
-                    category: categories[i],
-                    isSelected: selected == categories[i],
+                    category: categories[i + 1],
+                    isSelected: selected == categories[i + 1],
                     isEnabled: isEnabled,
-                    onTap: () => onSelect(categories[i]),
+                    onTap: () => onSelect(categories[i + 1]),
                   ),
-                ),
-                const Gap(8),
-                // Last item (odd count) — fill with empty to preserve alignment
-                if (i + 1 < categories.length)
-                  Expanded(
-                    child: _CategoryTile(
-                      category: categories[i + 1],
-                      isSelected: selected == categories[i + 1],
-                      isEnabled: isEnabled,
-                      onTap: () => onSelect(categories[i + 1]),
-                    ),
-                  )
-                else
-                  const Expanded(child: SizedBox()),
-              ],
-            ),
-          ],
+                )
+              else
+                const Expanded(child: SizedBox()),
+            ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -114,12 +108,14 @@ class _CategoryTile extends StatelessWidget {
       onTap: isEnabled ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.grey50,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? AppColors.primary : AppColors.surface, // Flat
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.grey300,
+            color: isSelected
+                ? AppColors.primary
+                : (AppColors.grey200 ?? Colors.grey.withOpacity(0.2)),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -130,17 +126,16 @@ class _CategoryTile extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  size: 14,
+                  size: 16,
                   color: isSelected ? Colors.white : AppColors.primary,
                 ),
-                const Gap(6),
+                const Gap(8),
                 Expanded(
                   child: Text(
                     label,
-                    style: AppTextStyles.labelSm.copyWith(
+                    style: AppTextStyles.labelMd.copyWith(
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
-                      fontSize: 12,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -148,20 +143,19 @@ class _CategoryTile extends StatelessWidget {
                 if (isSelected)
                   const Icon(
                     Icons.check_circle_rounded,
-                    size: 13,
+                    size: 16,
                     color: Colors.white,
                   ),
               ],
             ),
-            const Gap(3),
+            const Gap(6),
             Text(
               description,
               style: AppTextStyles.caption.copyWith(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.78)
+                    ? Colors.white.withOpacity(0.85)
                     : AppColors.textSecondary,
-                fontSize: 10,
-                height: 1.3,
+                height: 1.4,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
