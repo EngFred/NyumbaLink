@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:rentora/features/bookings/presentation/widgets/book/section_header.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_info_card.dart';
@@ -19,6 +20,7 @@ import 'package:rentora/features/bookings/presentation/widgets/book/booking_text
 import 'package:rentora/features/bookings/presentation/widgets/book/confirm_booking_sheet.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
 import '../widgets/book/booking_success.dart';
+import '../widgets/book/property_summary_card.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({
@@ -117,6 +119,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   Future<void> _onSubmitTap() async {
     if (ref.read(bookingProvider).isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
     if (_moveInDate == null) {
       AppSnackbar.error(context, 'Please select a move-in date');
       return;
@@ -216,19 +219,19 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         child: ListView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 100 + bottomPad),
           children: [
-            // Flat, seamless property header
-            _RichPropertySummary(
+            // ── COMPACT, FLAT, EFFICIENT SUMMARY ──────────────────────────────
+            PropertySummary(
               title: widget.propertyTitle,
               location: widget.location,
               price: widget.price,
               billingCycle: widget.billingCycle,
               imageUrl: widget.imageUrl,
-              universityName: widget.universityName, // NEW FIX: Pass it down
+              universityName: widget.universityName,
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
 
+            // ──────────────────────────────────────────────────────────────────
             const Gap(16),
-
             Row(
               children: [
                 Text(
@@ -248,14 +251,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate().fadeIn(duration: 200.ms),
 
             const Gap(16),
-
-            const _SectionHeader(
+            const SectionHeader(
               number: '01',
               title: 'Your Details',
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
-
             BookingTextField(
               controller: _nameController,
               label: 'Full Name',
@@ -269,7 +270,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
-
             BookingTextField(
               controller: _phoneController,
               label: 'Phone Number',
@@ -290,7 +290,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
-
             BookingTextField(
               controller: _emailController,
               label: 'Email Address',
@@ -306,13 +305,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             const Divider(height: 1, color: AppColors.grey100),
             const Gap(32),
 
-            const _SectionHeader(
+            const SectionHeader(
               number: '02',
               title: 'Booking Details',
             ).animate(delay: 120.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
-
             DatePickerField(
               selectedDate: _moveInDate,
               enabled: !state.isLoading,
@@ -321,7 +319,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
-
             BookingTextField(
               controller: _notesController,
               label: 'Notes / Questions',
@@ -334,7 +331,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 160.ms).fadeIn(duration: 300.ms),
 
             const Gap(32),
-
             const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:
@@ -349,241 +345,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         isLoading: state.isLoading,
         onSubmit: _onSubmitTap,
       ),
-    );
-  }
-}
-
-class _RichPropertySummary extends StatelessWidget {
-  const _RichPropertySummary({
-    required this.title,
-    required this.location,
-    required this.price,
-    this.billingCycle,
-    this.imageUrl,
-    this.universityName, // NEW FIX
-    this.roomNumber,
-  });
-
-  final String title;
-  final String location;
-  final double price;
-  final String? billingCycle;
-  final String? imageUrl;
-  final String? universityName; // NEW FIX
-  final String? roomNumber;
-
-  String _formatBilling(String? cycle) {
-    if (cycle == null || cycle.isEmpty) return '';
-    switch (cycle.toUpperCase()) {
-      case 'DAILY':
-        return '/ day';
-      case 'WEEKLY':
-        return '/ week';
-      case 'MONTHLY':
-        return '/ month';
-      case 'QUARTERLY':
-        return '/ quarter';
-      case 'BIANNUAL':
-        return '/ half-year';
-      case 'ANNUAL':
-        return '/ year';
-      default:
-        return '';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      symbol: 'UGX ',
-      decimalDigits: 0,
-    );
-    final billingStr = _formatBilling(billingCycle);
-
-    // Completely unboxed header design
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Scaled up thumbnail to balance the text
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: SizedBox(
-                width: 96,
-                height: 96,
-                child: imageUrl != null && imageUrl!.isNotEmpty
-                    ? Image.network(imageUrl!, fit: BoxFit.cover)
-                    : Container(
-                        color: AppColors.grey100,
-                        child: const Icon(
-                          Icons.home_work_outlined,
-                          color: AppColors.grey400,
-                          size: 32,
-                        ),
-                      ),
-              ),
-            ),
-            const Gap(16),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (roomNumber != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Room $roomNumber',
-                        style: AppTextStyles.labelSm.copyWith(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    const Gap(8),
-                  ],
-
-                  Text(
-                    title,
-                    style: AppTextStyles.h3.copyWith(
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Gap(8),
-
-                  // NEW FIX: Render University if available
-                  if (universityName != null && universityName!.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.school_outlined,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const Gap(6),
-                        Expanded(
-                          child: Text(
-                            universityName!,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Gap(4),
-                  ],
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                      const Gap(6),
-                      Expanded(
-                        child: Text(
-                          location.isNotEmpty
-                              ? location
-                              : 'Location unavailable',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (price > 0) ...[
-                    const Gap(12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          currencyFormat.format(price),
-                          style: AppTextStyles.h4.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        if (billingStr.isNotEmpty) ...[
-                          const Gap(4),
-                          Text(
-                            billingStr,
-                            style: AppTextStyles.bodySm.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-        const Gap(24),
-        // Clean divider separating header from form fields
-        const Divider(height: 1, thickness: 1, color: AppColors.grey200),
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.number, required this.title});
-  final String number;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            number,
-            style: AppTextStyles.labelSm.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const Gap(12),
-        Text(
-          title,
-          style: AppTextStyles.h4.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ],
     );
   }
 }

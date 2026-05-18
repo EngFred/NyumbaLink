@@ -142,7 +142,7 @@ class _PropertyContentState extends State<PropertyContent> {
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, end: 0, duration: 300.ms),
 
-          const Gap(10),
+          const Gap(15),
 
           // Meta chips
           if (_hasMeta(p))
