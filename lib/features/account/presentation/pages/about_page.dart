@@ -171,7 +171,7 @@ class AboutPage extends StatelessWidget {
                           ),
                           const Gap(12),
                           Text(
-                            'Rentora connects Ugandans with quality rental spaces — from apartments and houses to hostels and commercial properties. We make the search simple, transparent, and fast so you can focus on settling in, not searching.',
+                            'Rentora connects Ugandans with quality rental spaces from apartments and houses to hostels and commercial properties. We make the search simple, transparent, and fast so you can focus on settling in, not searching.',
                             style: AppTextStyles.bodyMd.copyWith(
                               color: AppColors.textSecondary,
                               height: 1.6,
@@ -248,21 +248,22 @@ class AboutPage extends StatelessWidget {
                           _ContactTile(
                             icon: Icons.email_outlined,
                             label: 'Email Support',
-                            value: 'support@rentora.ug',
-                            onTap: () => _launch('mailto:support@rentora.ug'),
+                            value: 'rentorahouselink@gmail.com',
+                            onTap: () =>
+                                _launch('mailto:rentorahouselink@gmail.com'),
                           ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.grey100,
-                            indent: 16,
-                            endIndent: 16,
-                          ),
-                          _ContactTile(
-                            icon: Icons.language_rounded,
-                            label: 'Website',
-                            value: 'www.rentora.ug',
-                            onTap: () => _launch('https://rentora.ug'),
-                          ),
+                          // const Divider(
+                          //   height: 1,
+                          //   color: AppColors.grey100,
+                          //   indent: 16,
+                          //   endIndent: 16,
+                          // ),
+                          // _ContactTile(
+                          //   icon: Icons.language_rounded,
+                          //   label: 'Website',
+                          //   value: 'www.rentora.ug',
+                          //   onTap: () => _launch('https://rentora.ug'),
+                          // ),
                         ],
                       ),
                     ),
@@ -282,7 +283,9 @@ class AboutPage extends StatelessWidget {
                           const Gap(4),
                           _LegalTile(
                             label: 'Terms of Service',
-                            onTap: () => _launch('https://rentora.ug/terms'),
+                            onTap: () => _launch(
+                              'https://rentora-houselink.vercel.app/terms',
+                            ),
                           ),
                           const Divider(
                             height: 1,
@@ -292,7 +295,9 @@ class AboutPage extends StatelessWidget {
                           ),
                           _LegalTile(
                             label: 'Privacy Policy',
-                            onTap: () => _launch('https://rentora.ug/privacy'),
+                            onTap: () => _launch(
+                              'https://rentora-houselink.vercel.app/privacy',
+                            ),
                           ),
                         ],
                       ),
