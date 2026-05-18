@@ -22,28 +22,23 @@ class BookingSuccess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface, // Clean flat background
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
           child: Column(
             children: [
-              const Gap(32),
               // ── Animated success icon ────────────────────────────────────
               Container(
-                    width: 100,
-                    height: 100,
+                    width: 88,
+                    height: 88,
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.success.withOpacity(0.3),
-                        width: 2,
-                      ),
                     ),
                     child: const Icon(
                       Icons.check_rounded,
-                      size: 52,
+                      size: 40,
                       color: AppColors.success,
                     ),
                   )
@@ -54,16 +49,22 @@ class BookingSuccess extends StatelessWidget {
                     curve: Curves.elasticOut,
                   )
                   .fadeIn(duration: 300.ms),
-              const Gap(24),
+
+              const Gap(32),
+
               Text(
                     'Request Submitted!',
-                    style: AppTextStyles.h1,
+                    style: AppTextStyles.h1.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   )
                   .animate(delay: 200.ms)
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, end: 0),
-              const Gap(10),
+
+              const Gap(12),
+
               Text(
                 'Your booking request for '
                 '${roomNumber != null ? 'Room $roomNumber at ' : ''}'
@@ -74,102 +75,61 @@ class BookingSuccess extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ).animate(delay: 260.ms).fadeIn(duration: 300.ms),
-              const Gap(32),
-              // ── Token card ───────────────────────────────────────────────
+
+              const Gap(48),
+
+              // ── Premium Flat Token Display ───────────────────────────────
               Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary.withOpacity(0.08),
-                          AppColors.accent.withOpacity(0.06),
-                        ],
-                      ),
+                      color: AppColors.grey50,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.primary.withOpacity(0.2),
-                      ),
+                      border: Border.all(color: AppColors.grey200),
                     ),
                     child: Column(
                       children: [
+                        Text(
+                          'CANCELLATION TOKEN',
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: AppColors.textHint,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Gap(16),
+                        Text(
+                          cancellationToken,
+                          style: AppTextStyles.h1.copyWith(
+                            color: AppColors.primary,
+                            letterSpacing: 8,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 36,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Gap(24),
+                        const Divider(height: 1, color: AppColors.grey200),
+                        const Gap(16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(
-                              Icons.key_rounded,
-                              size: 17,
-                              color: AppColors.primary,
+                              Icons.security_rounded,
+                              size: 16,
+                              color: AppColors.textSecondary,
                             ),
-                            const Gap(8),
-                            Text(
-                              'Your Cancellation Token',
-                              style: AppTextStyles.labelLg.copyWith(
-                                color: AppColors.primary,
+                            const Gap(12),
+                            Expanded(
+                              child: Text(
+                                'Save this token to cancel your booking later. It has also been saved to your "My Bookings" tab.',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
-                        ),
-                        const Gap(16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.2),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withOpacity(0.08),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            cancellationToken,
-                            style: AppTextStyles.h1.copyWith(
-                              color: AppColors.primary,
-                              letterSpacing: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        const Gap(14),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withOpacity(0.07),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.warning_amber_rounded,
-                                size: 15,
-                                color: AppColors.accent,
-                              ),
-                              const Gap(8),
-                              Expanded(
-                                child: Text(
-                                  'Save this token — you\'ll need it to cancel this booking. '
-                                  'It has also been saved to your "My Bookings" tab.',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.accent,
-                                    height: 1.45,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
@@ -177,69 +137,78 @@ class BookingSuccess extends StatelessWidget {
                   .animate(delay: 360.ms)
                   .fadeIn(duration: 400.ms)
                   .slideY(begin: 0.06, end: 0),
-              const Gap(20),
+
+              const Gap(48),
+
               // ── What's next ──────────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.grey200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("What's next?", style: AppTextStyles.labelLg),
-                    const Gap(12),
-                    ..._nextSteps.map(
-                      (step) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary50,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                step.$2,
-                                size: 15,
-                                color: AppColors.primary,
-                              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "What's next?",
+                    style: AppTextStyles.h3.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Gap(20),
+                  ..._nextSteps.map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.05),
+                              shape: BoxShape.circle,
                             ),
-                            const Gap(10),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 5),
-                                child: Text(
-                                  step.$1,
-                                  style: AppTextStyles.bodySm.copyWith(
-                                    height: 1.4,
-                                  ),
+                            child: Icon(
+                              step.$2,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const Gap(16),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                step.$1,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ).animate(delay: 460.ms).fadeIn(duration: 400.ms),
-              const Gap(28),
+
+              const Gap(48),
+
               ElevatedButton.icon(
                 onPressed: onDone,
-                icon: const Icon(Icons.explore_rounded, size: 18),
-                label: const Text('Back to Explore'),
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+                label: const Text(
+                  'Got it',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 52),
+                  minimumSize: const Size(double.infinity, 56),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ).animate(delay: 540.ms).fadeIn(duration: 300.ms),
-              const Gap(8),
+
+              const Gap(16),
             ],
           ),
         ),

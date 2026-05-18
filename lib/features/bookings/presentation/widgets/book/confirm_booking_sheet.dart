@@ -5,9 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Confirmation bottom sheet — shown before the API call fires
-// ─────────────────────────────────────────────────────────────────────────────
 class ConfirmBookingSheet extends StatelessWidget {
   const ConfirmBookingSheet({
     super.key,
@@ -30,130 +27,109 @@ class ConfirmBookingSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    // ── NEW PRO UX: Solid background with rounded top corners ──
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface, // CRITICAL: Fixes the transparent overlap bug
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
+        24,
+        12,
+        24,
         MediaQuery.of(context).padding.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Sheet header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: AppColors.primary50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.fact_check_outlined,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
+          // Subtle drag handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.grey200,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const Gap(12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Confirm Your Booking', style: AppTextStyles.h4),
-                    Text(
-                      'Review before submitting',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const Gap(20),
-
-          // Details summary card
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.grey50,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.grey200),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _SheetDetailRow(
-                  icon: Icons.home_work_outlined,
-                  label: 'Property',
-                  value: roomNumber != null
-                      ? '$propertyTitle · Room $roomNumber'
-                      : propertyTitle,
-                  iconColor: AppColors.primary,
-                ),
-                _SheetDivider(),
-                _SheetDetailRow(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Name',
-                  value: name,
-                ),
-                _SheetDivider(),
-                _SheetDetailRow(
-                  icon: Icons.phone_outlined,
-                  label: 'Phone',
-                  value: phone,
-                ),
-                if (email != null && email!.isNotEmpty) ...[
-                  _SheetDivider(),
-                  _SheetDetailRow(
-                    icon: Icons.email_outlined,
-                    label: 'Email',
-                    value: email!,
-                  ),
-                ],
-                _SheetDivider(),
-                _SheetDetailRow(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'Move-in',
-                  value: DateFormat('EEE, MMM d, yyyy').format(moveInDate),
-                  iconColor: AppColors.accent,
-                ),
-                if (notes != null && notes!.isNotEmpty) ...[
-                  _SheetDivider(),
-                  _SheetDetailRow(
-                    icon: Icons.notes_rounded,
-                    label: 'Notes',
-                    value: notes!,
-                  ),
-                ],
-              ],
+          ),
+          const Gap(24),
+
+          Text(
+            'Confirm Booking',
+            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const Gap(6),
+          Text(
+            'Please review your details before submitting.',
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
 
-          const Gap(14),
+          const Gap(32),
 
-          // Token reminder
+          // Clean, unboxed receipt layout
+          _DetailRow(
+            icon: Icons.home_work_outlined,
+            label: 'Property',
+            value: roomNumber != null
+                ? '$propertyTitle (Room $roomNumber)'
+                : propertyTitle,
+          ),
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(icon: Icons.person_outline, label: 'Name', value: name),
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(icon: Icons.phone_outlined, label: 'Phone', value: phone),
+          if (email != null && email!.isNotEmpty) ...[
+            const Divider(height: 24, color: AppColors.grey100),
+            _DetailRow(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: email!,
+            ),
+          ],
+          const Divider(height: 24, color: AppColors.grey100),
+          _DetailRow(
+            icon: Icons.calendar_month_outlined,
+            label: 'Move-in',
+            value: DateFormat('EEE, MMM d, yyyy').format(moveInDate),
+            iconColor: AppColors.primary,
+          ),
+          if (notes != null && notes!.isNotEmpty) ...[
+            const Divider(height: 24, color: AppColors.grey100),
+            _DetailRow(
+              icon: Icons.notes_rounded,
+              label: 'Notes',
+              value: notes!,
+            ),
+          ],
+
+          const Gap(32),
+
+          // Subtle information box
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.infoLight,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.primary.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.key_rounded, size: 14, color: AppColors.info),
-                const Gap(8),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const Gap(12),
                 Expanded(
                   child: Text(
-                    'A cancellation token will be generated and saved to '
-                    '"My Bookings" after submission.',
+                    'A secure cancellation token will be generated and saved to your account upon submission.',
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.info,
-                      fontWeight: FontWeight.w500,
+                      color: AppColors.primary,
                       height: 1.4,
                     ),
                   ),
@@ -162,29 +138,35 @@ class ConfirmBookingSheet extends StatelessWidget {
             ),
           ),
 
-          const Gap(20),
+          const Gap(32),
 
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.send_rounded, size: 16),
-            label: const Text('Confirm & Submit'),
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 52),
+              minimumSize: const Size(double.infinity, 54),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text(
+              'Confirm & Submit',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-
           const Gap(8),
-
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             style: TextButton.styleFrom(
-              minimumSize: const Size(double.infinity, 44),
-            ),
-            child: Text(
-              'Go Back & Edit',
-              style: AppTextStyles.button.copyWith(
-                color: AppColors.textSecondary,
+              minimumSize: const Size(double.infinity, 54),
+              foregroundColor: AppColors.textSecondary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+            ),
+            child: const Text(
+              'Go Back & Edit',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -193,8 +175,8 @@ class ConfirmBookingSheet extends StatelessWidget {
   }
 }
 
-class _SheetDetailRow extends StatelessWidget {
-  const _SheetDetailRow({
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
@@ -208,45 +190,33 @@ class _SheetDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 15, color: iconColor ?? AppColors.grey500),
-          const Gap(10),
-          SizedBox(
-            width: 60,
-            child: Text(
-              label,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: iconColor ?? AppColors.textHint),
+        const Gap(12),
+        SizedBox(
+          width: 70,
+          child: Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
             ),
+            textAlign: TextAlign.right,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-}
-
-class _SheetDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => const Divider(
-    height: 1,
-    color: AppColors.grey200,
-    indent: 14,
-    endIndent: 14,
-  );
 }
