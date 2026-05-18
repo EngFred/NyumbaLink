@@ -29,16 +29,15 @@ class BookingResponseModel {
     required this.status,
     required this.cancellationToken,
   });
-
   final String id;
   final String status;
   final String cancellationToken;
 
   factory BookingResponseModel.fromJson(Map<String, dynamic> json) {
     return BookingResponseModel(
-      id: json['id'] as String,
-      status: json['status'] as String,
-      cancellationToken: json['cancellationToken'] as String,
+      id: json['id']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      cancellationToken: json['cancellationToken']?.toString() ?? '',
     );
   }
 
@@ -56,6 +55,7 @@ class LocalBookingModel {
   const LocalBookingModel({
     required this.id,
     required this.cancellationToken,
+    required this.propertyId,
     required this.propertyTitle,
     required this.price,
     required this.location,
@@ -67,6 +67,7 @@ class LocalBookingModel {
 
   final String id;
   final String cancellationToken;
+  final String propertyId;
   final String propertyTitle;
   final double price;
   final String location;
@@ -78,6 +79,7 @@ class LocalBookingModel {
   Map<String, dynamic> toJson() => {
     'id': id,
     'cancellationToken': cancellationToken,
+    'propertyId': propertyId,
     'propertyTitle': propertyTitle,
     'price': price,
     'location': location,
@@ -92,6 +94,7 @@ class LocalBookingModel {
   ) => LocalBookingModel(
     id: json['id']?.toString() ?? '',
     cancellationToken: json['cancellationToken']?.toString() ?? '',
+    propertyId: json['propertyId']?.toString() ?? '',
     propertyTitle: json['propertyTitle']?.toString() ?? '',
     price: (json['price'] as num?)?.toDouble() ?? 0.0,
     location: json['location']?.toString() ?? '',
@@ -105,6 +108,7 @@ class LocalBookingModel {
     return SavedBooking(
       id: id,
       cancellationToken: cancellationToken,
+      propertyId: propertyId,
       propertyTitle: propertyTitle,
       price: price,
       location: location,
@@ -122,6 +126,7 @@ class RemoteBookingModel {
     required this.id,
     required this.status,
     required this.createdAt,
+    required this.propertyId,
     required this.propertyTitle,
     required this.price,
     required this.location,
@@ -132,6 +137,7 @@ class RemoteBookingModel {
   final String id;
   final String status;
   final String createdAt;
+  final String propertyId;
   final String propertyTitle;
   final double price;
   final String location;
@@ -139,31 +145,44 @@ class RemoteBookingModel {
   final String? roomNumber;
 
   factory RemoteBookingModel.fromJson(Map<String, dynamic> json) {
-    // Safely extract from your backend's Joined Property Entity
     final property = json['property'] as Map<String, dynamic>? ?? {};
     final images = property['images'] as List<dynamic>? ?? [];
-    final thumbnail = images.isNotEmpty ? images.first['url'] as String? : null;
+    final thumbnail = images.isNotEmpty
+        ? images.first['url']?.toString()
+        : null;
 
-    final area = property['area'] as String? ?? '';
-    final district = property['district']?['name'] as String? ?? '';
+    final area = property['area']?.toString() ?? '';
+    final district = property['district']?['name']?.toString() ?? '';
     final loc = district.isNotEmpty ? '$area, $district' : area;
 
+    // Bulletproof price parsing (TypeORM sends decimals as strings)
+    final priceVal = property['price'];
+    double parsedPrice = 0.0;
+    if (priceVal is num) {
+      parsedPrice = priceVal.toDouble();
+    } else if (priceVal is String) {
+      parsedPrice = double.tryParse(priceVal) ?? 0.0;
+    }
+
     return RemoteBookingModel(
-      id: json['id'] as String,
-      status: json['status'] as String,
-      createdAt: json['createdAt'] as String,
-      propertyTitle: property['title'] as String? ?? 'Unknown Property',
-      price: (property['price'] as num?)?.toDouble() ?? 0.0,
+      id: json['id']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      createdAt:
+          json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+      propertyId: property['id']?.toString() ?? '',
+      propertyTitle: property['title']?.toString() ?? 'Unknown Property',
+      price: parsedPrice,
       location: loc,
       thumbnailUrl: thumbnail,
-      roomNumber: json['hostelRoom']?['roomNumber'] as String?,
+      roomNumber: json['hostelRoom']?['roomNumber']?.toString(),
     );
   }
 
   SavedBooking toEntity() {
     return SavedBooking(
       id: id,
-      cancellationToken: '', // Not needed for logged-in users
+      cancellationToken: '', // Merged securely in LocalDataSource
+      propertyId: propertyId,
       propertyTitle: propertyTitle,
       price: price,
       location: location,

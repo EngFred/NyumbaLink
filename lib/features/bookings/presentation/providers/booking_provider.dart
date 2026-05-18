@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../domain/entities/booking_entities.dart';
 import '../../domain/usecases/booking_usecases.dart';
 import 'booking_usecase_providers.dart';
@@ -10,7 +9,6 @@ class BookingState {
     this.error,
     this.successResponse,
   });
-
   final bool isLoading;
   final String? error;
   final BookingResponse? successResponse;
@@ -36,18 +34,26 @@ final bookingProvider =
 
 class BookingNotifier extends StateNotifier<BookingState> {
   BookingNotifier(this._createBooking) : super(const BookingState());
-
   final CreateBookingUseCase _createBooking;
 
   Future<void> submitBooking({
     required BookingRequest request,
     required String propertyTitle,
+    required double price,
+    required String location,
+    String? thumbnailUrl,
     String? roomNumber,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
-
     try {
-      final response = await _createBooking(request, propertyTitle, roomNumber);
+      final response = await _createBooking(
+        request,
+        propertyTitle,
+        price,
+        location,
+        thumbnailUrl,
+        roomNumber,
+      );
       state = state.copyWith(isLoading: false, successResponse: response);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

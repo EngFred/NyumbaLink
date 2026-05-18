@@ -12,13 +12,10 @@ final bookingsLocalDataSourceProvider = Provider<BookingsLocalDataSource>((
 class BookingsLocalDataSource {
   static const _savedBookingsKey = 'rentora_saved_bookings';
 
-  /// Upserts a list of bookings into local storage (used after remote sync).
-  /// Preserves existing local entries that aren't in the remote list.
   Future<void> upsertFromRemote(List<LocalBookingModel> remoteEntries) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getStringList(_savedBookingsKey) ?? [];
 
-    // Build a map of existing entries keyed by id
     final map = <String, LocalBookingModel>{};
     for (final raw in existing) {
       try {
@@ -27,9 +24,26 @@ class BookingsLocalDataSource {
       } catch (_) {}
     }
 
-    // Overwrite/insert with remote data (remote is authoritative for status)
     for (final entry in remoteEntries) {
-      map[entry.id] = entry;
+      final existingEntry = map[entry.id];
+
+      // CRITICAL FIX: Preserve the cancellation token if the remote doesn't have it
+      final tokenToKeep = (existingEntry?.cancellationToken.isNotEmpty == true)
+          ? existingEntry!.cancellationToken
+          : entry.cancellationToken;
+
+      map[entry.id] = LocalBookingModel(
+        id: entry.id,
+        cancellationToken: tokenToKeep,
+        propertyId: entry.propertyId,
+        propertyTitle: entry.propertyTitle,
+        price: entry.price,
+        location: entry.location,
+        thumbnailUrl: entry.thumbnailUrl,
+        roomNumber: entry.roomNumber,
+        bookedAt: entry.bookedAt,
+        isCancelled: entry.isCancelled,
+      );
     }
 
     final merged = map.values.map((m) => jsonEncode(m.toJson())).toList();
@@ -39,9 +53,10 @@ class BookingsLocalDataSource {
   Future<void> saveBookingLocally({
     required String bookingId,
     required String cancellationToken,
+    required String propertyId,
     required String propertyTitle,
-    double price = 0.0, // Default for backwards compatibility
-    String location = '',
+    required double price,
+    required String location,
     String? thumbnailUrl,
     String? roomNumber,
     String? remoteStatus,
@@ -52,6 +67,7 @@ class BookingsLocalDataSource {
     final entry = LocalBookingModel(
       id: bookingId,
       cancellationToken: cancellationToken,
+      propertyId: propertyId,
       propertyTitle: propertyTitle,
       price: price,
       location: location,
@@ -61,7 +77,7 @@ class BookingsLocalDataSource {
       isCancelled: false,
     );
 
-    existing.insert(0, jsonEncode(entry.toJson())); // newest first
+    existing.insert(0, jsonEncode(entry.toJson()));
     await prefs.setStringList(_savedBookingsKey, existing);
   }
 
@@ -90,6 +106,7 @@ class BookingsLocalDataSource {
           LocalBookingModel(
             id: m.id,
             cancellationToken: m.cancellationToken,
+            propertyId: m.propertyId,
             propertyTitle: m.propertyTitle,
             price: m.price,
             location: m.location,

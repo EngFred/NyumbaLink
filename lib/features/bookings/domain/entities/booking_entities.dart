@@ -38,6 +38,7 @@ class SavedBooking {
   const SavedBooking({
     required this.id,
     required this.cancellationToken,
+    required this.propertyId, // NEW: Required for navigation
     required this.propertyTitle,
     required this.price,
     required this.location,
@@ -49,6 +50,7 @@ class SavedBooking {
 
   final String id;
   final String cancellationToken;
+  final String propertyId;
   final String propertyTitle;
   final double price;
   final String location;

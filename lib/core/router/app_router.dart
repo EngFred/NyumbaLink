@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/account/presentation/pages/about_page.dart';
 
+import 'package:rentora/features/account/presentation/pages/about_page.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_profile_page.dart';
@@ -31,7 +31,6 @@ final GoRouter appRouter = GoRouter(
       name: 'splash',
       builder: (context, state) => const SplashPage(),
     ),
-
     // ── Onboarding ────────────────────────────────────────────────────────────
     GoRoute(
       path: '/onboarding',
@@ -42,7 +41,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _fadeTransition,
       ),
     ),
-
     // ── Auth ──────────────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.login,
@@ -83,7 +81,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     // ── Deep link redirect ────────────────────────────────────────────────────
     GoRoute(
       path: '/p/:id',
@@ -94,7 +91,6 @@ final GoRouter appRouter = GoRouter(
         return AppRoutes.browse;
       },
     ),
-
     // ── Main shell (bottom nav tabs) ──────────────────────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
@@ -138,7 +134,6 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
-
     // ── Property detail & rooms ───────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.propertyDetail,
@@ -169,11 +164,17 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final id = state.pathParameters['id']!;
         final extra = (state.extra as Map<String, dynamic>?) ?? {};
+
         return CustomTransitionPage(
           key: state.pageKey,
           child: BookingPage(
             propertyId: id,
             propertyTitle: extra['title'] as String? ?? '',
+            // ── NEW FIXES: Parsing the required fields from the extra map ──
+            price: (extra['price'] as num?)?.toDouble() ?? 0.0,
+            location: extra['location'] as String? ?? '',
+            imageUrl: extra['imageUrl'] as String?,
+            // ─────────────────────────────────────────────────────────────────
             hostelRoomId: extra['hostelRoomId'] as String?,
             roomNumber: extra['roomNumber'] as String?,
           ),
@@ -181,7 +182,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
     // ── Other routes ──────────────────────────────────────────────────────────
     GoRoute(
       path: '/complaint',
@@ -238,7 +238,6 @@ final GoRouter appRouter = GoRouter(
 );
 
 // ── Transition helpers ────────────────────────────────────────────────────────
-
 Widget _slideUpTransition(
   BuildContext context,
   Animation<double> animation,
