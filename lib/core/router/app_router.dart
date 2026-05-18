@@ -31,7 +31,6 @@ final GoRouter appRouter = GoRouter(
       name: 'splash',
       builder: (context, state) => const SplashPage(),
     ),
-    // ── Onboarding ────────────────────────────────────────────────────────────
     GoRoute(
       path: '/onboarding',
       name: 'onboarding',
@@ -41,7 +40,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _fadeTransition,
       ),
     ),
-    // ── Auth ──────────────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.login,
       name: 'login',
@@ -81,7 +79,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-    // ── Deep link redirect ────────────────────────────────────────────────────
     GoRoute(
       path: '/p/:id',
       name: 'propertyDeepLink',
@@ -91,7 +88,6 @@ final GoRouter appRouter = GoRouter(
         return AppRoutes.browse;
       },
     ),
-    // ── Main shell (bottom nav tabs) ──────────────────────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -134,7 +130,6 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
-    // ── Property detail & rooms ───────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.propertyDetail,
       name: 'propertyDetail',
@@ -151,10 +146,23 @@ final GoRouter appRouter = GoRouter(
       name: 'hostelRooms',
       pageBuilder: (context, state) {
         final id = state.pathParameters['id']!;
-        final title = state.extra as String? ?? 'Hostel Rooms';
+
+        // FIX: Extracting the full Map from PropertyDetailPage
+        final extra = (state.extra as Map<String, dynamic>?) ?? {};
+        final title = extra['title'] as String? ?? 'Hostel Rooms';
+        final location = extra['location'] as String? ?? '';
+        final imageUrl = extra['imageUrl'] as String?;
+        final universityName = extra['universityName'] as String?;
+
         return MaterialPage(
           key: state.pageKey,
-          child: HostelRoomsPage(propertyId: id, propertyTitle: title),
+          child: HostelRoomsPage(
+            propertyId: id,
+            propertyTitle: title,
+            location: location,
+            imageUrl: imageUrl,
+            universityName: universityName,
+          ),
         );
       },
     ),
@@ -164,7 +172,6 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) {
         final id = state.pathParameters['id']!;
         final extra = (state.extra as Map<String, dynamic>?) ?? {};
-
         return CustomTransitionPage(
           key: state.pageKey,
           child: BookingPage(
@@ -174,7 +181,7 @@ final GoRouter appRouter = GoRouter(
             location: extra['location'] as String? ?? '',
             imageUrl: extra['imageUrl'] as String?,
             billingCycle: extra['billingCycle'] as String?,
-            // ─────────────────────────────────────────────────────────────────
+            universityName: extra['universityName'] as String?,
             hostelRoomId: extra['hostelRoomId'] as String?,
             roomNumber: extra['roomNumber'] as String?,
           ),
@@ -182,7 +189,6 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-    // ── Other routes ──────────────────────────────────────────────────────────
     GoRoute(
       path: '/complaint',
       name: 'complaint',
@@ -237,7 +243,6 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
-// ── Transition helpers ────────────────────────────────────────────────────────
 Widget _slideUpTransition(
   BuildContext context,
   Animation<double> animation,

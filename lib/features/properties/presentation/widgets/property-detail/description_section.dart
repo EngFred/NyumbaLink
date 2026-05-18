@@ -11,13 +11,14 @@ class DescriptionSection extends StatelessWidget {
     required this.expanded,
     required this.onToggle,
   });
+
   final String description;
   final bool expanded;
   final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    const maxLines = 3;
+    const maxLines = 4; // Slightly increased since we removed the title
     final isLong = description.length > 200;
 
     return Padding(
@@ -25,8 +26,6 @@ class DescriptionSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Description', style: AppTextStyles.h3),
-          const Gap(10),
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 250),
             crossFadeState: expanded
@@ -37,6 +36,7 @@ class DescriptionSection extends StatelessWidget {
               style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.6,
+                fontSize: 15,
               ),
               maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
@@ -46,18 +46,19 @@ class DescriptionSection extends StatelessWidget {
               style: AppTextStyles.bodyMd.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.6,
+                fontSize: 15,
               ),
             ),
           ),
           if (isLong) ...[
-            const Gap(6),
+            const Gap(10),
             GestureDetector(
               onTap: onToggle,
               child: Text(
                 expanded ? 'Show less ↑' : 'Read more ↓',
                 style: AppTextStyles.labelMd.copyWith(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

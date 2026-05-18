@@ -1,4 +1,6 @@
 // ── District Entity ──────────────────────────────────────────────────────────
+import '../../../universities/domain/entities/university.dart';
+
 class District {
   const District({required this.id, required this.name});
   final String id;
@@ -68,8 +70,8 @@ class Property {
     this.amenities,
     this.lat,
     this.lng,
+    this.university, // NEW FIX
   });
-
   final String id;
   final String title;
   final String description;
@@ -86,16 +88,11 @@ class Property {
   final int numberOfRooms;
   final bool parkingAvailable;
 
-  // ── Featured ────────────────────────────────────────────────────────────
   final bool isFeatured;
   final String? featuredUntil;
-
-  // ── Type-conditional fields ─────────────────────────────────────────────
   final String? billingCycle;
   final int? totalRooms;
   final String? hotelCategory;
-
-  // ── Optional property details ───────────────────────────────────────────
   final String? furnishingStatus;
   final int? floor;
   final String? address;
@@ -104,8 +101,8 @@ class Property {
   final List<String>? amenities;
   final double? lat;
   final double? lng;
+  final University? university; // NEW FIX
 
-  // ── Computed helpers ────────────────────────────────────────────────────
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
@@ -145,6 +142,7 @@ class Property {
     List<String>? amenities,
     double? lat,
     double? lng,
+    University? university,
   }) {
     return Property(
       id: id ?? this.id,
@@ -175,6 +173,7 @@ class Property {
       amenities: amenities ?? this.amenities,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
+      university: university ?? this.university,
     );
   }
 }
@@ -201,7 +200,6 @@ class HostelRoom {
   final int? floor;
   final String? description;
   final List<String>? amenities;
-
   bool get isAvailable => status == 'AVAILABLE';
 }
 

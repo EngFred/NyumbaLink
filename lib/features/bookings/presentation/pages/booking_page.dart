@@ -14,10 +14,10 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../properties/presentation/providers/properties_provider.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_provider.dart';
+
 import 'package:rentora/features/bookings/presentation/widgets/book/booking_text_field.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/confirm_booking_sheet.dart';
 import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
-
 import '../widgets/book/booking_success.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
@@ -29,6 +29,7 @@ class BookingPage extends ConsumerStatefulWidget {
     required this.location,
     this.billingCycle,
     this.imageUrl,
+    this.universityName,
     this.hostelRoomId,
     this.roomNumber,
   });
@@ -39,6 +40,7 @@ class BookingPage extends ConsumerStatefulWidget {
   final String location;
   final String? billingCycle;
   final String? imageUrl;
+  final String? universityName;
   final String? hostelRoomId;
   final String? roomNumber;
 
@@ -115,7 +117,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   Future<void> _onSubmitTap() async {
     if (ref.read(bookingProvider).isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
     if (_moveInDate == null) {
       AppSnackbar.error(context, 'Please select a move-in date');
       return;
@@ -220,8 +221,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               title: widget.propertyTitle,
               location: widget.location,
               price: widget.price,
-              billingCycle: widget.billingCycle, // Pass it down
+              billingCycle: widget.billingCycle,
               imageUrl: widget.imageUrl,
+              universityName: widget.universityName, // NEW FIX: Pass it down
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
 
@@ -253,6 +255,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             BookingTextField(
               controller: _nameController,
               label: 'Full Name',
@@ -264,7 +267,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               validator: (v) =>
                   v == null || v.trim().isEmpty ? 'Name is required' : null,
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
+
             const Gap(16),
+
             BookingTextField(
               controller: _phoneController,
               label: 'Phone Number',
@@ -283,7 +288,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
                 return null;
               },
             ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
+
             const Gap(16),
+
             BookingTextField(
               controller: _emailController,
               label: 'Email Address',
@@ -305,13 +312,16 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 120.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             DatePickerField(
               selectedDate: _moveInDate,
               enabled: !state.isLoading,
               onTap: _selectDate,
               onClear: () => setState(() => _moveInDate = null),
             ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
+
             const Gap(16),
+
             BookingTextField(
               controller: _notesController,
               label: 'Notes / Questions',
@@ -350,6 +360,7 @@ class _RichPropertySummary extends StatelessWidget {
     required this.price,
     this.billingCycle,
     this.imageUrl,
+    this.universityName, // NEW FIX
     this.roomNumber,
   });
 
@@ -358,6 +369,7 @@ class _RichPropertySummary extends StatelessWidget {
   final double price;
   final String? billingCycle;
   final String? imageUrl;
+  final String? universityName; // NEW FIX
   final String? roomNumber;
 
   String _formatBilling(String? cycle) {
@@ -386,32 +398,34 @@ class _RichPropertySummary extends StatelessWidget {
       symbol: 'UGX ',
       decimalDigits: 0,
     );
-
     final billingStr = _formatBilling(billingCycle);
 
+    // Completely unboxed header design
     return Column(
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.grey100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: imageUrl != null && imageUrl!.isNotEmpty
-                  ? Image.network(imageUrl!, fit: BoxFit.cover)
-                  : const Center(
-                      child: Icon(
-                        Icons.home_work_outlined,
-                        color: AppColors.grey400,
+            // Scaled up thumbnail to balance the text
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                width: 96,
+                height: 96,
+                child: imageUrl != null && imageUrl!.isNotEmpty
+                    ? Image.network(imageUrl!, fit: BoxFit.cover)
+                    : Container(
+                        color: AppColors.grey100,
+                        child: const Icon(
+                          Icons.home_work_outlined,
+                          color: AppColors.grey400,
+                          size: 32,
+                        ),
                       ),
-                    ),
+              ),
             ),
             const Gap(16),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,29 +437,57 @@ class _RichPropertySummary extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.accent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'Room $roomNumber',
                         style: AppTextStyles.labelSm.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    const Gap(6),
+                    const Gap(8),
                   ],
+
                   Text(
                     title,
                     style: AppTextStyles.h3.copyWith(
-                      // Slightly larger for a hero feel
                       fontWeight: FontWeight.bold,
+                      height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Gap(6),
+                  const Gap(8),
+
+                  // NEW FIX: Render University if available
+                  if (universityName != null && universityName!.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.school_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const Gap(6),
+                        Expanded(
+                          child: Text(
+                            universityName!,
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Gap(4),
+                  ],
+
                   Row(
                     children: [
                       const Icon(
@@ -453,7 +495,7 @@ class _RichPropertySummary extends StatelessWidget {
                         size: 14,
                         color: AppColors.textSecondary,
                       ),
-                      const Gap(4),
+                      const Gap(6),
                       Expanded(
                         child: Text(
                           location.isNotEmpty
@@ -468,8 +510,9 @@ class _RichPropertySummary extends StatelessWidget {
                       ),
                     ],
                   ),
+
                   if (price > 0) ...[
-                    const Gap(8),
+                    const Gap(12),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
@@ -478,6 +521,7 @@ class _RichPropertySummary extends StatelessWidget {
                           currencyFormat.format(price),
                           style: AppTextStyles.h4.copyWith(
                             color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         if (billingStr.isNotEmpty) ...[
@@ -498,11 +542,9 @@ class _RichPropertySummary extends StatelessWidget {
             ),
           ],
         ),
-
         const Gap(24),
-
-        // This clean divider replaces the bulky card box
-        const Divider(height: 1, color: AppColors.grey200),
+        // Clean divider separating header from form fields
+        const Divider(height: 1, thickness: 1, color: AppColors.grey200),
       ],
     );
   }

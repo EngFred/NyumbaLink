@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
+
 import 'package:rentora/features/properties/presentation/widgets/property-detail/amenities_section.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/description_section.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/details_grid.dart';
@@ -8,6 +9,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/meta_chips_row.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/sheet_handle.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/similar_properties_section.dart';
+
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
@@ -33,6 +35,7 @@ class _PropertyContentState extends State<PropertyContent> {
   @override
   Widget build(BuildContext context) {
     final p = widget.property;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
@@ -74,10 +77,43 @@ class _PropertyContentState extends State<PropertyContent> {
                             letterSpacing: 1.1,
                           ),
                         ),
-                        const Gap(4),
+                        const Gap(6),
                       ],
-                      Text(p.title, style: AppTextStyles.h1),
-                      const Gap(6),
+                      Text(
+                        p.title,
+                        style: AppTextStyles.h1.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Gap(8),
+
+                      // ── Render University if it exists ──
+                      if (p.university != null) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.school_outlined,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                            const Gap(6),
+                            Expanded(
+                              child: Text(
+                                p.university!.name,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Gap(6),
+                      ],
+
+                      // ──────────────────────────────────────────
                       Row(
                         children: [
                           const Icon(
@@ -85,7 +121,7 @@ class _PropertyContentState extends State<PropertyContent> {
                             size: 16,
                             color: AppColors.accent,
                           ),
-                          const Gap(4),
+                          const Gap(6),
                           Expanded(
                             child: Text(
                               '${p.area.trim()}, ${p.district.name}',
@@ -105,25 +141,25 @@ class _PropertyContentState extends State<PropertyContent> {
               .animate(delay: 60.ms)
               .fadeIn(duration: 300.ms)
               .slideY(begin: 0.04, end: 0, duration: 300.ms),
-          const Gap(16),
+
+          const Gap(10),
 
           // Meta chips
           if (_hasMeta(p))
             MetaChipsRow(
               property: p,
             ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-          const Gap(16),
 
-          // Divider
+          const Gap(10),
           const Divider(
             indent: 20,
             endIndent: 20,
             height: 1,
             color: AppColors.grey200,
           ),
-          const Gap(20),
+          const Gap(10),
 
-          // Description
+          // Description (Header removed internally)
           DescriptionSection(
             description: p.description,
             expanded: _descExpanded,
@@ -132,7 +168,7 @@ class _PropertyContentState extends State<PropertyContent> {
 
           // Amenities
           if (p.amenities != null && p.amenities!.isNotEmpty) ...[
-            const Gap(20),
+            const Gap(24),
             const Divider(
               indent: 20,
               endIndent: 20,
@@ -145,8 +181,8 @@ class _PropertyContentState extends State<PropertyContent> {
             ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
           ],
 
-          // Details grid
-          const Gap(20),
+          // Details grid (Now flattened)
+          const Gap(24),
           const Divider(
             indent: 20,
             endIndent: 20,
@@ -159,7 +195,7 @@ class _PropertyContentState extends State<PropertyContent> {
           ).animate(delay: 220.ms).fadeIn(duration: 300.ms),
 
           // Engagement stats
-          const Gap(20),
+          const Gap(24),
           const Divider(
             indent: 20,
             endIndent: 20,

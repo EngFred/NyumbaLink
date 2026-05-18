@@ -1,3 +1,5 @@
+import '../../../universities/data/models/university_model.dart';
+import '../../../universities/domain/entities/university.dart';
 import '../../domain/entities/property_entities.dart';
 import '../models/property_models.dart';
 
@@ -19,6 +21,12 @@ extension ContactModelX on ContactModel {
 extension PropertyImageModelX on PropertyImageModel {
   PropertyImage toEntity() =>
       PropertyImage(id: id, url: url, publicId: publicId, isPrimary: isPrimary);
+}
+
+// NEW FIX: Map University model to entity
+extension UniversityModelX on UniversityModel {
+  University toEntity() =>
+      University(id: id, name: name, shortName: shortName, location: location);
 }
 
 extension PropertyModelX on PropertyModel {
@@ -51,6 +59,7 @@ extension PropertyModelX on PropertyModel {
     amenities: amenities,
     lat: lat,
     lng: lng,
+    university: university?.toEntity(), // NEW FIX: Safely map university
   );
 }
 

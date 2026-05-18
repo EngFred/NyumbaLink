@@ -1,9 +1,11 @@
+import '../../../universities/data/models/university_model.dart';
+import '../../domain/entities/property_entities.dart';
+
 // ── District ──────────────────────────────────────────────────────────────────
 class DistrictModel {
   const DistrictModel({required this.id, required this.name});
   final String id;
   final String name;
-
   factory DistrictModel.fromJson(Map<String, dynamic> j) =>
       DistrictModel(id: j['id'] as String, name: j['name'] as String);
 }
@@ -24,7 +26,6 @@ class ContactModel {
   final String role;
   final String? whatsapp;
   final String? email;
-
   factory ContactModel.fromJson(Map<String, dynamic> j) => ContactModel(
     id: j['id'] as String,
     name: j['name'] as String,
@@ -47,7 +48,6 @@ class PropertyImageModel {
   final String url;
   final String publicId;
   final bool isPrimary;
-
   factory PropertyImageModel.fromJson(Map<String, dynamic> j) =>
       PropertyImageModel(
         id: j['id'] as String,
@@ -88,8 +88,8 @@ class PropertyModel {
     this.amenities,
     this.lat,
     this.lng,
+    this.university,
   });
-
   final String id;
   final String title;
   final String description;
@@ -118,6 +118,7 @@ class PropertyModel {
   final List<String>? amenities;
   final double? lat;
   final double? lng;
+  final UniversityModel? university;
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
@@ -171,6 +172,9 @@ class PropertyModel {
       lng: j['longitude'] != null
           ? double.tryParse(j['longitude'].toString())
           : null,
+      university: j['university'] != null
+          ? UniversityModel.fromJson(j['university'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
@@ -197,9 +201,7 @@ class HostelRoomModel {
   final int? floor;
   final String? description;
   final List<String>? amenities;
-
   bool get isAvailable => status == 'AVAILABLE';
-
   factory HostelRoomModel.fromJson(Map<String, dynamic> j) => HostelRoomModel(
     id: j['id'] as String,
     roomNumber: j['roomNumber'] as String,
@@ -233,7 +235,6 @@ class HostelStatsModel {
   final double occupancyRate;
   final int? capacityCap;
   final int? slotsRemaining;
-
   factory HostelStatsModel.fromJson(Map<String, dynamic> j) => HostelStatsModel(
     total: int.tryParse(j['total'].toString()) ?? 0,
     available: int.tryParse(j['available'].toString()) ?? 0,

@@ -19,8 +19,6 @@ import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 import '../providers/saved_properties_provider.dart';
 
-/// Public base URL for the admin/web portal.
-/// This is the URL that gets shared — anyone with or without the app can open it.
 const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
@@ -33,7 +31,6 @@ class PropertyDetailPage extends ConsumerStatefulWidget {
 }
 
 class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
-  // _pageController removed — HeroCarousel owns it internally now
   int _currentImageIndex = 0;
 
   String _formatWhatsApp(String phone) {
@@ -65,9 +62,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     );
   }
 
-  /// Shares a property using the native share sheet.
-  /// The URL points to the public web page — works for recipients who don't have
-  /// the app installed (opens in browser) and those who do (deep link opens the app).
   void _shareProperty(Property property) {
     final publicUrl = '$_kPublicBaseUrl/p/${property.id}';
     final shareText =
@@ -118,7 +112,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         body: CustomScrollView(
           physics: const ClampingScrollPhysics(),
           slivers: [
-            // ── Hero ────────────────────────────────────────────────────────
             SliverAppBar(
               expandedHeight: 360,
               pinned: true,
@@ -182,7 +175,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 ),
               ),
             ),
-            // ── Content ─────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: PropertyContent(
                 property: property,
@@ -203,18 +195,21 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           onEnquire: () => _showEnquireSheet(property),
           onBook: () {
             if (property.isHostel) {
-              // Note: If you want Hostel Rooms to also have images on the Booking card,
-              // you will eventually need to pass the extra data here too and extract it inside HostelRoomsPage.
+              // FIX: Now passing the full context dictionary to HostelRoomsPage
               context.push(
                 AppRoutes.hostelRoomsPath(property.id),
-                extra: property.title,
+                extra: {
+                  'title': property.title,
+                  'location': '${property.area}, ${property.district.name}',
+                  'imageUrl': property.thumbnailUrl,
+                  'universityName': property.university?.name,
+                },
               );
             } else {
               context.push(
                 AppRoutes.bookingPath(property.id),
                 extra: {
                   'title': property.title,
-                  // ── CRITICAL FIX: Passing the data to the router ──
                   'price': property.price,
                   'location': '${property.area}, ${property.district.name}',
                   'imageUrl': property.thumbnailUrl,
