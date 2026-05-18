@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
@@ -13,6 +11,7 @@ class FilterBar extends StatelessWidget {
     required this.rooms,
     required this.onSelected,
   });
+
   final RoomFilter selected;
   final List<HostelRoom> rooms;
   final ValueChanged<RoomFilter> onSelected;
@@ -32,64 +31,63 @@ class FilterBar extends StatelessWidget {
     RoomFilter.occupied => 'Occupied',
   };
 
-  Color _activeColor(RoomFilter f) => switch (f) {
-    RoomFilter.all => AppColors.primary,
-    RoomFilter.available => AppColors.success,
-    RoomFilter.occupied => AppColors.error,
-  };
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.grey100,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: RoomFilter.values.map((f) {
-          final isSelected = selected == f;
-          final color = _activeColor(f);
+          final isSel = selected == f;
           return Expanded(
             child: GestureDetector(
               onTap: () => onSelected(f),
+              behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? color : Colors.transparent,
-                  borderRadius: BorderRadius.circular(11),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: color.withOpacity(0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
+                  color: isSel ? AppColors.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: isSel
+                      ? Border.all(color: AppColors.grey200)
+                      : Border.all(color: Colors.transparent),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${_count(f)}',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: isSelected ? Colors.white : AppColors.grey600,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                      _label(f),
+                      style: AppTextStyles.labelMd.copyWith(
+                        color: isSel
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                        fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
-                    const Gap(1),
-                    Text(
-                      _label(f),
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: isSelected
-                            ? Colors.white.withOpacity(0.85)
-                            : AppColors.grey500,
-                        fontSize: 11,
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSel
+                            ? AppColors.primary.withOpacity(0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${_count(f)}',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: isSel ? AppColors.primary : AppColors.textHint,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
