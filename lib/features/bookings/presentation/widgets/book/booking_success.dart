@@ -29,7 +29,6 @@ class BookingSuccess extends StatelessWidget {
           child: Column(
             children: [
               const Gap(32),
-
               // ── Animated success icon ────────────────────────────────────
               Container(
                     width: 100,
@@ -55,9 +54,7 @@ class BookingSuccess extends StatelessWidget {
                     curve: Curves.elasticOut,
                   )
                   .fadeIn(duration: 300.ms),
-
               const Gap(24),
-
               Text(
                     'Request Submitted!',
                     style: AppTextStyles.h1,
@@ -66,9 +63,7 @@ class BookingSuccess extends StatelessWidget {
                   .animate(delay: 200.ms)
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, end: 0),
-
               const Gap(10),
-
               Text(
                 'Your booking request for '
                 '${roomNumber != null ? 'Room $roomNumber at ' : ''}'
@@ -79,9 +74,7 @@ class BookingSuccess extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ).animate(delay: 260.ms).fadeIn(duration: 300.ms),
-
               const Gap(32),
-
               // ── Token card ───────────────────────────────────────────────
               Container(
                     width: double.infinity,
@@ -184,9 +177,7 @@ class BookingSuccess extends StatelessWidget {
                   .animate(delay: 360.ms)
                   .fadeIn(duration: 400.ms)
                   .slideY(begin: 0.06, end: 0),
-
               const Gap(20),
-
               // ── What's next ──────────────────────────────────────────────
               Container(
                 width: double.infinity,
@@ -239,9 +230,7 @@ class BookingSuccess extends StatelessWidget {
                   ],
                 ),
               ).animate(delay: 460.ms).fadeIn(duration: 400.ms),
-
               const Gap(28),
-
               ElevatedButton.icon(
                 onPressed: onDone,
                 icon: const Icon(Icons.explore_rounded, size: 18),
@@ -250,7 +239,6 @@ class BookingSuccess extends StatelessWidget {
                   minimumSize: const Size(double.infinity, 52),
                 ),
               ).animate(delay: 540.ms).fadeIn(duration: 300.ms),
-
               const Gap(8),
             ],
           ),

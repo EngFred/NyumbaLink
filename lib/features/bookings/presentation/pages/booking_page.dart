@@ -5,11 +5,6 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:rentora/features/bookings/presentation/widgets/book/booking_success.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/booking_text_field.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/confirm_booking_sheet.dart';
-import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_info_card.dart';
@@ -19,6 +14,11 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../properties/presentation/providers/properties_provider.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_provider.dart';
+import 'package:rentora/features/bookings/presentation/widgets/book/booking_text_field.dart';
+import 'package:rentora/features/bookings/presentation/widgets/book/confirm_booking_sheet.dart';
+import 'package:rentora/features/bookings/presentation/widgets/book/date_picker_field.dart';
+
+import '../widgets/book/booking_success.dart';
 
 class BookingPage extends ConsumerStatefulWidget {
   const BookingPage({
@@ -27,6 +27,7 @@ class BookingPage extends ConsumerStatefulWidget {
     required this.propertyTitle,
     required this.price,
     required this.location,
+    this.billingCycle,
     this.imageUrl,
     this.hostelRoomId,
     this.roomNumber,
@@ -36,6 +37,7 @@ class BookingPage extends ConsumerStatefulWidget {
   final String propertyTitle;
   final double price;
   final String location;
+  final String? billingCycle;
   final String? imageUrl;
   final String? hostelRoomId;
   final String? roomNumber;
@@ -161,9 +163,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             userId: user?.id,
           ),
           propertyTitle: widget.propertyTitle,
-          price: widget.price, // NEW FIX
-          location: widget.location, // NEW FIX
-          thumbnailUrl: widget.imageUrl, // NEW FIX
+          price: widget.price,
+          location: widget.location,
+          thumbnailUrl: widget.imageUrl,
           roomNumber: widget.roomNumber,
         );
   }
@@ -213,16 +215,17 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         child: ListView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 100 + bottomPad),
           children: [
-            // Using the _RichPropertySummary widget we defined in the previous step
+            // Flat, seamless property header
             _RichPropertySummary(
               title: widget.propertyTitle,
               location: widget.location,
               price: widget.price,
+              billingCycle: widget.billingCycle, // Pass it down
               imageUrl: widget.imageUrl,
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
 
-            const Gap(32),
+            const Gap(16),
 
             Row(
               children: [
@@ -248,6 +251,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               number: '01',
               title: 'Your Details',
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
+
             const Gap(16),
             BookingTextField(
               controller: _nameController,
@@ -271,8 +275,9 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               phonePrefix: '+256',
               maxLength: 9,
               validator: (v) {
-                if (v == null || v.trim().isEmpty)
+                if (v == null || v.trim().isEmpty) {
                   return 'Phone number is required';
+                }
                 final digits = v.trim().replaceAll(RegExp(r'\D'), '');
                 if (digits.length < 9) return 'Enter 9 digits after +256';
                 return null;
@@ -298,6 +303,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               number: '02',
               title: 'Booking Details',
             ).animate(delay: 120.ms).fadeIn(duration: 300.ms),
+
             const Gap(16),
             DatePickerField(
               selectedDate: _moveInDate,
@@ -342,6 +348,7 @@ class _RichPropertySummary extends StatelessWidget {
     required this.title,
     required this.location,
     required this.price,
+    this.billingCycle,
     this.imageUrl,
     this.roomNumber,
   });
@@ -349,8 +356,29 @@ class _RichPropertySummary extends StatelessWidget {
   final String title;
   final String location;
   final double price;
+  final String? billingCycle;
   final String? imageUrl;
   final String? roomNumber;
+
+  String _formatBilling(String? cycle) {
+    if (cycle == null || cycle.isEmpty) return '';
+    switch (cycle.toUpperCase()) {
+      case 'DAILY':
+        return '/ day';
+      case 'WEEKLY':
+        return '/ week';
+      case 'MONTHLY':
+        return '/ month';
+      case 'QUARTERLY':
+        return '/ quarter';
+      case 'BIANNUAL':
+        return '/ half-year';
+      case 'ANNUAL':
+        return '/ year';
+      default:
+        return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -359,101 +387,123 @@ class _RichPropertySummary extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.grey200 ?? Colors.grey.withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.grey100,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.hardEdge,
-            child: imageUrl != null && imageUrl!.isNotEmpty
-                ? Image.network(imageUrl!, fit: BoxFit.cover)
-                : const Center(
-                    child: Icon(
-                      Icons.home_work_outlined,
-                      color: AppColors.grey400,
-                    ),
-                  ),
-          ),
-          const Gap(16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (roomNumber != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Room $roomNumber',
-                      style: AppTextStyles.labelSm.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+    final billingStr = _formatBilling(billingCycle);
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.grey100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: imageUrl != null && imageUrl!.isNotEmpty
+                  ? Image.network(imageUrl!, fit: BoxFit.cover)
+                  : const Center(
+                      child: Icon(
+                        Icons.home_work_outlined,
+                        color: AppColors.grey400,
                       ),
                     ),
+            ),
+            const Gap(16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (roomNumber != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'Room $roomNumber',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const Gap(6),
+                  ],
+                  Text(
+                    title,
+                    style: AppTextStyles.h3.copyWith(
+                      // Slightly larger for a hero feel
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const Gap(6),
-                ],
-                Text(
-                  title,
-                  style: AppTextStyles.labelLg.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Gap(4),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    const Gap(4),
-                    Expanded(
-                      child: Text(
-                        location.isNotEmpty ? location : 'Location unavailable',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: AppColors.textSecondary,
                       ),
+                      const Gap(4),
+                      Expanded(
+                        child: Text(
+                          location.isNotEmpty
+                              ? location
+                              : 'Location unavailable',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (price > 0) ...[
+                    const Gap(8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          currencyFormat.format(price),
+                          style: AppTextStyles.h4.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        if (billingStr.isNotEmpty) ...[
+                          const Gap(4),
+                          Text(
+                            billingStr,
+                            style: AppTextStyles.bodySm.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
-                ),
-                if (price > 0) ...[
-                  const Gap(8),
-                  Text(
-                    currencyFormat.format(price),
-                    style: AppTextStyles.h4.copyWith(color: AppColors.primary),
-                  ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+
+        const Gap(24),
+
+        // This clean divider replaces the bulky card box
+        const Divider(height: 1, color: AppColors.grey200),
+      ],
     );
   }
 }

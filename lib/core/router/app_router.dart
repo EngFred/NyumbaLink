@@ -170,10 +170,10 @@ final GoRouter appRouter = GoRouter(
           child: BookingPage(
             propertyId: id,
             propertyTitle: extra['title'] as String? ?? '',
-            // ── NEW FIXES: Parsing the required fields from the extra map ──
             price: (extra['price'] as num?)?.toDouble() ?? 0.0,
             location: extra['location'] as String? ?? '',
             imageUrl: extra['imageUrl'] as String?,
+            billingCycle: extra['billingCycle'] as String?,
             // ─────────────────────────────────────────────────────────────────
             hostelRoomId: extra['hostelRoomId'] as String?,
             roomNumber: extra['roomNumber'] as String?,

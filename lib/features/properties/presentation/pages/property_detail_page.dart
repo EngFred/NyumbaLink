@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+
 import 'package:rentora/features/properties/presentation/widgets/property-detail/circle_hero_button.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/cta_bar.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/detail_skeleton.dart';
@@ -10,6 +11,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/full_screen_gallery.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_carousel.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_content.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -23,6 +25,7 @@ const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
+
   final String propertyId;
 
   @override
@@ -71,7 +74,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         '${property.title}\n'
         '${property.area}, ${property.district.name}\n\n'
         '$publicUrl';
-
     Share.share(shareText, subject: property.title);
   }
 
@@ -201,6 +203,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           onEnquire: () => _showEnquireSheet(property),
           onBook: () {
             if (property.isHostel) {
+              // Note: If you want Hostel Rooms to also have images on the Booking card,
+              // you will eventually need to pass the extra data here too and extract it inside HostelRoomsPage.
               context.push(
                 AppRoutes.hostelRoomsPath(property.id),
                 extra: property.title,
@@ -208,7 +212,14 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
             } else {
               context.push(
                 AppRoutes.bookingPath(property.id),
-                extra: {'title': property.title},
+                extra: {
+                  'title': property.title,
+                  // ── CRITICAL FIX: Passing the data to the router ──
+                  'price': property.price,
+                  'location': '${property.area}, ${property.district.name}',
+                  'imageUrl': property.thumbnailUrl,
+                  'billingCycle': property.billingCycle,
+                },
               );
             }
           },

@@ -37,7 +37,6 @@ class BookingCard extends StatelessWidget {
     return Opacity(
       opacity: isCancelled ? 0.65 : 1.0,
       child: GestureDetector(
-        // THIS MAKES THE CARD CLICKABLE
         onTap: () {
           if (booking.propertyId.isNotEmpty) {
             context.push('/p/${booking.propertyId}');
@@ -75,13 +74,13 @@ class BookingCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Thumbnail
+                  // Thumbnail (UPGRADED SIZE)
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       color: AppColors.grey100,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: AppColors.grey200 ?? Colors.transparent,
                       ),
@@ -97,10 +96,10 @@ class BookingCard extends StatelessWidget {
                         : const Icon(
                             Icons.home_work_outlined,
                             color: AppColors.grey400,
-                            size: 24,
+                            size: 28,
                           ),
                   ),
-                  const Gap(14),
+                  const Gap(16),
 
                   // Title, Location & Price
                   Expanded(
@@ -116,7 +115,7 @@ class BookingCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Gap(4),
+                        const Gap(6),
                         Row(
                           children: [
                             const Icon(
@@ -140,17 +139,17 @@ class BookingCard extends StatelessWidget {
                           ],
                         ),
                         if (booking.price > 0) ...[
-                          const Gap(4),
+                          const Gap(6),
                           Text(
                             currencyFormat.format(booking.price),
                             style: AppTextStyles.labelSm.copyWith(
                               color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
                         if (booking.roomNumber != null) ...[
-                          const Gap(6),
+                          const Gap(8),
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
