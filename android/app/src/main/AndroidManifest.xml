@@ -61,9 +61,16 @@
             Required for url_launcher to open WhatsApp links.
             Without this, wa.me links silently fail on Android 11+.
         -->
+
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mailto" />
+        </intent>
+
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
         </intent>
     </queries>
+    
 </manifest>

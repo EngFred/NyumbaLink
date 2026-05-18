@@ -13,8 +13,11 @@ class AboutPage extends StatelessWidget {
 
   Future<void> _launch(String url) async {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!success) {
+      debugPrint('Could not launch $url');
     }
   }
 
@@ -307,22 +310,11 @@ class AboutPage extends StatelessWidget {
 
                     // ── Footer ───────────────────────────────────────────────
                     Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            '© ${DateTime.now().year} Rentora Uganda',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textHint,
-                            ),
-                          ),
-                          const Gap(4),
-                          Text(
-                            'Made with ❤️ in Uganda',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textHint,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '© ${DateTime.now().year} Rentora Uganda',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textHint,
+                        ),
                       ),
                     ).animate(delay: 240.ms).fadeIn(duration: 300.ms),
                   ],
