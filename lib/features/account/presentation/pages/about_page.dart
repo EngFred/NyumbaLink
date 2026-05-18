@@ -3,19 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/account/presentation/widgets/about/section_header.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../widgets/about/action_tile.dart';
+import '../widgets/about/animated_section.dart';
+import '../widgets/about/feature_row.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   Future<void> _launch(String url) async {
     final uri = Uri.parse(url);
-
     final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
-
     if (!success) {
       debugPrint('Could not launch $url');
     }
@@ -26,7 +28,8 @@ class AboutPage extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        // Use surface color for a seamless, flat look instead of a darker background
+        backgroundColor: AppColors.surface,
         body: CustomScrollView(
           slivers: [
             // ── Hero ──────────────────────────────────────────────────────────
@@ -82,17 +85,17 @@ class AboutPage extends StatelessWidget {
                               height: 88,
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(22),
+                                borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 12),
                                   ),
                                 ],
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(22),
+                                borderRadius: BorderRadius.circular(24),
                                 child: Image.asset(
                                   'assets/images/no_bg.png',
                                   fit: BoxFit.contain,
@@ -118,26 +121,28 @@ class AboutPage extends StatelessWidget {
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
                           ),
                         ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
                         const Gap(6),
                         Text(
                           'Find your perfect home in Uganda',
                           style: AppTextStyles.bodyMd.copyWith(
-                            color: Colors.white.withOpacity(0.75),
+                            color: Colors.white.withOpacity(0.85),
+                            fontWeight: FontWeight.w500,
                           ),
                         ).animate(delay: 130.ms).fadeIn(duration: 300.ms),
-                        const Gap(12),
+                        const Gap(10),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 5,
+                            horizontal: 16,
+                            vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(30),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withOpacity(0.2),
                             ),
                           ),
                           child: Text(
@@ -145,9 +150,11 @@ class AboutPage extends StatelessWidget {
                             style: AppTextStyles.labelSm.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
+                        const Gap(8),
                       ],
                     ),
                   ),
@@ -158,74 +165,71 @@ class AboutPage extends StatelessWidget {
             // ── Content ───────────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 48),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 64),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Mission ──────────────────────────────────────────────
-                    _SectionCard(
+                    AnimatedSection(
                       delay: 0,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _SectionHeader(
-                            icon: Icons.flag_outlined,
-                            label: 'Our Mission',
-                          ),
-                          const Gap(12),
+                          const SectionHeader(label: 'Our Mission'),
+                          const Gap(16),
                           Text(
-                            'Rentora connects Ugandans with quality rental spaces from apartments and houses to hostels and commercial properties. We make the search simple, transparent, and fast so you can focus on settling in, not searching.',
+                            'Rentora connects Ugandans with quality rental spaces — from apartments and houses to hostels and commercial properties. We make the search simple, transparent, and fast so you can focus on settling in, not searching.',
                             style: AppTextStyles.bodyMd.copyWith(
                               color: AppColors.textSecondary,
-                              height: 1.6,
+                              height: 1.7,
+                              fontSize: 15,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const Gap(16),
+                    const Gap(32),
+                    const _Divider(),
+                    const Gap(32),
 
                     // ── What you can do ──────────────────────────────────────
-                    const _SectionCard(
+                    const AnimatedSection(
                       delay: 60,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _SectionHeader(
-                            icon: Icons.star_outline_rounded,
-                            label: 'What You Can Do',
-                          ),
-                          Gap(12),
-                          _FeatureRow(
+                          SectionHeader(label: 'What You Can Do'),
+                          Gap(24),
+                          FeatureRow(
                             icon: Icons.search_rounded,
                             title: 'Browse Listings',
                             subtitle:
                                 'Filter by type, price, area, and university proximity.',
                           ),
-                          Gap(10),
-                          _FeatureRow(
+                          Gap(20),
+                          FeatureRow(
                             icon: Icons.calendar_month_outlined,
                             title: 'Book Online',
                             subtitle:
                                 'Submit booking requests and track them in one place.',
                           ),
-                          Gap(10),
-                          _FeatureRow(
+                          Gap(20),
+                          FeatureRow(
                             icon: Icons.hotel_outlined,
                             title: 'Hostel Rooms',
                             subtitle:
                                 'Browse and book individual hostel rooms near universities.',
                           ),
-                          Gap(10),
-                          _FeatureRow(
+                          Gap(20),
+                          FeatureRow(
                             icon: Icons.favorite_border_rounded,
                             title: 'Save Properties',
                             subtitle:
                                 'Save your favourites and sync them across devices.',
                           ),
-                          Gap(10),
-                          _FeatureRow(
+                          Gap(20),
+                          FeatureRow(
                             icon: Icons.notifications_outlined,
                             title: 'Real-time Alerts',
                             subtitle:
@@ -235,68 +239,35 @@ class AboutPage extends StatelessWidget {
                       ),
                     ),
 
-                    const Gap(16),
+                    const Gap(32),
+                    const _Divider(),
+                    const Gap(32),
 
-                    // ── Contact ──────────────────────────────────────────────
-                    _SectionCard(
+                    // ── Contact & Legal ──────────────────────────────────────
+                    AnimatedSection(
                       delay: 120,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _SectionHeader(
-                            icon: Icons.support_agent_rounded,
-                            label: 'Get in Touch',
-                          ),
-                          const Gap(12),
-                          _ContactTile(
+                          const SectionHeader(label: 'Support & Legal'),
+                          const Gap(16),
+                          ActionTile(
                             icon: Icons.email_outlined,
-                            label: 'Email Support',
-                            value: 'rentorahouselink@gmail.com',
+                            label: 'Contact Support',
                             onTap: () =>
                                 _launch('mailto:rentorahouselink@gmail.com'),
                           ),
-                          // const Divider(
-                          //   height: 1,
-                          //   color: AppColors.grey100,
-                          //   indent: 16,
-                          //   endIndent: 16,
-                          // ),
-                          // _ContactTile(
-                          //   icon: Icons.language_rounded,
-                          //   label: 'Website',
-                          //   value: 'www.rentora.ug',
-                          //   onTap: () => _launch('https://rentora.ug'),
-                          // ),
-                        ],
-                      ),
-                    ),
-
-                    const Gap(16),
-
-                    // ── Legal ────────────────────────────────────────────────
-                    _SectionCard(
-                      delay: 180,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const _SectionHeader(
+                          const Gap(8),
+                          ActionTile(
                             icon: Icons.gavel_rounded,
-                            label: 'Legal',
-                          ),
-                          const Gap(4),
-                          _LegalTile(
                             label: 'Terms of Service',
                             onTap: () => _launch(
                               'https://rentora-houselink.vercel.app/terms',
                             ),
                           ),
-                          const Divider(
-                            height: 1,
-                            color: AppColors.grey100,
-                            indent: 16,
-                            endIndent: 16,
-                          ),
-                          _LegalTile(
+                          const Gap(8),
+                          ActionTile(
+                            icon: Icons.privacy_tip_outlined,
                             label: 'Privacy Policy',
                             onTap: () => _launch(
                               'https://rentora-houselink.vercel.app/privacy',
@@ -306,7 +277,7 @@ class AboutPage extends StatelessWidget {
                       ),
                     ),
 
-                    const Gap(32),
+                    const Gap(48),
 
                     // ── Footer ───────────────────────────────────────────────
                     Center(
@@ -314,6 +285,7 @@ class AboutPage extends StatelessWidget {
                         '© ${DateTime.now().year} Rentora Uganda',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.textHint,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ).animate(delay: 240.ms).fadeIn(duration: 300.ms),
@@ -328,181 +300,12 @@ class AboutPage extends StatelessWidget {
   }
 }
 
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child, this.delay = 0});
-  final Widget child;
-  final int delay;
+/// A soft, modern divider
+class _Divider extends StatelessWidget {
+  const _Divider();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: child,
-        )
-        .animate(delay: Duration(milliseconds: delay))
-        .fadeIn(duration: 300.ms)
-        .slideY(begin: 0.04, end: 0, duration: 300.ms);
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.primary50,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(icon, size: 17, color: AppColors.primary),
-        ),
-        const Gap(10),
-        Text(label, style: AppTextStyles.h4),
-      ],
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.grey100,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
-        ),
-        const Gap(12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTextStyles.labelLg),
-              const Gap(2),
-              Text(
-                subtitle,
-                style: AppTextStyles.bodySm.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ContactTile extends StatelessWidget {
-  const _ContactTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const Gap(12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: AppTextStyles.labelSm.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-                Text(value, style: AppTextStyles.labelMd),
-              ],
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.open_in_new_rounded,
-              size: 16,
-              color: AppColors.grey400,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LegalTile extends StatelessWidget {
-  const _LegalTile({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-        child: Row(
-          children: [
-            Text(label, style: AppTextStyles.labelMd),
-            const Spacer(),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: AppColors.grey400,
-            ),
-          ],
-        ),
-      ),
-    );
+    return const Divider(height: 1, thickness: 1, color: AppColors.grey100);
   }
 }

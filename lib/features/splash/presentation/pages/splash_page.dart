@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+
+const _onboardingKey = 'rentora_onboarding_complete';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -24,13 +27,23 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   Future<void> _bootstrap() async {
-    await Future.wait([
+    // Run auth check and minimum splash duration in parallel
+    final results = await Future.wait([
       ref.read(authProvider.notifier).checkAuthStatus(),
       Future.delayed(const Duration(milliseconds: 2200)),
+      SharedPreferences.getInstance(),
     ]);
 
     if (!mounted) return;
-    context.go(AppRoutes.browse);
+
+    final prefs = results[2] as SharedPreferences;
+    final onboardingSeen = prefs.getBool(_onboardingKey) ?? false;
+
+    if (!onboardingSeen) {
+      context.go('/onboarding');
+    } else {
+      context.go(AppRoutes.browse);
+    }
   }
 
   @override

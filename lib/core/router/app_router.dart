@@ -13,6 +13,7 @@ import '../../features/bookings/presentation/pages/booking_page.dart';
 import '../../features/bookings/presentation/pages/my_bookings_page.dart';
 import '../../features/complaints/presentation/pages/complaint_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/properties/presentation/pages/browse_page.dart';
 import '../../features/properties/presentation/pages/hostel_rooms_page.dart';
 import '../../features/properties/presentation/pages/property_detail_page.dart';
@@ -30,6 +31,19 @@ final GoRouter appRouter = GoRouter(
       name: 'splash',
       builder: (context, state) => const SplashPage(),
     ),
+
+    // ── Onboarding ────────────────────────────────────────────────────────────
+    GoRoute(
+      path: '/onboarding',
+      name: 'onboarding',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const OnboardingPage(),
+        transitionsBuilder: _fadeTransition,
+      ),
+    ),
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.login,
       name: 'login',
@@ -61,7 +75,6 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.resetPassword,
       name: 'resetPassword',
       pageBuilder: (context, state) {
-        // Extract the email passed via the 'extra' parameter
         final email = state.extra as String? ?? '';
         return CustomTransitionPage(
           key: state.pageKey,
@@ -70,6 +83,8 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    // ── Deep link redirect ────────────────────────────────────────────────────
     GoRoute(
       path: '/p/:id',
       name: 'propertyDeepLink',
@@ -79,8 +94,8 @@ final GoRouter appRouter = GoRouter(
         return AppRoutes.browse;
       },
     ),
-    // ── StatefulShellRoute keeps every tab alive in an IndexedStack.
-    // This preserves scroll position and prevents re-fetch on tab switch.
+
+    // ── Main shell (bottom nav tabs) ──────────────────────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -123,6 +138,8 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+
+    // ── Property detail & rooms ───────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.propertyDetail,
       name: 'propertyDetail',
@@ -164,6 +181,8 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    // ── Other routes ──────────────────────────────────────────────────────────
     GoRoute(
       path: '/complaint',
       name: 'complaint',
@@ -218,6 +237,8 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
+// ── Transition helpers ────────────────────────────────────────────────────────
+
 Widget _slideUpTransition(
   BuildContext context,
   Animation<double> animation,
@@ -231,4 +252,13 @@ Widget _slideUpTransition(
     ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
     child: child,
   );
+}
+
+Widget _fadeTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return FadeTransition(opacity: animation, child: child);
 }
