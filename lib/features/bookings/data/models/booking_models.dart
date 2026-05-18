@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-
 import '../../domain/entities/booking_entities.dart';
 
 // ── EXTENSION MAPPER ──
@@ -12,7 +11,6 @@ extension BookingRequestMapper on BookingRequest {
       'propertyId': propertyId,
       'moveInDate': fmt.format(moveInDate),
     };
-
     if (renterEmail != null && renterEmail!.isNotEmpty) {
       map['renterEmail'] = renterEmail;
     }
@@ -20,7 +18,6 @@ extension BookingRequestMapper on BookingRequest {
     if (moveOutDate != null) map['moveOutDate'] = fmt.format(moveOutDate!);
     if (notes != null && notes!.isNotEmpty) map['notes'] = notes;
     if (userId != null && userId!.isNotEmpty) map['userId'] = userId;
-
     return map;
   }
 }
@@ -60,6 +57,9 @@ class LocalBookingModel {
     required this.id,
     required this.cancellationToken,
     required this.propertyTitle,
+    required this.price,
+    required this.location,
+    this.thumbnailUrl,
     this.roomNumber,
     required this.bookedAt,
     this.isCancelled = false,
@@ -68,6 +68,9 @@ class LocalBookingModel {
   final String id;
   final String cancellationToken;
   final String propertyTitle;
+  final double price;
+  final String location;
+  final String? thumbnailUrl;
   final String? roomNumber;
   final String bookedAt;
   final bool isCancelled;
@@ -76,6 +79,9 @@ class LocalBookingModel {
     'id': id,
     'cancellationToken': cancellationToken,
     'propertyTitle': propertyTitle,
+    'price': price,
+    'location': location,
+    'thumbnailUrl': thumbnailUrl,
     'roomNumber': roomNumber,
     'bookedAt': bookedAt,
     'isCancelled': isCancelled,
@@ -87,6 +93,9 @@ class LocalBookingModel {
     id: json['id']?.toString() ?? '',
     cancellationToken: json['cancellationToken']?.toString() ?? '',
     propertyTitle: json['propertyTitle']?.toString() ?? '',
+    price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    location: json['location']?.toString() ?? '',
+    thumbnailUrl: json['thumbnailUrl']?.toString(),
     roomNumber: json['roomNumber']?.toString(),
     bookedAt: json['bookedAt']?.toString() ?? DateTime.now().toIso8601String(),
     isCancelled: json['isCancelled'] == true || json['isCancelled'] == 'true',
@@ -97,6 +106,9 @@ class LocalBookingModel {
       id: id,
       cancellationToken: cancellationToken,
       propertyTitle: propertyTitle,
+      price: price,
+      location: location,
+      thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: bookedAt,
       isCancelled: isCancelled,
@@ -111,6 +123,9 @@ class RemoteBookingModel {
     required this.status,
     required this.createdAt,
     required this.propertyTitle,
+    required this.price,
+    required this.location,
+    this.thumbnailUrl,
     this.roomNumber,
   });
 
@@ -118,14 +133,29 @@ class RemoteBookingModel {
   final String status;
   final String createdAt;
   final String propertyTitle;
+  final double price;
+  final String location;
+  final String? thumbnailUrl;
   final String? roomNumber;
 
   factory RemoteBookingModel.fromJson(Map<String, dynamic> json) {
+    // Safely extract from your backend's Joined Property Entity
+    final property = json['property'] as Map<String, dynamic>? ?? {};
+    final images = property['images'] as List<dynamic>? ?? [];
+    final thumbnail = images.isNotEmpty ? images.first['url'] as String? : null;
+
+    final area = property['area'] as String? ?? '';
+    final district = property['district']?['name'] as String? ?? '';
+    final loc = district.isNotEmpty ? '$area, $district' : area;
+
     return RemoteBookingModel(
       id: json['id'] as String,
       status: json['status'] as String,
       createdAt: json['createdAt'] as String,
-      propertyTitle: json['property']['title'] as String,
+      propertyTitle: property['title'] as String? ?? 'Unknown Property',
+      price: (property['price'] as num?)?.toDouble() ?? 0.0,
+      location: loc,
+      thumbnailUrl: thumbnail,
       roomNumber: json['hostelRoom']?['roomNumber'] as String?,
     );
   }
@@ -135,9 +165,12 @@ class RemoteBookingModel {
       id: id,
       cancellationToken: '', // Not needed for logged-in users
       propertyTitle: propertyTitle,
+      price: price,
+      location: location,
+      thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: createdAt,
-      isCancelled: status == 'CANCELLED',
+      isCancelled: status == 'CANCELLED' || status == 'COMPLETED',
     );
   }
 }

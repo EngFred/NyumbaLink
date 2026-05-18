@@ -20,7 +20,6 @@ class BookingRepositoryImpl implements BookingRepository {
   final BookingsLocalDataSource _localDataSource;
 
   // ── Create ────────────────────────────────────────────────────────────────
-
   @override
   Future<BookingResponse> createBooking(
     BookingRequest request,
@@ -30,12 +29,14 @@ class BookingRepositoryImpl implements BookingRepository {
     final responseModel = await _remoteDataSource.createBooking(
       request.toJson(),
     );
+
     await _localDataSource.saveBookingLocally(
       bookingId: responseModel.id,
       cancellationToken: responseModel.cancellationToken,
       propertyTitle: propertyTitle,
       roomNumber: roomNumber,
     );
+
     return responseModel.toEntity();
   }
 
@@ -43,7 +44,6 @@ class BookingRepositoryImpl implements BookingRepository {
   //
   // token non-empty → /cancel-by-renter (works for guests AND unsynced bookings)
   // token empty     → /cancel-mine (booking was created while logged in)
-
   @override
   Future<void> cancelBooking(
     String id,
@@ -56,13 +56,13 @@ class BookingRepositoryImpl implements BookingRepository {
     } else {
       await _remoteDataSource.cancelMine(id, reason: reason);
     }
+
     await _localDataSource.markAsCancelled(id);
   }
 
   // ── Read ──────────────────────────────────────────────────────────────────
   //
   // Always reads local. isAuthenticated ignored (kept for interface compat).
-
   @override
   Future<List<SavedBooking>> getMyBookings(bool isAuthenticated) async {
     final localModels = await _localDataSource.getLocalBookings();
@@ -70,14 +70,15 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   // ── Sync guest bookings to account ───────────────────────────────────────
-
   @override
   Future<void> syncGuestData() async {
     final localBookings = await _localDataSource.getLocalBookings();
     if (localBookings.isEmpty) return;
+
     final payload = localBookings
         .map((b) => {'id': b.id, 'cancellationToken': b.cancellationToken})
         .toList();
+
     try {
       await _remoteDataSource.syncBookings(payload);
     } catch (_) {}
@@ -92,7 +93,6 @@ class BookingRepositoryImpl implements BookingRepository {
   //          COMPLETED, CANCELLED) exist only on the server. Without this pull,
   //          local shows "REQUESTED" forever and the Cancel button stays visible
   //          even for COMPLETED bookings, causing a confusing 400 error.
-
   @override
   Future<void> syncFromServer() async {
     try {
@@ -101,6 +101,7 @@ class BookingRepositoryImpl implements BookingRepository {
 
       // Step 2: pull server → local
       final remoteBookings = await _remoteDataSource.getMyBookings();
+
       final remoteAsLocal = remoteBookings.map((r) {
         // Preserve the local cancellation token if we have one — the server
         // never returns it in plaintext after the first creation response.
@@ -108,6 +109,9 @@ class BookingRepositoryImpl implements BookingRepository {
           id: r.id,
           cancellationToken: '', // will be merged below from local
           propertyTitle: r.propertyTitle,
+          price: r.price, // NEW: Pass the price
+          location: r.location, // NEW: Pass the location
+          thumbnailUrl: r.thumbnailUrl, // NEW: Pass the image
           roomNumber: r.roomNumber,
           bookedAt: r.createdAt,
           isCancelled: r.status == 'CANCELLED' || r.status == 'COMPLETED',

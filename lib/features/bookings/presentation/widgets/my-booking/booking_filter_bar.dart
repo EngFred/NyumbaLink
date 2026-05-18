@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 import 'package:rentora/features/bookings/domain/entities/booking_filter.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 
-// ── Filter bar ────────────────────────────────────────────────────────────────
 class BookingFilterBar extends StatelessWidget {
   const BookingFilterBar({
     super.key,
@@ -13,7 +10,6 @@ class BookingFilterBar extends StatelessWidget {
     required this.bookings,
     required this.onSelected,
   });
-
   final BookingFilter selected;
   final List<dynamic> bookings;
   final ValueChanged<BookingFilter> onSelected;
@@ -30,65 +26,63 @@ class BookingFilterBar extends StatelessWidget {
     BookingFilter.cancelled => 'Cancelled',
   };
 
-  Color _color(BookingFilter f) => switch (f) {
-    BookingFilter.all => AppColors.primary,
-    BookingFilter.active => AppColors.success,
-    BookingFilter.cancelled => AppColors.error,
-  };
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.grey100,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: BookingFilter.values.map((f) {
           final isSel = selected == f;
-          final color = _color(f);
-
           return Expanded(
             child: GestureDetector(
               onTap: () => onSelected(f),
+              behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                padding: const EdgeInsets.symmetric(vertical: 9),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSel ? color : Colors.transparent,
-                  borderRadius: BorderRadius.circular(11),
-                  boxShadow: isSel
-                      ? [
-                          BoxShadow(
-                            color: color.withOpacity(0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
+                  color: isSel ? AppColors.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: isSel
+                      ? Border.all(color: AppColors.grey200)
+                      : Border.all(color: Colors.transparent),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${_count(f)}',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: isSel ? Colors.white : AppColors.grey600,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                      _label(f),
+                      style: AppTextStyles.labelMd.copyWith(
+                        color: isSel
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                        fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
-                    const Gap(1),
-                    Text(
-                      _label(f),
-                      style: AppTextStyles.labelSm.copyWith(
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
                         color: isSel
-                            ? Colors.white.withOpacity(0.85)
-                            : AppColors.grey500,
-                        fontSize: 11,
+                            ? AppColors.primary.withOpacity(0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${_count(f)}',
+                        style: AppTextStyles.labelSm.copyWith(
+                          color: isSel ? AppColors.primary : AppColors.textHint,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

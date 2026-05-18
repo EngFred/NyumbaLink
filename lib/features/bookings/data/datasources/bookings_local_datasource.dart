@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../models/booking_models.dart';
 
 final bookingsLocalDataSourceProvider = Provider<BookingsLocalDataSource>((
@@ -41,19 +40,27 @@ class BookingsLocalDataSource {
     required String bookingId,
     required String cancellationToken,
     required String propertyTitle,
+    double price = 0.0, // Default for backwards compatibility
+    String location = '',
+    String? thumbnailUrl,
     String? roomNumber,
-    String? remoteStatus, // pass 'PENDING' from API
+    String? remoteStatus,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getStringList(_savedBookingsKey) ?? [];
+
     final entry = LocalBookingModel(
       id: bookingId,
       cancellationToken: cancellationToken,
       propertyTitle: propertyTitle,
+      price: price,
+      location: location,
+      thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: DateTime.now().toIso8601String(),
       isCancelled: false,
     );
+
     existing.insert(0, jsonEncode(entry.toJson())); // newest first
     await prefs.setStringList(_savedBookingsKey, existing);
   }
@@ -84,6 +91,9 @@ class BookingsLocalDataSource {
             id: m.id,
             cancellationToken: m.cancellationToken,
             propertyTitle: m.propertyTitle,
+            price: m.price,
+            location: m.location,
+            thumbnailUrl: m.thumbnailUrl,
             roomNumber: m.roomNumber,
             bookedAt: m.bookedAt,
             isCancelled: true,

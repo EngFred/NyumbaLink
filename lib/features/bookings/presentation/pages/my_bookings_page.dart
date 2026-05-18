@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+
 import 'package:rentora/features/bookings/domain/entities/booking_filter.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_card.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_filter_bar.dart';
@@ -19,7 +20,6 @@ import '../providers/my_bookings_provider.dart';
 
 class MyBookingsPage extends ConsumerStatefulWidget {
   const MyBookingsPage({super.key});
-
   @override
   ConsumerState<MyBookingsPage> createState() => _MyBookingsPageState();
 }
@@ -32,7 +32,8 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text('Cancel Booking', style: AppTextStyles.h3),
         content: Text(
           'Are you sure you want to cancel this booking request? '
@@ -42,15 +43,18 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
             height: 1.5,
           ),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(foregroundColor: AppColors.textPrimary),
             child: const Text('Keep Booking'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              elevation: 0,
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -68,10 +72,8 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
     final state = ref.watch(myBookingsProvider);
     final isAuthenticated = ref.watch(authProvider).isAuthenticated;
 
-    // ── Loading ──────────────────────────────────────────────────────────────
     if (state.isLoading) return const BookingsSkeleton();
 
-    // ── Error (empty list) ───────────────────────────────────────────────────
     if (state.error != null && state.bookings.isEmpty) {
       return AppErrorState(
         message: state.error!,
@@ -79,7 +81,6 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
       );
     }
 
-    // ── Client-side filtering ────────────────────────────────────────────────
     final filtered = switch (_filter) {
       BookingFilter.all => state.bookings,
       BookingFilter.active =>
@@ -88,133 +89,154 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
         state.bookings.where((b) => b.isCancelled).toList(),
     };
 
-    return Stack(
-      children: [
-        RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () => ref.read(myBookingsProvider.notifier).load(),
-          child: CustomScrollView(
-            slivers: [
-              // ── Header ─────────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: BookingsHeader(
-                  total: state.bookings.length,
-                  isAuthenticated: isAuthenticated,
-                ).animate().fadeIn(duration: 300.ms),
-              ),
-              // ── Guest Banner ───────────────────────────────────────────────
-              if (!isAuthenticated)
-                SliverToBoxAdapter(
-                  child: const GuestBanner()
-                      .animate(delay: 50.ms)
-                      .fadeIn(duration: 300.ms)
-                      .slideY(begin: 0.04, end: 0),
-                ),
-              // ── Filter bar (only when there are bookings) ──────────────────
-              if (state.bookings.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: BookingFilterBar(
-                    selected: _filter,
-                    bookings: state.bookings,
-                    onSelected: (f) => setState(() => _filter = f),
-                  ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
-                ),
-              // ── Empty state ────────────────────────────────────────────────
-              if (state.bookings.isEmpty)
-                SliverFillRemaining(
-                  child: AppEmptyState(
-                    icon: Icons.receipt_long_rounded,
-                    title: isAuthenticated
-                        ? 'No bookings found'
-                        : 'Sign in to view bookings',
-                    subtitle: isAuthenticated
-                        ? 'Your schedule requests and active applications will pop up right here.'
-                        : 'Keep tabs on your scheduled property visits and active rental leases.',
+    return Scaffold(
+      backgroundColor: AppColors.surface, // Clean flat background
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            onRefresh: () => ref.read(myBookingsProvider.notifier).load(),
+            child: CustomScrollView(
+              slivers: [
+                SliverSafeArea(
+                  bottom: false,
+                  sliver: SliverToBoxAdapter(
+                    child: BookingsHeader(
+                      total: state.bookings.length,
+                      isAuthenticated: isAuthenticated,
+                    ).animate().fadeIn(duration: 300.ms),
                   ),
-                )
-              else if (filtered.isEmpty)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _filter == BookingFilter.active
-                              ? Icons.receipt_long_outlined
-                              : Icons.cancel_outlined,
-                          size: 48,
-                          color: AppColors.grey300,
-                        ),
-                        const Gap(12),
-                        Text(
-                          _filter == BookingFilter.active
-                              ? 'No active bookings'
-                              : 'No cancelled bookings',
-                          style: AppTextStyles.bodyMd.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                ),
+
+                if (!isAuthenticated)
+                  SliverToBoxAdapter(
+                    child: const GuestBanner()
+                        .animate(delay: 50.ms)
+                        .fadeIn(duration: 300.ms)
+                        .slideY(begin: 0.04, end: 0),
+                  ),
+
+                if (state.bookings.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: BookingFilterBar(
+                        selected: _filter,
+                        bookings: state.bookings,
+                        onSelected: (f) => setState(() => _filter = f),
+                      ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
                     ),
                   ),
-                )
-              else
-                // ── Booking list ─────────────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                  sliver: SliverList.separated(
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const Gap(12),
-                    itemBuilder: (context, index) {
-                      final booking = filtered[index];
-                      return Dismissible(
-                        key: ValueKey(booking.id),
-                        direction: booking.isCancelled
-                            ? DismissDirection.none
-                            : DismissDirection.endToStart,
-                        background: const AppDismissBackground(
-                          icon: Icons.cancel_outlined,
-                          label: 'Cancel',
-                        ),
-                        confirmDismiss: (_) async {
-                          _showCancelDialog(
-                            booking.id,
-                            booking.cancellationToken,
-                          );
-                          return false;
-                        },
-                        child:
-                            BookingCard(
-                                  booking: booking,
-                                  isAuthenticated: isAuthenticated,
-                                  onCancel: () => _showCancelDialog(
-                                    booking.id,
-                                    booking.cancellationToken,
+
+                if (state.bookings.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: AppEmptyState(
+                      icon: Icons.receipt_long_rounded,
+                      title: isAuthenticated
+                          ? 'No bookings yet'
+                          : 'Sign in to view bookings',
+                      subtitle: isAuthenticated
+                          ? 'Your property requests and applications will appear here.'
+                          : 'Keep tabs on your scheduled visits and leases.',
+                    ),
+                  )
+                else if (filtered.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _filter == BookingFilter.active
+                                ? Icons.receipt_long_outlined
+                                : Icons.cancel_outlined,
+                            size: 48,
+                            color: AppColors.grey300,
+                          ),
+                          const Gap(16),
+                          Text(
+                            _filter == BookingFilter.active
+                                ? 'No active bookings'
+                                : 'No cancelled bookings',
+                            style: AppTextStyles.bodyMd.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      8,
+                      20,
+                      MediaQuery.of(context).padding.bottom + 100,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          const Gap(16), // Increased gap for flat design
+                      itemBuilder: (context, index) {
+                        final booking = filtered[index];
+                        return Dismissible(
+                          key: ValueKey(booking.id),
+                          direction: booking.isCancelled
+                              ? DismissDirection.none
+                              : DismissDirection.endToStart,
+                          background: const AppDismissBackground(
+                            icon: Icons.cancel_outlined,
+                            label: 'Cancel',
+                          ),
+                          confirmDismiss: (_) async {
+                            _showCancelDialog(
+                              booking.id,
+                              booking.cancellationToken,
+                            );
+                            return false;
+                          },
+                          child:
+                              BookingCard(
+                                    booking: booking,
+                                    isAuthenticated: isAuthenticated,
+                                    onCancel: () => _showCancelDialog(
+                                      booking.id,
+                                      booking.cancellationToken,
+                                    ),
+                                  )
+                                  .animate(
+                                    delay: Duration(
+                                      milliseconds: 40 + index * 40,
+                                    ),
+                                  )
+                                  .fadeIn(duration: 300.ms)
+                                  .slideY(
+                                    begin: 0.04,
+                                    end: 0,
+                                    duration: 300.ms,
+                                    curve: Curves.easeOut,
                                   ),
-                                )
-                                .animate(
-                                  delay: Duration(
-                                    milliseconds: 80 + index * 55,
-                                  ),
-                                )
-                                .fadeIn(duration: 280.ms)
-                                .slideY(begin: 0.06, end: 0, duration: 280.ms),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-            ],
-          ),
-        ),
-        // ── Cancelling overlay ───────────────────────────────────────────────
-        if (state.isCancelling)
-          Container(
-            color: Colors.black.withOpacity(0.25),
-            child: const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              ],
             ),
           ),
-      ],
+
+          if (state.isCancelling)
+            Container(
+              color: AppColors.surface.withOpacity(0.6),
+              child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

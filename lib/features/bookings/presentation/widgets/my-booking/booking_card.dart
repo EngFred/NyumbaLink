@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
+
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/status_badge.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/token_section.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../domain/entities/booking_entities.dart'; // Make sure to import this
 
-// ── Booking Card ──────────────────────────────────────────────────────────────
 class BookingCard extends StatelessWidget {
   const BookingCard({
     super.key,
@@ -16,163 +16,208 @@ class BookingCard extends StatelessWidget {
     required this.onCancel,
   });
 
-  final dynamic booking; // LocalBooking
+  final SavedBooking booking;
   final bool isAuthenticated;
   final VoidCallback onCancel;
 
-  Color get _statusColor =>
-      booking.isCancelled ? AppColors.error : AppColors.success;
-
   @override
   Widget build(BuildContext context) {
-    final date = DateTime.tryParse(booking.bookedAt as String);
+    final date = DateTime.tryParse(booking.bookedAt);
     final dateStr = date != null
         ? DateFormat('MMM dd, yyyy · h:mm a').format(date)
         : 'Unknown Date';
 
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final isCancelled = booking.isCancelled;
+
+    final currencyFormat = NumberFormat.currency(
+      symbol: 'UGX ',
+      decimalDigits: 0,
+    );
+
+    return Opacity(
+      opacity: isCancelled ? 0.65 : 1.0,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isCancelled ? AppColors.grey50 : AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.grey200 ?? Colors.grey.withOpacity(0.2),
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Status strip ───────────────────────────────────────────────
-            Container(width: 5, color: _statusColor),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Row 1: Date + Status badge
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.schedule_rounded,
-                          size: 12,
-                          color: AppColors.grey500,
-                        ),
-                        const Gap(4),
-                        Text(
-                          dateStr,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const Spacer(),
-                        StatusBadge(isCancelled: booking.isCancelled as bool),
-                      ],
-                    ),
-                    const Gap(10),
+            // ── Top Row: Status & Date ──────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                StatusBadge(isCancelled: isCancelled),
+                Text(
+                  dateStr,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(16),
 
-                    // Row 2: Property title
-                    Text(
-                      booking.propertyTitle as String,
-                      style: AppTextStyles.h4,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+            // ── Middle: Property Info ───────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Thumbnail
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.grey200 ?? Colors.transparent,
                     ),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  child:
+                      booking.thumbnailUrl != null &&
+                          booking.thumbnailUrl!.isNotEmpty
+                      ? Image.network(booking.thumbnailUrl!, fit: BoxFit.cover)
+                      : const Icon(
+                          Icons.home_work_outlined,
+                          color: AppColors.grey400,
+                          size: 24,
+                        ),
+                ),
+                const Gap(14),
 
-                    // Room number (if any)
-                    if ((booking.roomNumber as String?) != null) ...[
+                // Title, Location & Price
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.propertyTitle,
+                        style: AppTextStyles.h4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
                       const Gap(4),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.door_back_door_outlined,
-                            size: 13,
-                            color: AppColors.accent,
+                            Icons.location_on_outlined,
+                            size: 12,
+                            color: AppColors.textSecondary,
                           ),
                           const Gap(4),
-                          Text(
+                          Expanded(
+                            child: Text(
+                              booking.location.isNotEmpty
+                                  ? booking.location
+                                  : 'Location unavailable',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (booking.price > 0) ...[
+                        const Gap(4),
+                        Text(
+                          currencyFormat.format(booking.price),
+                          style: AppTextStyles.labelSm.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+
+                      if (booking.roomNumber != null) ...[
+                        const Gap(6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
                             'Room ${booking.roomNumber}',
                             style: AppTextStyles.labelSm.copyWith(
                               color: AppColors.accent,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ],
-
-                    const Gap(14),
-                    const Divider(height: 1, color: AppColors.grey100),
-                    const Gap(12),
-
-                    // Row 3: Token / secure + action
-                    if (!booking.isCancelled)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Token display
-                          Expanded(
-                            child: TokenSection(
-                              token: booking.cancellationToken as String,
-                              isAuthenticated: isAuthenticated,
-                            ),
-                          ),
-                          const Gap(8),
-                          // Cancel button
-                          GestureDetector(
-                            onTap: onCancel,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.errorLight,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: AppColors.error.withOpacity(0.25),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.cancel_outlined,
-                                    size: 14,
-                                    color: AppColors.error,
-                                  ),
-                                  const Gap(5),
-                                  Text(
-                                    'Cancel',
-                                    style: AppTextStyles.labelSm.copyWith(
-                                      color: AppColors.error,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline_rounded,
-                            size: 14,
-                            color: AppColors.grey500,
-                          ),
-                          const Gap(6),
-                          Text(
-                            'This request was cancelled.',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.grey500,
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
+
+            const Gap(16),
+            const Divider(height: 1, thickness: 1, color: AppColors.grey100),
+            const Gap(16),
+
+            // ── Bottom: Actions / Token ─────────────────────────────────────
+            if (!isCancelled)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: TokenSection(
+                      token: booking.cancellationToken,
+                      isAuthenticated: isAuthenticated,
+                    ),
+                  ),
+                  const Gap(12),
+                  TextButton.icon(
+                    onPressed: onCancel,
+                    icon: const Icon(Icons.close_rounded, size: 16),
+                    label: const Text('Cancel'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
+                  const Gap(8),
+                  Text(
+                    'This request has been cancelled.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

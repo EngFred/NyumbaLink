@@ -39,6 +39,9 @@ class SavedBooking {
     required this.id,
     required this.cancellationToken,
     required this.propertyTitle,
+    required this.price,
+    required this.location,
+    this.thumbnailUrl,
     this.roomNumber,
     required this.bookedAt,
     required this.isCancelled,
@@ -47,6 +50,9 @@ class SavedBooking {
   final String id;
   final String cancellationToken;
   final String propertyTitle;
+  final double price;
+  final String location;
+  final String? thumbnailUrl;
   final String? roomNumber;
   final String bookedAt;
   final bool isCancelled;
