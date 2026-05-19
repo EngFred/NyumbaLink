@@ -47,7 +47,7 @@ class SavedProperty {
     id: p.id,
     title: p.title,
     price: p.price,
-    location: '${p.area}, ${p.district.name}',
+    location: '${p.area?.name ?? ''}, ${p.district.name}',
     thumbnailUrl: p.thumbnailUrl,
     type: p.type,
   );

@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rentora/features/area-alerts/presentation/providers/area_alert_providers.dart';
 
-import '../../data/datasources/area_alerts_remote_datasource.dart';
 import '../../domain/entities/area_alert.dart';
-
-// ── State ─────────────────────────────────────────────────────────────────────
+import '../../domain/usecases/area_alert_usecases.dart';
 
 class AreaAlertsState {
   const AreaAlertsState({
@@ -30,36 +29,38 @@ class AreaAlertsState {
   }
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
-
 final areaAlertsProvider =
     StateNotifierProvider<AreaAlertsNotifier, AreaAlertsState>((ref) {
-      return AreaAlertsNotifier(ref.watch(areaAlertsRemoteDataSourceProvider));
+      final repo = ref.watch(areaAlertRepositoryProvider);
+      return AreaAlertsNotifier(
+        GetMyAreaAlerts(repo),
+        SubscribeToAreaAlert(repo),
+        UnsubscribeFromAreaAlert(repo),
+      );
     });
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
-
 class AreaAlertsNotifier extends StateNotifier<AreaAlertsState> {
-  AreaAlertsNotifier(this._dataSource) : super(const AreaAlertsState());
+  final GetMyAreaAlerts _getMyAlerts;
+  final SubscribeToAreaAlert _subscribe;
+  final UnsubscribeFromAreaAlert _unsubscribe;
 
-  final AreaAlertsRemoteDataSource _dataSource;
+  AreaAlertsNotifier(this._getMyAlerts, this._subscribe, this._unsubscribe)
+    : super(const AreaAlertsState());
 
-  /// Fetches the authenticated user's current subscriptions.
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final alerts = await _dataSource.getMyAlerts();
+      final alerts = await _getMyAlerts.call();
       state = state.copyWith(alerts: alerts, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  /// Subscribes to [areaId] and inserts the new alert into the local list.
   Future<void> subscribe(String areaId) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final alert = await _dataSource.subscribe(areaId);
+      final alert = await _subscribe.call(areaId);
       state = state.copyWith(
         alerts: [alert, ...state.alerts],
         isLoading: false,
@@ -69,11 +70,10 @@ class AreaAlertsNotifier extends StateNotifier<AreaAlertsState> {
     }
   }
 
-  /// Unsubscribes from [areaId] and removes the alert from the local list.
   Future<void> unsubscribe(String areaId) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _dataSource.unsubscribe(areaId);
+      await _unsubscribe.call(areaId);
       state = state.copyWith(
         alerts: state.alerts.where((a) => a.areaId != areaId).toList(),
         isLoading: false,

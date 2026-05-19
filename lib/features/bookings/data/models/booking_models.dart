@@ -151,7 +151,8 @@ class RemoteBookingModel {
         ? images.first['url']?.toString()
         : null;
 
-    final area = property['area']?.toString() ?? '';
+    final area =
+        (property['area'] as Map<String, dynamic>?)?['name']?.toString() ?? '';
     final district = property['district']?['name']?.toString() ?? '';
     final loc = district.isNotEmpty ? '$area, $district' : area;
 

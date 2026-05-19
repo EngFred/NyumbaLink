@@ -14,10 +14,13 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_error_state.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 import '../providers/saved_properties_provider.dart';
+import '../../../hostel-alerts/presentation/providers/hostel_alerts_provider.dart';
 
 const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 
@@ -71,13 +74,65 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     Share.share(shareText, subject: property.title);
   }
 
+  /// Toggle hostel alerts (only visible for HOSTEL properties)
+  Future<void> _toggleHostelAlert(Property property) async {
+    if (!property.isHostel) return;
+
+    final notifier = ref.read(hostelAlertsProvider.notifier);
+    final isSubscribed = notifier.isSubscribed(property.id);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isSubscribed ? 'Stop alerts?' : 'Get room alerts?',
+          style: AppTextStyles.h4,
+        ),
+        content: Text(
+          isSubscribed
+              ? 'You will no longer receive notifications when new rooms become available in this hostel.'
+              : 'You will be notified when new rooms are added or become available again.',
+          style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isSubscribed
+                  ? AppColors.error
+                  : AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isSubscribed ? 'Unsubscribe' : 'Subscribe'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      if (isSubscribed) {
+        await notifier.unsubscribe(property.id);
+        AppSnackbar.success(context, 'Alerts disabled for ${property.title}');
+      } else {
+        await notifier.subscribe(property.id);
+        AppSnackbar.success(context, 'You will now receive room alerts!');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(propertyDetailProvider(widget.propertyId));
-    final isSaved = ref
-        .watch(savedPropertiesProvider)
-        .savedList
-        .any((p) => p.id == widget.propertyId);
+    final savedState = ref.watch(savedPropertiesProvider);
+    final hostelState = ref.watch(hostelAlertsProvider);
+
+    final isSaved = savedState.savedList.any((p) => p.id == widget.propertyId);
 
     if (state.isLoading) return const DetailSkeleton();
 
@@ -104,6 +159,11 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 
     final property = state.property!;
 
+    // Check if user is subscribed to hostel alerts
+    final isHostelSubscribed =
+        property.isHostel &&
+        hostelState.alerts.any((a) => a.propertyId == widget.propertyId);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
@@ -129,6 +189,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 ),
               ),
               actions: [
+                // Share Button
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -137,6 +198,23 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                     onTap: () => _shareProperty(property),
                   ),
                 ),
+
+                // Hostel Alert Bell (only for hostels)
+                if (property.isHostel)
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: CircleHeroButton(
+                      icon: isHostelSubscribed
+                          ? Icons.notifications_rounded
+                          : Icons.notifications_outlined,
+                      iconColor: isHostelSubscribed
+                          ? AppColors.primary
+                          : Colors.white,
+                      onTap: () => _toggleHostelAlert(property),
+                    ),
+                  ),
+
+                // Favorite Button
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -148,6 +226,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                       ref
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(property);
+
                       if (isSaved) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -195,7 +274,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           onEnquire: () => _showEnquireSheet(property),
           onBook: () {
             if (property.isHostel) {
-              // FIX: Now passing the full context dictionary to HostelRoomsPage
               context.push(
                 AppRoutes.hostelRoomsPath(property.id),
                 extra: {
