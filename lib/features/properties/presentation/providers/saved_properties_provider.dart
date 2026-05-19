@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -182,10 +183,11 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   // both operations are idempotent).
 
   Future<void> syncGuestData() async {
+    state = state.copyWith(isLoading: true);
+
+    // Step 1: push local → server (best-effort, failure is silent)
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Step 1: push local → server
       final localData = prefs.getStringList(_key) ?? [];
       if (localData.isNotEmpty) {
         final localIds = localData
@@ -195,22 +197,28 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
               ).id,
             )
             .toList();
-        await _remoteDataSource.syncFavorites(localIds).catchError((_) {});
+        await _remoteDataSource.syncFavorites(localIds);
       }
+    } catch (e) {
+      debugPrint('[SavedProperties] push sync failed: $e');
+    }
 
-      // Step 2: pull server → local (overwrites with authoritative merged list)
+    // Step 2: pull server → local (critical path — SEPARATE try-catch)
+    try {
       final remoteModels = await _remoteDataSource.getFavorites();
+      final prefs = await SharedPreferences.getInstance();
       final merged = remoteModels
           .map(
             (m) => jsonEncode(SavedProperty.fromDomain(m.toEntity()).toJson()),
           )
           .toList();
-
       await prefs.setStringList(_key, merged);
-      await load();
-    } catch (_) {
-      // Sync failure is silent — fall back to whatever is in local storage.
-      await load();
+    } catch (e) {
+      // This will now print the real error instead of swallowing it
+      debugPrint('[SavedProperties] pull sync failed: $e');
     }
+
+    // Step 3: always load from local regardless of outcome
+    await load();
   }
 }
