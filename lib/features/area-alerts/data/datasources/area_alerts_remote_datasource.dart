@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentora/features/area-alerts/domain/entities/area_alert.dart';
 
-import '../../../../../core/network/dio_client.dart';
+import '../../../../../../../core/network/dio_client.dart';
 
 final areaAlertsRemoteDataSourceProvider = Provider<AreaAlertsRemoteDataSource>(
   (ref) => AreaAlertsRemoteDataSource(ref.watch(dioProvider)),

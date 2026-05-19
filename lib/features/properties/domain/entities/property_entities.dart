@@ -1,8 +1,15 @@
-// ── District Entity ──────────────────────────────────────────────────────────
 import '../../../universities/domain/entities/university.dart';
 
+// ── District Entity ──────────────────────────────────────────────────────────
 class District {
   const District({required this.id, required this.name});
+  final String id;
+  final String name;
+}
+
+// ── Area Entity ───────────────────────────────────────────────────────────────
+class Area {
+  const Area({required this.id, required this.name});
   final String id;
   final String name;
 }
@@ -47,7 +54,6 @@ class Property {
     required this.description,
     required this.type,
     required this.price,
-    required this.area,
     required this.status,
     required this.district,
     required this.contact,
@@ -57,6 +63,7 @@ class Property {
     required this.createdAt,
     required this.numberOfRooms,
     required this.parkingAvailable,
+    this.area,
     this.isFeatured = false,
     this.featuredUntil,
     this.billingCycle,
@@ -70,14 +77,14 @@ class Property {
     this.amenities,
     this.lat,
     this.lng,
-    this.university, // NEW FIX
+    this.university,
   });
   final String id;
   final String title;
   final String description;
   final String type;
   final double price;
-  final String area;
+  final Area? area;
   final String status;
   final District district;
   final Contact contact;
@@ -87,7 +94,6 @@ class Property {
   final DateTime createdAt;
   final int numberOfRooms;
   final bool parkingAvailable;
-
   final bool isFeatured;
   final String? featuredUntil;
   final String? billingCycle;
@@ -101,7 +107,7 @@ class Property {
   final List<String>? amenities;
   final double? lat;
   final double? lng;
-  final University? university; // NEW FIX
+  final University? university;
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
@@ -119,7 +125,7 @@ class Property {
     String? description,
     String? type,
     double? price,
-    String? area,
+    Area? area,
     String? status,
     District? district,
     Contact? contact,
