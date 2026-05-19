@@ -1,5 +1,4 @@
 import '../../../universities/data/models/university_model.dart';
-import '../../domain/entities/property_entities.dart';
 
 // ── District ──────────────────────────────────────────────────────────────────
 class DistrictModel {
