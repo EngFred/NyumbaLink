@@ -5,6 +5,8 @@ import '../../domain/entities/auth_entities.dart';
 import '../../domain/usecases/auth_usecases.dart';
 import '../../../properties/presentation/providers/saved_properties_provider.dart';
 import '../../../bookings/data/repositories/booking_repository_impl.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/services/fcm_service.dart';
 
 final loginUseCaseProvider = Provider(
   (ref) => LoginUseCase(ref.watch(authRepositoryProvider)),
@@ -109,6 +111,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _checkAuthStatusUseCase();
       state = state.copyWith(user: user, isLoading: false);
+
+      // Register FCM token for the restored session (fire-and-forget).
+      if (user != null) {
+        final dio = _ref.read(dioProvider);
+        FcmService().init(dio).ignore();
+      }
     } catch (e) {
       state = state.copyWith(isLoading: false);
     }
@@ -120,6 +128,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _loginUseCase(email, password);
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
+
+      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      final dio = _ref.read(dioProvider);
+      FcmService().init(dio).ignore();
+
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -133,6 +146,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _registerUseCase(name, email, password);
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
+
+      // Register FCM token for the new account (fire-and-forget).
+      final dio = _ref.read(dioProvider);
+      FcmService().init(dio).ignore();
+
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -201,13 +219,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Requests account deletion, then clears the local session.
-  /// Returns true on success. The caller should navigate to the login screen.
   Future<bool> deleteAccount() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _deleteAccountUseCase();
-      // Clear user from state — same effect as logout from the UI's perspective
       state = state.copyWith(clearUser: true, isLoading: false);
       return true;
     } catch (e) {

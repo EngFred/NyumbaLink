@@ -18,11 +18,13 @@ class ProfileView extends StatelessWidget {
     required this.user,
     required this.initials,
     required this.onLogout,
+    required this.onAreaAlerts,
   });
 
   final AuthUser user;
   final String initials;
   final VoidCallback onLogout;
+  final VoidCallback onAreaAlerts;
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +32,11 @@ class ProfileView extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          // ── Gradient header ──────────────────────────────────────────
           ProfileHeader(
             user: user,
             initials: initials,
           ).animate().fadeIn(duration: 400.ms),
 
-          // ── Settings cards ───────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
             child: Column(
@@ -68,6 +68,11 @@ class ProfileView extends StatelessWidget {
                 SettingsCard(
                       tiles: [
                         SettingsTile(
+                          icon: Icons.notifications_active_outlined,
+                          label: 'Area Alerts',
+                          onTap: onAreaAlerts,
+                        ),
+                        SettingsTile(
                           icon: Icons.feedback_outlined,
                           label: 'Report an Issue',
                           onTap: () => context.push('/complaint'),
@@ -90,13 +95,11 @@ class ProfileView extends StatelessWidget {
                     .slideY(begin: 0.04, end: 0),
                 const Gap(32),
 
-                // ── Log out ────────────────────────────────────────────
                 LogoutButton(
                   onTap: onLogout,
                 ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
                 const Gap(12),
 
-                // ── Delete Account (Coming Soon) ───────────────────────
                 const DeleteAccountButton()
                     .animate(delay: 220.ms)
                     .fadeIn(duration: 300.ms),

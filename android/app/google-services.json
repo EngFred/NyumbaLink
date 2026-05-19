@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "215244487816",
+    "project_id": "rentora-houselink-fcm",
+    "storage_bucket": "rentora-houselink-fcm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:215244487816:android:9611e3a67acc0be6ec733d",
+        "android_client_info": {
+          "package_name": "com.rentora.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyQ1Cy9WRQjeBsXURU62Ujm7SPhddXK2M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -5,6 +5,7 @@ import 'package:rentora/features/account/presentation/pages/about_page.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_profile_page.dart';
+import '../../features/area-alerts/presentation/pages/area_alerts_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -146,8 +147,6 @@ final GoRouter appRouter = GoRouter(
       name: 'hostelRooms',
       pageBuilder: (context, state) {
         final id = state.pathParameters['id']!;
-
-        // FIX: Extracting the full Map from PropertyDetailPage
         final extra = (state.extra as Map<String, dynamic>?) ?? {};
         final title = extra['title'] as String? ?? 'Hostel Rooms';
         final location = extra['location'] as String? ?? '';
@@ -210,6 +209,16 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const NotificationsPage(),
+        transitionsBuilder: _slideUpTransition,
+      ),
+    ),
+    // ── Area Alerts ──────────────────────────────────────────────────────────
+    GoRoute(
+      path: '/area-alerts',
+      name: 'areaAlerts',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const AreaAlertsPage(),
         transitionsBuilder: _slideUpTransition,
       ),
     ),

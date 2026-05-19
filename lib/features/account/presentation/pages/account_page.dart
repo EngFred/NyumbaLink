@@ -1,6 +1,9 @@
-import 'dart:ui'; // Required for ImageFilter
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/account/presentation/widgets/account/guest_view.dart';
 import 'package:rentora/features/account/presentation/widgets/account/profile_view.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -54,13 +57,13 @@ class AccountPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
 
-    // Determine the baseline content layer
     final Widget baseContent;
     if (auth.isAuthenticated && auth.user != null) {
       baseContent = ProfileView(
         user: auth.user!,
         initials: _initials(auth.user!.name),
         onLogout: () => _confirmLogout(context, ref),
+        onAreaAlerts: () => context.push('/area-alerts'),
       );
     } else {
       baseContent = const GuestView();
@@ -68,22 +71,16 @@ class AccountPage extends ConsumerWidget {
 
     return Stack(
       children: [
-        // ── Main Content Layer ──────────────────────────────────────────────
         baseContent,
-
-        // ── Premium Loading Overlay Layer ───────────────────────────────────
         if (auth.isLoading)
           Positioned.fill(
             child: AbsorbPointer(
-              absorbing:
-                  true, // Thoroughly blocks all taps on the underlying view
+              absorbing: true,
               child: ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
                   child: Container(
-                    color: Colors.black.withOpacity(
-                      0.25,
-                    ), // Smooth, dark overlay tint
+                    color: Colors.black.withOpacity(0.25),
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.all(24),
