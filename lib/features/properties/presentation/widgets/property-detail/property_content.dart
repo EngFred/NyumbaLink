@@ -124,7 +124,7 @@ class _PropertyContentState extends State<PropertyContent> {
                           const Gap(6),
                           Expanded(
                             child: Text(
-                              '${p.area.trim()}, ${p.district.name}',
+                              '${p.area?.name.trim()}, ${p.district.name}',
                               style: AppTextStyles.bodyMd.copyWith(
                                 color: AppColors.textSecondary,
                               ),

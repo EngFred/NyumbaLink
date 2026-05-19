@@ -9,6 +9,15 @@ class DistrictModel {
       DistrictModel(id: j['id'] as String, name: j['name'] as String);
 }
 
+// ── Area ──────────────────────────────────────────────────────────────────────
+class AreaModel {
+  const AreaModel({required this.id, required this.name});
+  final String id;
+  final String name;
+  factory AreaModel.fromJson(Map<String, dynamic> j) =>
+      AreaModel(id: j['id'] as String, name: j['name'] as String);
+}
+
 // ── Contact ───────────────────────────────────────────────────────────────────
 class ContactModel {
   const ContactModel({
@@ -64,7 +73,6 @@ class PropertyModel {
     required this.description,
     required this.type,
     required this.price,
-    required this.area,
     required this.status,
     required this.district,
     required this.contact,
@@ -74,6 +82,7 @@ class PropertyModel {
     required this.createdAt,
     required this.numberOfRooms,
     required this.parkingAvailable,
+    this.area,
     this.isFeatured = false,
     this.featuredUntil,
     this.billingCycle,
@@ -94,7 +103,7 @@ class PropertyModel {
   final String description;
   final String type;
   final double price;
-  final String area;
+  final AreaModel? area;
   final String status;
   final DistrictModel district;
   final ContactModel contact;
@@ -136,7 +145,9 @@ class PropertyModel {
       description: j['description'] as String,
       type: j['type'] as String,
       price: double.parse(j['price'].toString()),
-      area: j['area'] as String,
+      area: j['area'] != null
+          ? AreaModel.fromJson(j['area'] as Map<String, dynamic>)
+          : null,
       status: j['status'] as String,
       district: DistrictModel.fromJson(j['district'] as Map<String, dynamic>),
       contact: ContactModel.fromJson(j['contact'] as Map<String, dynamic>),

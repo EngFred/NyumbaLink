@@ -126,7 +126,7 @@ class SavedPage extends ConsumerWidget {
 class _SavedPropertyAdapter {
   static Property toProperty(SavedProperty s) {
     final parts = s.location.split(', ');
-    final area = parts.isNotEmpty ? parts[0] : s.location;
+    final areaName = parts.isNotEmpty ? parts[0] : s.location;
     final districtName = parts.length > 1 ? parts[1] : '';
     return Property(
       id: s.id,
@@ -134,7 +134,7 @@ class _SavedPropertyAdapter {
       description: '',
       type: s.type,
       price: s.price,
-      area: area,
+      area: areaName.isNotEmpty ? Area(id: '', name: areaName) : null,
       status: 'AVAILABLE',
       district: District(id: '', name: districtName),
       contact: const Contact(id: '', name: '', phone: '', role: ''),

@@ -7,6 +7,10 @@ extension DistrictModelX on DistrictModel {
   District toEntity() => District(id: id, name: name);
 }
 
+extension AreaModelX on AreaModel {
+  Area toEntity() => Area(id: id, name: name);
+}
+
 extension ContactModelX on ContactModel {
   Contact toEntity() => Contact(
     id: id,
@@ -23,7 +27,6 @@ extension PropertyImageModelX on PropertyImageModel {
       PropertyImage(id: id, url: url, publicId: publicId, isPrimary: isPrimary);
 }
 
-// NEW FIX: Map University model to entity
 extension UniversityModelX on UniversityModel {
   University toEntity() =>
       University(id: id, name: name, shortName: shortName, location: location);
@@ -36,7 +39,7 @@ extension PropertyModelX on PropertyModel {
     description: description,
     type: type,
     price: price,
-    area: area,
+    area: area?.toEntity(),
     status: status,
     district: district.toEntity(),
     contact: contact.toEntity(),
@@ -59,7 +62,7 @@ extension PropertyModelX on PropertyModel {
     amenities: amenities,
     lat: lat,
     lng: lng,
-    university: university?.toEntity(), // NEW FIX: Safely map university
+    university: university?.toEntity(),
   );
 }
 
