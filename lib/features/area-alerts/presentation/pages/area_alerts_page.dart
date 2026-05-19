@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
@@ -35,7 +34,6 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
     final isAuth = ref.watch(authProvider).isAuthenticated;
     final state = ref.watch(areaAlertsProvider);
 
-    // Show error via snackbar
     ref.listen<AreaAlertsState>(areaAlertsProvider, (prev, next) {
       if (next.error != null && next.error != prev?.error) {
         AppSnackbar.error(context, next.error!);
@@ -127,7 +125,6 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
         ],
       ),
     );
-
     if (confirm == true && mounted) {
       await ref.read(areaAlertsProvider.notifier).unsubscribe(alert.areaId);
       if (mounted) {
@@ -147,7 +144,6 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
 }
 
 // ── Subscription tile ─────────────────────────────────────────────────────────
-
 class _AlertTile extends StatelessWidget {
   const _AlertTile({required this.alert, required this.onUnsubscribe});
 
@@ -188,7 +184,6 @@ class _AlertTile extends StatelessWidget {
             color: AppColors.error,
             size: 22,
           ),
-          tooltip: 'Remove alert',
           onPressed: onUnsubscribe,
         ),
       ),
@@ -197,7 +192,6 @@ class _AlertTile extends StatelessWidget {
 }
 
 // ── Add Area bottom sheet ─────────────────────────────────────────────────────
-
 class _AddAreaSheet extends ConsumerStatefulWidget {
   const _AddAreaSheet();
 
@@ -251,7 +245,6 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
               )
               .toList();
 
-    // Group by district for display
     final Map<String, List<AreaOption>> grouped = {};
     for (final area in filtered) {
       grouped.putIfAbsent(area.districtName, () => []).add(area);
@@ -269,7 +262,6 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
           ),
           child: Column(
             children: [
-              // ── Handle ──────────────────────────────────────────────────
               const SizedBox(height: 12),
               Container(
                 width: 40,
@@ -294,9 +286,7 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
                       ),
                     ),
                     const Gap(14),
-                    // ── Search ───────────────────────────────────────────
                     TextField(
-                      autofocus: false,
                       decoration: InputDecoration(
                         hintText: 'Search areas…',
                         prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -318,7 +308,6 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
               ),
               const Gap(8),
               const Divider(height: 1, color: AppColors.grey200),
-              // ── List ────────────────────────────────────────────────────
               Expanded(
                 child: _loading
                     ? const Center(
@@ -327,14 +316,7 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
                         ),
                       )
                     : grouped.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No areas found',
-                          style: AppTextStyles.bodyMd.copyWith(
-                            color: AppColors.textHint,
-                          ),
-                        ),
-                      )
+                    ? const Center(child: Text('No areas found'))
                     : ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.only(bottom: 32),
@@ -346,7 +328,6 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
                                 entry.key,
                                 style: AppTextStyles.labelMd.copyWith(
                                   color: AppColors.textSecondary,
-                                  letterSpacing: 0.4,
                                 ),
                               ),
                             ),
@@ -413,35 +394,41 @@ class _AddAreaSheetState extends ConsumerState<_AddAreaSheet> {
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
-
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onAdd});
+
   final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Gap(20), // Extra top space for better balance
             Container(
-              width: 72,
-              height: 72,
+              width: 96,
+              height: 96,
               decoration: BoxDecoration(
                 color: AppColors.primary.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.notifications_none_rounded,
+                Icons
+                    .notifications_none_rounded, // Changed to match screenshot better
                 color: AppColors.primary,
-                size: 34,
+                size: 46,
               ),
             ),
-            const Gap(20),
-            Text('No area alerts yet', style: AppTextStyles.h4),
-            const Gap(8),
+            const Gap(32),
+            Text(
+              'No area alerts yet',
+              style: AppTextStyles.h4,
+              textAlign: TextAlign.center,
+            ),
+            const Gap(12),
             Text(
               'Add an area to get notified when new properties are listed there.',
               textAlign: TextAlign.center,
@@ -450,12 +437,23 @@ class _EmptyState extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-            const Gap(24),
-            OutlinedButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add an area'),
+            const Gap(48),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: const Text('Add an area'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+              ),
             ),
+            const Gap(80), // Bottom spacing to prevent floating button overlap
           ],
         ),
       ),
@@ -464,9 +462,9 @@ class _EmptyState extends StatelessWidget {
 }
 
 // ── Unauthenticated view ──────────────────────────────────────────────────────
-
 class _UnauthenticatedView extends StatelessWidget {
   const _UnauthenticatedView({required this.onLogin});
+
   final VoidCallback onLogin;
 
   @override
