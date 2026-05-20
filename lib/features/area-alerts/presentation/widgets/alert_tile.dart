@@ -9,15 +9,17 @@ class AlertTile extends StatelessWidget {
     super.key,
     required this.alert,
     required this.onUnsubscribe,
+    this.isDeleting = false,
   });
 
   final AreaAlert alert;
-  final VoidCallback onUnsubscribe;
+  final VoidCallback? onUnsubscribe;
+  final bool isDeleting;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.surface, // Flat background, no elevation
+      color: AppColors.surface,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
@@ -52,15 +54,31 @@ class AlertTile extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onUnsubscribe,
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              color: AppColors.grey400,
-            ),
-            tooltip: 'Remove alert',
-            highlightColor: AppColors.error.withOpacity(0.1),
-          ),
+          // UI Polish: Show inline deletion spinner
+          isDeleting
+              ? const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.error,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: onUnsubscribe,
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    // Grey out icon if disabled (onUnsubscribe == null)
+                    color: onUnsubscribe == null
+                        ? AppColors.grey200
+                        : AppColors.grey400,
+                  ),
+                  tooltip: 'Remove alert',
+                  highlightColor: AppColors.error.withOpacity(0.1),
+                ),
         ],
       ),
     );

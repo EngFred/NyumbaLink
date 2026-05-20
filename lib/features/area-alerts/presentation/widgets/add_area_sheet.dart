@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
@@ -20,7 +21,7 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
   bool _loading = true;
   String _search = '';
 
-  // UI Polish: Track which item is currently being saved to show an inline spinner
+  // Track which item is being saved to show an inline spinner
   String? _subscribingId;
 
   @override
@@ -51,6 +52,7 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
         .alerts
         .map((a) => a.areaId)
         .toSet();
+
     final filtered = _search.isEmpty
         ? _allAreas
         : _allAreas
@@ -113,8 +115,7 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                           color: AppColors.grey400,
                         ),
                         filled: true,
-                        fillColor: AppColors
-                            .background, // Slight contrast from the surface
+                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -149,8 +150,7 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                             Padding(
                               padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                               child: Text(
-                                entry.key
-                                    .toUpperCase(), // Uppercase header for distinct visual hierarchy
+                                entry.key.toUpperCase(),
                                 style: AppTextStyles.labelMd.copyWith(
                                   color: AppColors.textSecondary,
                                   letterSpacing: 0.5,
@@ -162,6 +162,7 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                                 area.id,
                               );
                               final isSubscribing = _subscribingId == area.id;
+                              final isAnySubscribing = _subscribingId != null;
 
                               return ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
@@ -185,8 +186,6 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                                         : FontWeight.w400,
                                   ),
                                 ),
-
-                                // UI Polish: Dynamic Trailing state
                                 trailing: isSubscribing
                                     ? const SizedBox(
                                         height: 20,
@@ -204,26 +203,27 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                                           fontWeight: FontWeight.w600,
                                         ),
                                       )
-                                    : const Icon(
+                                    : Icon(
                                         Icons.add_rounded,
-                                        color: AppColors.grey400,
+                                        // Visually grey out if another item is loading
+                                        color: isAnySubscribing
+                                            ? AppColors.grey200
+                                            : AppColors.grey400,
                                         size: 24,
                                       ),
 
-                                onTap: isSubscribed || _subscribingId != null
+                                // Disable tap if already subscribed OR if anything is currently loading
+                                onTap: isSubscribed || isAnySubscribing
                                     ? null
                                     : () async {
-                                        // 1. Set the loading UI state
                                         setState(
                                           () => _subscribingId = area.id,
                                         );
 
-                                        // 2. Await the network call
                                         await ref
                                             .read(areaAlertsProvider.notifier)
                                             .subscribe(area.id);
 
-                                        // 3. Check if it succeeded by looking at the updated state
                                         final success = ref
                                             .read(areaAlertsProvider)
                                             .alerts
@@ -231,14 +231,12 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
 
                                         if (mounted) {
                                           if (success) {
-                                            // Smooth closing sequence
                                             Navigator.pop(context);
                                             AppSnackbar.success(
                                               context,
                                               'Alerts enabled for ${area.name}',
                                             );
                                           } else {
-                                            // If failed, remove loading state (error handled by listener in parent)
                                             setState(
                                               () => _subscribingId = null,
                                             );

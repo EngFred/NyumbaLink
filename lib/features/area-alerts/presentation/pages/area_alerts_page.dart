@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/services/notification_permission_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../../core/services/notification_permission_service.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/area_alert.dart';
 import '../providers/area_alerts_provider.dart';
@@ -25,11 +25,12 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _shimmerController;
 
+  // Track which item is currently being deleted for inline spinner
+  String? _deletingId;
+
   @override
   void initState() {
     super.initState();
-
-    // Initialize the shimmer animation for the premium loading state
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -48,21 +49,14 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
     super.dispose();
   }
 
-  /// Ensures notification permission is in place before subscribing to an area.
-  ///
-  /// Returns true if the caller can proceed, false if they should abort.
   Future<bool> _ensureNotificationPermission() async {
-    // Already granted — nothing to do.
     if (await NotificationPermissionService.isGranted()) return true;
 
-    // Not asked yet — request now. The user is actively trying to subscribe
-    // so the reason is obvious and they're likely to accept.
     if (await NotificationPermissionService.isNotDetermined()) {
       await NotificationPermissionService.requestPermission();
       return NotificationPermissionService.isGranted();
     }
 
-    // Denied — explain and offer a shortcut to Settings.
     if (!mounted) return false;
     await showDialog<void>(
       context: context,
@@ -129,7 +123,7 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
               onPressed: () => _onAddAreaTapped(context),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              elevation: 2, // Subtle shadow to pop off the flat list
+              elevation: 2,
               icon: const Icon(Icons.add_rounded),
               label: const Text(
                 'Add area',
@@ -140,7 +134,7 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
       body: !isAuth
           ? UnauthenticatedView(onLogin: _goToLogin)
           : state.isLoading && state.alerts.isEmpty
-          ? _buildSkeletonList() // UI Polish: Premium Shimmer Loading
+          ? _buildSkeletonList()
           : state.alerts.isEmpty
           ? EmptyState(onAdd: () => _onAddAreaTapped(context))
           : RefreshIndicator(
@@ -149,16 +143,20 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
               child: ListView.separated(
                 padding: const EdgeInsets.only(bottom: 100),
                 itemCount: state.alerts.length,
-                // UI Polish: WhatsApp style flat dividers
                 separatorBuilder: (_, __) => const Divider(
                   height: 1,
                   color: AppColors.grey200,
-                  indent: 64, // Aligns divider with text, past the icon
+                  indent: 64,
                 ),
                 itemBuilder: (context, index) {
+                  final alert = state.alerts[index];
                   return AlertTile(
-                    alert: state.alerts[index],
-                    onUnsubscribe: () => _unsubscribe(state.alerts[index]),
+                    alert: alert,
+                    isDeleting: _deletingId == alert.areaId,
+                    // If something is currently deleting, disable all other trash icons
+                    onUnsubscribe: _deletingId != null
+                        ? null
+                        : () => _unsubscribe(alert),
                   );
                 },
               ),
@@ -166,7 +164,6 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
     );
   }
 
-  /// Builds the animated shimmer skeleton to display while data is loading.
   Widget _buildSkeletonList() {
     return AnimatedBuilder(
       animation: _shimmerController,
@@ -226,7 +223,6 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
 
   void _goToLogin() => context.go('/login');
 
-  /// Called when the user taps "Add area" — checks permission first.
   Future<void> _onAddAreaTapped(BuildContext context) async {
     final allowed = await _ensureNotificationPermission();
     if (!allowed || !mounted) return;
@@ -259,9 +255,24 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
     );
 
     if (confirm == true && mounted) {
+      // 1. Show the inline spinner on the tile
+      setState(() => _deletingId = alert.areaId);
+
+      // 2. Perform the unsubscription
       await ref.read(areaAlertsProvider.notifier).unsubscribe(alert.areaId);
+
       if (mounted) {
-        AppSnackbar.success(context, 'Removed alerts for ${alert.areaName}');
+        // 3. Reset the spinner state
+        setState(() => _deletingId = null);
+
+        // 4. Check if it was successfully removed from state before showing success
+        final stillExists = ref
+            .read(areaAlertsProvider)
+            .alerts
+            .any((a) => a.areaId == alert.areaId);
+        if (!stillExists) {
+          AppSnackbar.success(context, 'Removed alerts for ${alert.areaName}');
+        }
       }
     }
   }
