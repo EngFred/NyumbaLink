@@ -6,13 +6,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_dismiss_background.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/saved_properties_provider.dart';
 
-// Assuming you import these:
 import '../widgets/saved-properties/guest_banner.dart';
 import '../widgets/saved-properties/saved_header.dart';
 import '../widgets/saved-properties/saved_property_card.dart';
@@ -30,7 +28,7 @@ class SavedPage extends ConsumerWidget {
 
     final list = state.savedList;
 
-    if (list.isEmpty && isAuthenticated) {
+    if (list.isEmpty) {
       return const AppEmptyState(
         icon: Icons.favorite_border_rounded,
         title: 'No saved spaces yet',
@@ -50,7 +48,7 @@ class SavedPage extends ConsumerWidget {
       },
       child: CustomScrollView(
         slivers: [
-          // ── Header ────────────────────────────────────────────────────────
+          // Header
           SliverToBoxAdapter(
             child: SavedHeader(
               count: list.length,
@@ -58,7 +56,7 @@ class SavedPage extends ConsumerWidget {
             ).animate().fadeIn(duration: 300.ms),
           ),
 
-          // ── Guest banner ──────────────────────────────────────────────────
+          // Guest banner
           if (!isAuthenticated)
             SliverToBoxAdapter(
               child: const GuestBanner()
@@ -67,61 +65,51 @@ class SavedPage extends ConsumerWidget {
                   .slideY(begin: 0.05, end: 0, duration: 300.ms),
             ),
 
-          // ── Empty state ───────────────────────────────────────────────────
-          if (list.isEmpty)
-            SliverFillRemaining(
-              child: Center(
-                child: Text(
-                  'No saved properties yet.\nTap ♡ on any listing to save it.',
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          else
-            // ── List ──────────────────────────────────────────────────────
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-              sliver: SliverList.separated(
-                itemCount: list.length,
-                separatorBuilder: (_, __) => const Gap(12),
-                itemBuilder: (context, index) {
-                  final property = list[index];
+          // List
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            sliver: SliverList.separated(
+              itemCount: list.length,
+              separatorBuilder: (_, __) => const Gap(12),
+              itemBuilder: (context, index) {
+                final property = list[index];
 
-                  return Dismissible(
-                    key: ValueKey(property.id),
-                    direction: DismissDirection.endToStart,
-                    background: const AppDismissBackground(
-                      icon: Icons.favorite_border_rounded,
-                      label: 'Remove',
-                    ),
-                    confirmDismiss: (_) async {
-                      await ref
-                          .read(savedPropertiesProvider.notifier)
-                          .toggleSave(property);
-                      return false; // The removal from state handles the animation out
-                    },
-                    child:
-                        SavedPropertyCard(
-                              property: property,
-                              onTap: () => context.push(
-                                AppRoutes.propertyDetailPath(property.id),
-                              ),
-                              onRemove: () => ref
+                return Dismissible(
+                  key: ValueKey(property.id),
+                  direction: DismissDirection.endToStart,
+                  background: const AppDismissBackground(
+                    icon: Icons.favorite_border_rounded,
+                    label: 'Remove',
+                  ),
+                  confirmDismiss: (_) async {
+                    // No await needed - toggleSave is optimistic
+                    ref
+                        .read(savedPropertiesProvider.notifier)
+                        .toggleSave(property);
+
+                    return false; // Let optimistic update handle UI
+                  },
+                  child:
+                      SavedPropertyCard(
+                            property: property,
+                            onTap: () => context.push(
+                              AppRoutes.propertyDetailPath(property.id),
+                            ),
+                            onRemove: () {
+                              ref
                                   .read(savedPropertiesProvider.notifier)
-                                  .toggleSave(property),
-                            )
-                            .animate(
-                              delay: Duration(milliseconds: 80 + index * 50),
-                            )
-                            .fadeIn(duration: 280.ms)
-                            .slideX(begin: 0.04, end: 0),
-                  );
-                },
-              ),
+                                  .toggleSave(property);
+                            },
+                          )
+                          .animate(
+                            delay: Duration(milliseconds: 80 + index * 50),
+                          )
+                          .fadeIn(duration: 280.ms)
+                          .slideX(begin: 0.04, end: 0),
+                );
+              },
             ),
+          ),
         ],
       ),
     );

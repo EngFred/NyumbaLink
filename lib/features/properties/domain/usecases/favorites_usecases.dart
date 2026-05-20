@@ -12,7 +12,8 @@ class ToggleFavoriteUseCase {
   const ToggleFavoriteUseCase(this._repository);
   final FavoritesRepository _repository;
 
-  Future<void> call(SavedProperty property, {required bool isAuthenticated}) =>
+  /// Returns the server-confirmed new saved state.
+  Future<bool> call(SavedProperty property, {required bool isAuthenticated}) =>
       _repository.toggleFavorite(property, isAuthenticated: isAuthenticated);
 }
 

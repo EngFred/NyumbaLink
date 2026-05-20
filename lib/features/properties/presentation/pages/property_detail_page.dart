@@ -75,12 +75,15 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     Share.share(shareText, subject: property.title);
   }
 
-  /// Toggle hostel alerts (only visible for HOSTEL properties)
+  /// Toggle hostel alerts — only callable for HOSTEL properties.
   Future<void> _toggleHostelAlert(Property property) async {
     if (!property.isHostel) return;
 
-    final notifier = ref.read(hostelAlertsProvider.notifier);
-    final isSubscribed = notifier.isSubscribed(property.id);
+    // Read current state synchronously before showing the dialog so the
+    // dialog copy is always consistent with what the user sees.
+    final isSubscribed = ref
+        .read(hostelAlertsProvider)
+        .isSubscribed(property.id);
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -93,8 +96,10 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         ),
         content: Text(
           isSubscribed
-              ? 'You will no longer receive notifications when new rooms become available in this hostel.'
-              : 'You will be notified when new rooms are added or become available again.',
+              ? 'You will no longer receive notifications when new rooms '
+                    'become available in this hostel.'
+              : 'You will be notified when new rooms are added or become '
+                    'available again.',
           style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
@@ -116,13 +121,25 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
       ),
     );
 
-    if (confirm == true && mounted) {
+    if (confirm != true || !mounted) return;
+
+    final notifier = ref.read(hostelAlertsProvider.notifier);
+
+    try {
       if (isSubscribed) {
         await notifier.unsubscribe(property.id);
-        AppSnackbar.success(context, 'Alerts disabled for ${property.title}');
+        if (mounted) {
+          AppSnackbar.success(context, 'Alerts disabled for ${property.title}');
+        }
       } else {
         await notifier.subscribe(property.id);
-        AppSnackbar.success(context, 'You will now receive room alerts!');
+        if (mounted) {
+          AppSnackbar.success(context, 'You will now receive room alerts!');
+        }
+      }
+    } on Exception catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, 'Something went wrong. Please try again.');
       }
     }
   }
@@ -133,6 +150,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     final savedState = ref.watch(savedPropertiesProvider);
     final hostelState = ref.watch(hostelAlertsProvider);
 
+    // Derived from in-memory Riverpod state — always reflects optimistic taps.
     final isSaved = savedState.savedList.any((p) => p.id == widget.propertyId);
 
     if (state.isLoading) return const DetailSkeleton();
@@ -160,10 +178,9 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 
     final property = state.property!;
 
-    // Check if user is subscribed to hostel alerts
+    // Use the state helper so this is always consistent with the alerts list.
     final isHostelSubscribed =
-        property.isHostel &&
-        hostelState.alerts.any((a) => a.propertyId == widget.propertyId);
+        property.isHostel && hostelState.isSubscribed(widget.propertyId);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -190,7 +207,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 ),
               ),
               actions: [
-                // Share Button
+                // ── Share ─────────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -200,23 +217,26 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   ),
                 ),
 
-                // Hostel Alert Bell (only for hostels)
+                // ── Hostel alert bell (hostels only) ──────────────────────
                 if (property.isHostel)
                   Padding(
                     padding: const EdgeInsets.all(8),
-                    child: CircleHeroButton(
-                      icon: isHostelSubscribed
-                          ? Icons.notifications_rounded
-                          : Icons.notifications_outlined,
-                      iconColor: isHostelSubscribed
-                          ? AppColors.primary
-                          : Colors.white,
-                      onTap: () => _toggleHostelAlert(property),
-                    ),
+                    // Show a spinner inside the same circular container while
+                    // the subscribe / unsubscribe request is in-flight.
+                    child: hostelState.isPending(property.id)
+                        ? const _CircleLoadingButton()
+                        : CircleHeroButton(
+                            icon: isHostelSubscribed
+                                ? Icons.notifications_rounded
+                                : Icons.notifications_outlined,
+                            iconColor: isHostelSubscribed
+                                ? AppColors.primary
+                                : Colors.white,
+                            onTap: () => _toggleHostelAlert(property),
+                          ),
                   ),
 
-                // Favorite Button
-                // Favorite Button
+                // ── Favourite ─────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -225,26 +245,25 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                         : Icons.favorite_border_rounded,
                     iconColor: isSaved ? AppColors.error : Colors.white,
                     onTap: () {
-                      // Map the Property to a SavedProperty before passing it to the provider
-                      final savedProperty = property.toSavedProperty();
+                      // Capture the state BEFORE toggling so the snackbar
+                      // message is always correct.
+                      final wasSaved = isSaved;
 
                       ref
                           .read(savedPropertiesProvider.notifier)
-                          .toggleSave(savedProperty);
+                          .toggleSave(property.toSavedProperty());
 
-                      if (isSaved) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Removed from saved collection'),
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              wasSaved
+                                  ? 'Removed from saved collection'
+                                  : 'Added to saved collection!',
+                            ),
                           ),
                         );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Added to saved collection!'),
-                          ),
-                        );
-                      }
                     },
                   ),
                 ),
@@ -302,6 +321,28 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
             }
           },
         ),
+      ),
+    );
+  }
+}
+
+// ── Loading placeholder that matches CircleHeroButton's visual footprint ──────
+
+class _CircleLoadingButton extends StatelessWidget {
+  const _CircleLoadingButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.35),
+        shape: BoxShape.circle,
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(10),
+        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
       ),
     );
   }
