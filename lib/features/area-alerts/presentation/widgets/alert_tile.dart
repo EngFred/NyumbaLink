@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import 'package:gap/gap.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/area_alert.dart';
 
 class AlertTile extends StatelessWidget {
@@ -17,39 +17,51 @@ class AlertTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.grey200),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(10),
+      color: AppColors.surface, // Flat background, no elevation
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.notifications_active_outlined,
+              color: AppColors.primary,
+              size: 22,
+            ),
           ),
-          child: const Icon(
-            Icons.notifications_active_outlined,
-            color: AppColors.primary,
-            size: 20,
+          const Gap(16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alert.areaName,
+                  style: AppTextStyles.h4.copyWith(fontSize: 16),
+                ),
+                const Gap(4),
+                Text(
+                  alert.districtName,
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        title: Text(alert.areaName, style: AppTextStyles.labelLg),
-        subtitle: Text(
-          alert.districtName,
-          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-        ),
-        trailing: IconButton(
-          icon: const Icon(
-            Icons.delete_outline_rounded,
-            color: AppColors.error,
-            size: 22,
+          IconButton(
+            onPressed: onUnsubscribe,
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.grey400,
+            ),
+            tooltip: 'Remove alert',
+            highlightColor: AppColors.error.withOpacity(0.1),
           ),
-          onPressed: onUnsubscribe,
-        ),
+        ],
       ),
     );
   }

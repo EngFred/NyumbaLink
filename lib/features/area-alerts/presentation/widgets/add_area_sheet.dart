@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
@@ -20,6 +19,9 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
   List<AreaOption> _allAreas = [];
   bool _loading = true;
   String _search = '';
+
+  // UI Polish: Track which item is currently being saved to show an inline spinner
+  String? _subscribingId;
 
   @override
   void initState() {
@@ -49,7 +51,6 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
         .alerts
         .map((a) => a.areaId)
         .toSet();
-
     final filtered = _search.isEmpty
         ? _allAreas
         : _allAreas
@@ -106,9 +107,14 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                     TextField(
                       decoration: InputDecoration(
                         hintText: 'Search areas…',
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          size: 20,
+                          color: AppColors.grey400,
+                        ),
                         filled: true,
-                        fillColor: AppColors.background,
+                        fillColor: AppColors
+                            .background, // Slight contrast from the surface
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -123,24 +129,31 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                   ],
                 ),
               ),
-              const Gap(8),
+              const Gap(16),
               const Divider(height: 1, color: AppColors.grey200),
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
                     : grouped.isEmpty
-                    ? const Center(child: Text('No areas found'))
+                    ? const Center(
+                        child: Text(
+                          'No areas found',
+                          style: TextStyle(color: AppColors.grey400),
+                        ),
+                      )
                     : ListView(
                         controller: scrollController,
                         padding: const EdgeInsets.only(bottom: 32),
                         children: grouped.entries.expand((entry) {
                           return [
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+                              padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                               child: Text(
-                                entry.key,
+                                entry.key
+                                    .toUpperCase(), // Uppercase header for distinct visual hierarchy
                                 style: AppTextStyles.labelMd.copyWith(
                                   color: AppColors.textSecondary,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -148,6 +161,8 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                               final isSubscribed = subscribedIds.contains(
                                 area.id,
                               );
+                              final isSubscribing = _subscribingId == area.id;
+
                               return ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 20,
@@ -160,36 +175,74 @@ class _AddAreaSheetState extends ConsumerState<AddAreaSheet> {
                                   color: isSubscribed
                                       ? AppColors.primary
                                       : AppColors.grey400,
-                                  size: 22,
+                                  size: 24,
                                 ),
                                 title: Text(
                                   area.name,
-                                  style: AppTextStyles.bodyMd,
+                                  style: AppTextStyles.bodyMd.copyWith(
+                                    fontWeight: isSubscribed
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
                                 ),
-                                trailing: isSubscribed
+
+                                // UI Polish: Dynamic Trailing state
+                                trailing: isSubscribing
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : isSubscribed
                                     ? Text(
                                         'Subscribed',
                                         style: AppTextStyles.caption.copyWith(
                                           color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       )
                                     : const Icon(
                                         Icons.add_rounded,
                                         color: AppColors.grey400,
-                                        size: 20,
+                                        size: 24,
                                       ),
-                                onTap: isSubscribed
+
+                                onTap: isSubscribed || _subscribingId != null
                                     ? null
                                     : () async {
-                                        Navigator.pop(context);
+                                        // 1. Set the loading UI state
+                                        setState(
+                                          () => _subscribingId = area.id,
+                                        );
+
+                                        // 2. Await the network call
                                         await ref
                                             .read(areaAlertsProvider.notifier)
                                             .subscribe(area.id);
-                                        if (context.mounted) {
-                                          AppSnackbar.success(
-                                            context,
-                                            'Alerts enabled for ${area.name}',
-                                          );
+
+                                        // 3. Check if it succeeded by looking at the updated state
+                                        final success = ref
+                                            .read(areaAlertsProvider)
+                                            .alerts
+                                            .any((a) => a.areaId == area.id);
+
+                                        if (mounted) {
+                                          if (success) {
+                                            // Smooth closing sequence
+                                            Navigator.pop(context);
+                                            AppSnackbar.success(
+                                              context,
+                                              'Alerts enabled for ${area.name}',
+                                            );
+                                          } else {
+                                            // If failed, remove loading state (error handled by listener in parent)
+                                            setState(
+                                              () => _subscribingId = null,
+                                            );
+                                          }
                                         }
                                       },
                               );

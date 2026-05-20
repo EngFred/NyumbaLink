@@ -39,7 +39,7 @@ const _slides = [
   ),
   // ── NEW SLIDE ────────────────────────────────────────────────────────────
   _OnboardingSlide(
-    image: 'assets/images/onboarding_3.jpeg', // add a relevant image asset
+    image: 'assets/images/onboarding_4.jpeg',
     tag: 'Never Miss Out',
     title: 'Get Notified\nInstantly',
     subtitle:
