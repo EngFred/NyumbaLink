@@ -3,12 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_footer_link.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -17,7 +17,6 @@ import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
-
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
@@ -52,17 +51,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         AppSnackbar.error(context, next.error!);
       }
     });
+
     final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // ── Hero header ───────────────────────────────────────────────
           const AuthHero(
             title: 'Welcome back',
             subtitle: 'Sign in to continue your search',
           ),
-          // ── Form body ─────────────────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -71,7 +70,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Email ──────────────────────────────────────────
                     AuthSection(
                           children: [
                             AuthField(
@@ -91,8 +89,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(16),
-                    // ── Password ───────────────────────────────────────
+
+                    // UX Polish: Removed the Gap(16) here because AuthField already handles bottom spacing
                     AuthSection(
                           children: [
                             AuthField(
@@ -125,23 +123,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    // ── Forgot password ────────────────────────────────
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => context.push('/forgot-password'),
-                        child: Text(
-                          'Forgot password?',
-                          style: AppTextStyles.labelMd.copyWith(
-                            color: AppColors.primary,
+
+                    // Slightly negative transform to pull the "Forgot Password" link closer to the input
+                    Transform.translate(
+                      offset: const Offset(0, -12),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context.push('/forgot-password'),
+                          child: Text(
+                            'Forgot password?',
+                            style: AppTextStyles.labelMd.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       ),
                     ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-                    const Gap(8),
-                    // ── Submit ─────────────────────────────────────────
+
+                    const Gap(16),
+
                     SubmitButton(
                           isLoading: isLoading,
                           label: 'Sign In',
@@ -151,8 +154,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .animate(delay: 140.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(28),
-                    // ── Register link ──────────────────────────────────
+
+                    const Gap(32),
+
                     AuthFooterLink(
                       message: "Don't have an account? ",
                       linkText: 'Sign up',

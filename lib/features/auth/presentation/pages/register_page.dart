@@ -3,13 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_footer_link.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
-import 'package:rentora/features/auth/presentation/widgets/field_divider.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -17,7 +16,6 @@ import '../providers/auth_provider.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
-
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
@@ -61,7 +59,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         AppSnackbar.error(context, next.error!);
       }
     });
+
     final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -91,7 +91,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ? 'Name is required'
                                   : null,
                             ),
-                            const FieldDivider(),
+                            // UX Polish: Removed FieldDivider
                             AuthField(
                               controller: _emailController,
                               label: 'Email Address',
@@ -109,7 +109,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(16),
+
+                    // UX Polish: Removed Gap(16)
                     AuthSection(
                           children: [
                             AuthField(
@@ -133,16 +134,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 ),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty) {
+                                if (v == null || v.isEmpty)
                                   return 'Password is required';
-                                }
-                                if (v.length < 8) {
+                                if (v.length < 8)
                                   return 'At least 8 characters';
-                                }
                                 return null;
                               },
                             ),
-                            const FieldDivider(),
+                            // UX Polish: Removed FieldDivider
                             AuthField(
                               controller: _confirmController,
                               label: 'Confirm Password',
@@ -176,7 +175,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(24),
+
+                    const Gap(12),
+
                     SubmitButton(
                           isLoading: isLoading,
                           label: 'Create Account',
@@ -186,7 +187,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .animate(delay: 120.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(28),
+
+                    const Gap(32),
+
                     AuthFooterLink(
                       message: 'Already have an account? ',
                       linkText: 'Sign in',

@@ -28,44 +28,76 @@ class ProfileField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 13, color: AppColors.primary),
-              const Gap(5),
-              Text(
-                label,
-                style: AppTextStyles.labelSm.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
+          Text(
+            label,
+            style: AppTextStyles.labelSm.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          const Gap(8),
           TextFormField(
             controller: controller,
             enabled: enabled,
             keyboardType: inputType,
             textCapitalization: capitalization,
-            style: AppTextStyles.bodyMd,
+            style: AppTextStyles.bodyMd.copyWith(
+              color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               hintText: hint,
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              isDense: true,
+              hintStyle: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.grey400,
+              ),
+              prefixIcon: Icon(icon, size: 20, color: AppColors.grey400),
+              prefixIconConstraints: const BoxConstraints(minWidth: 44),
+              filled: true,
+              // UX Polish: Slightly darker fill if the field is disabled (like the email)
+              fillColor: enabled ? AppColors.surface : AppColors.grey50,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 16,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.grey200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.grey200),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppColors.grey200.withOpacity(0.5),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.error),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppColors.error,
+                  width: 1.5,
+                ),
+              ),
             ),
             validator: validator,
           ),
-          const SizedBox(height: 6),
         ],
       ),
     );

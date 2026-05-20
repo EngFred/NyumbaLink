@@ -3,18 +3,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
-
   @override
   ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
@@ -36,7 +35,6 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       final success = await ref
           .read(authProvider.notifier)
           .forgotPassword(email);
-
       if (success && mounted) {
         AppSnackbar.success(
           context,
@@ -92,7 +90,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(24),
+
+                    const Gap(12),
+
                     SubmitButton(
                           isLoading: isLoading,
                           label: 'Send Reset Code',

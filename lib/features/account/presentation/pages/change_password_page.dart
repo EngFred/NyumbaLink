@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:rentora/features/account/presentation/widgets/change-password/pw_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_section_card.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -22,7 +21,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
-
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
@@ -105,9 +103,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
           children: [
-            // ── Flat Security icon ────────────────────────────────────────────
             Center(
                   child: Column(
                     children: [
@@ -142,14 +139,11 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 )
                 .fadeIn(),
 
-            const Gap(32),
+            const Gap(40),
 
-            // ── Current password ─────────────────────────────────────────
-            AppSectionCard(
-                  number: '01',
-                  title: 'Current Password',
-                  icon: Icons.lock_open_outlined,
-                  padChildren: false,
+            // ── Standalone Fields ──────────────────────────────────────────
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     PwField(
                       controller: _currentCtrl,
@@ -162,21 +156,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                       validator: (v) =>
                           (v?.isEmpty ?? true) ? 'Required' : null,
                     ),
-                  ],
-                )
-                .animate(delay: 80.ms)
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.04, end: 0),
 
-            const Gap(16),
-
-            // ── New password ─────────────────────────────────────────────
-            AppSectionCard(
-                  number: '02',
-                  title: 'New Password',
-                  icon: Icons.lock_outline_rounded,
-                  padChildren: false,
-                  children: [
                     PwField(
                       controller: _newCtrl,
                       label: 'New Password',
@@ -192,47 +172,46 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                         return null;
                       },
                     ),
+
                     if (_newCtrl.text.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: List.generate(4, (i) {
-                                return Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.only(
-                                      right: i < 3 ? 4 : 0,
+                      Transform.translate(
+                        offset: const Offset(0, -10),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: List.generate(4, (i) {
+                                  return Expanded(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                        right: i < 3 ? 4 : 0,
+                                      ),
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: i < _strength
+                                            ? _strengthColor
+                                            : AppColors.grey200,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
                                     ),
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: i < _strength
-                                          ? _strengthColor
-                                          : AppColors.grey200,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                            const Gap(4),
-                            Text(
-                              'Strength: $_strengthLabel',
-                              style: AppTextStyles.caption.copyWith(
-                                color: _strengthColor,
-                                fontWeight: FontWeight.w600,
+                                  );
+                                }),
                               ),
-                            ),
-                          ],
+                              const Gap(6),
+                              Text(
+                                'Strength: $_strengthLabel',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: _strengthColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    const Divider(
-                      height: 1,
-                      color: AppColors.grey100,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
+
                     PwField(
                       controller: _confirmCtrl,
                       label: 'Confirm New Password',
@@ -246,11 +225,11 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                     ),
                   ],
                 )
-                .animate(delay: 130.ms)
+                .animate(delay: 80.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
 
-            const Gap(32),
+            const Gap(24),
 
             ElevatedButton(
               onPressed: isLoading ? null : _submit,
@@ -274,7 +253,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                         Text('Update Password'),
                       ],
                     ),
-            ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
+            ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
           ],
         ),
       ),

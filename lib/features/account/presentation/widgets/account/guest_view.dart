@@ -15,58 +15,57 @@ class GuestView extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Header
+          // ── Clean Flat Header ─────────────────────────────────────────────
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.primary, Color(0xFF1A3A6B)],
-              ),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-            ),
+            color: AppColors.surface,
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             child: SafeArea(
               bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.15),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.grey100, // Subtle placeholder color
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      size: 32,
+                      color: AppColors.grey500,
+                    ),
+                  ),
+                  const Gap(16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Guest',
+                          style: AppTextStyles.h3.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      child: const Icon(
-                        Icons.person_outline_rounded,
-                        size: 40,
-                        color: Colors.white,
-                      ),
+                        const Gap(2),
+                        Text(
+                          'Not signed in',
+                          style: AppTextStyles.bodyMd.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const Gap(14),
-                    Text(
-                      'Guest',
-                      style: AppTextStyles.h2.copyWith(color: Colors.white),
-                    ),
-                    const Gap(4),
-                    Text(
-                      'Not signed in',
-                      style: AppTextStyles.bodyMd.copyWith(
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ).animate().fadeIn(duration: 400.ms),
 
+          // ── Content ────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -78,19 +77,21 @@ class GuestView extends StatelessWidget {
                   title: 'Sync across devices',
                   subtitle: 'Access your saved properties anywhere.',
                 ),
-                const Gap(12),
+                const Gap(16),
                 const _BenefitRow(
                   icon: Icons.receipt_long_outlined,
                   title: 'Track your bookings',
                   subtitle: 'Manage all your requests in one place.',
                 ),
-                const Gap(12),
+                const Gap(16),
                 const _BenefitRow(
                   icon: Icons.notifications_outlined,
                   title: 'Real-time notifications',
                   subtitle: 'Get instant alerts on booking updates.',
                 ),
-                const Gap(36),
+
+                const Gap(48),
+
                 ElevatedButton.icon(
                   onPressed: () => context.push(AppRoutes.register),
                   icon: const Icon(Icons.person_add_rounded, size: 18),
@@ -135,7 +136,7 @@ class _BenefitRow extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.primary50,
+            color: AppColors.primary.withOpacity(0.08),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: AppColors.primary, size: 22),
@@ -151,6 +152,7 @@ class _BenefitRow extends StatelessWidget {
                 subtitle,
                 style: AppTextStyles.bodySm.copyWith(
                   color: AppColors.textSecondary,
+                  height: 1.3,
                 ),
               ),
             ],

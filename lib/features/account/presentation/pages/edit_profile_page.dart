@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:rentora/features/account/presentation/widgets/edit-profile/profile_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/app_section_card.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -90,9 +89,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
           children: [
-            // ── Flat Avatar section ───────────────────────────────────────────
             Center(
                   child: ValueListenableBuilder(
                     valueListenable: _nameController,
@@ -138,14 +136,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   duration: 350.ms,
                   curve: Curves.easeOut,
                 ),
-            const Gap(32),
 
-            // ── Fields card ──────────────────────────────────────────────
-            AppSectionCard(
-                  number: '01',
-                  title: 'Personal Info',
-                  icon: Icons.person_outline_rounded,
-                  padChildren: false,
+            const Gap(40),
+
+            // ── Standalone Fields ──────────────────────────────────────────
+            Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ProfileField(
                       controller: _nameController,
@@ -158,12 +154,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                           ? 'Name is too short'
                           : null,
                     ),
-                    const Divider(
-                      height: 1,
-                      color: AppColors.grey100,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
+
                     ProfileField(
                       controller: _emailController,
                       label: 'Email Address',
@@ -172,14 +163,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       enabled: false,
                       inputType: TextInputType.emailAddress,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+
+                    Transform.translate(
+                      offset: const Offset(0, -8),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
                             Icons.lock_outline_rounded,
-                            size: 13,
+                            size: 14,
                             color: AppColors.textHint.withOpacity(0.8),
                           ),
                           const Gap(6),
@@ -201,8 +193,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
 
-            const Gap(32),
-            // ── Save button ──────────────────────────────────────────────
+            const Gap(40),
+
             ElevatedButton(
               onPressed: isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(

@@ -3,12 +3,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
-import 'package:rentora/features/auth/presentation/widgets/field_divider.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../providers/auth_provider.dart';
@@ -26,7 +25,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
@@ -48,7 +46,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
             _otpController.text.trim(),
             _passwordController.text,
           );
-
       if (success && mounted) {
         AppSnackbar.success(
           context,
@@ -103,7 +100,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(16),
+
+                    // UX Polish: Removed Gap(16)
                     AuthSection(
                           children: [
                             AuthField(
@@ -142,7 +140,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                                 return null;
                               },
                             ),
-                            const FieldDivider(),
+                            // UX Polish: Removed FieldDivider
                             AuthField(
                               controller: _confirmController,
                               label: 'Confirm Password',
@@ -176,7 +174,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
-                    const Gap(24),
+
+                    const Gap(12),
+
                     SubmitButton(
                           isLoading: isLoading,
                           label: 'Reset Password',
