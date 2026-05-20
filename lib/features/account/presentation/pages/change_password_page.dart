@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/account/presentation/widgets/change-password/pw_field.dart';
 
+import 'package:rentora/features/account/presentation/widgets/change-password/pw_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_section_card.dart';
@@ -13,7 +13,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
   const ChangePasswordPage({super.key});
-
   @override
   ConsumerState<ChangePasswordPage> createState() => _ChangePasswordPageState();
 }
@@ -23,6 +22,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final _currentCtrl = TextEditingController();
   final _newCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
@@ -83,7 +83,9 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         AppSnackbar.error(context, next.error!);
       }
     });
+
     final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -103,52 +105,45 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
           children: [
-            // ── Security icon ────────────────────────────────────────────
+            // ── Flat Security icon ────────────────────────────────────────────
             Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.primary, Color(0xFF1A3A6B)],
-                      ),
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.08),
+                          shape: BoxShape.circle,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.shield_outlined,
-                      size: 40,
-                      color: Colors.white,
-                    ),
+                        child: const Icon(
+                          Icons.shield_outlined,
+                          size: 32,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const Gap(12),
+                      Text(
+                        'Keep your account secure',
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 )
                 .animate()
                 .scale(
-                  begin: const Offset(0.7, 0.7),
-                  duration: 500.ms,
-                  curve: Curves.elasticOut,
+                  begin: const Offset(0.9, 0.9),
+                  duration: 400.ms,
+                  curve: Curves.easeOut,
                 )
-                .fadeIn(duration: 300.ms),
-            const Gap(12),
-            Center(
-              child: Text(
-                'Keep your account secure',
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-            const Gap(28),
+                .fadeIn(),
+
+            const Gap(32),
+
             // ── Current password ─────────────────────────────────────────
             AppSectionCard(
                   number: '01',
@@ -172,7 +167,9 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 .animate(delay: 80.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
+
             const Gap(16),
+
             // ── New password ─────────────────────────────────────────────
             AppSectionCard(
                   number: '02',
@@ -190,9 +187,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                           setState(() => _obscureNew = !_obscureNew),
                       onChanged: (_) => setState(() {}),
                       validator: (v) {
-                        if (v == null || v.length < 8) {
+                        if (v == null || v.length < 8)
                           return 'At least 8 characters';
-                        }
                         return null;
                       },
                     ),
@@ -253,7 +249,9 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                 .animate(delay: 130.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
+
             const Gap(32),
+
             ElevatedButton(
               onPressed: isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(

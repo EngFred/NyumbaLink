@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -8,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rentora/features/account/presentation/widgets/account/guest_view.dart';
 import 'package:rentora/features/account/presentation/widgets/account/profile_view.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/notification_nudge_banner.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -27,23 +27,33 @@ class AccountPage extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Out'),
-        content: const Text(
+        surfaceTintColor: Colors.transparent, // Flat design, no weird tint
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Log Out', style: AppTextStyles.h4),
+        content: Text(
           'Are you sure you want to log out of your account?',
+          style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppTextStyles.labelMd.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              elevation: 0, // Flat button
             ),
             onPressed: () {
+              // Pop the dialog instantly...
               Navigator.pop(ctx);
+              // ...then trigger the logout which will display the blur overlay!
               ref.read(authProvider.notifier).logout();
             },
             child: const Text('Log Out'),
@@ -56,8 +66,8 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
-
     final Widget baseContent;
+
     if (auth.isAuthenticated && auth.user != null) {
       baseContent = Column(
         children: [
@@ -81,6 +91,8 @@ class AccountPage extends ConsumerWidget {
     return Stack(
       children: [
         baseContent,
+
+        // This existing overlay will now gracefully appear during logout!
         if (auth.isLoading)
           Positioned.fill(
             child: AbsorbPointer(

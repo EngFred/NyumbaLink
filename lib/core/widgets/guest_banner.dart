@@ -2,28 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../constants/app_constants.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 
 class GuestBanner extends StatelessWidget {
-  const GuestBanner({super.key});
+  const GuestBanner({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.marginBottom = 16.0,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final double marginBottom;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: EdgeInsets.fromLTRB(16, 0, 16, marginBottom),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.07),
-            AppColors.accent.withOpacity(0.07),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        color: AppColors.primary.withOpacity(0.04), // Flat, elegant tint
+        borderRadius: BorderRadius.circular(12), // Sharper corners
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.12),
+        ), // Crisp border
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,25 +38,26 @@ class GuestBanner extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.primary50,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.cloud_sync_rounded,
-              color: AppColors.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
           const Gap(14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sync across devices', style: AppTextStyles.labelLg),
+                Text(
+                  title,
+                  style: AppTextStyles.labelLg.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const Gap(4),
                 Text(
-                  'Sign in to back up your saved properties and access them from any device.',
+                  subtitle,
                   style: AppTextStyles.bodySm.copyWith(
                     color: AppColors.textSecondary,
                     height: 1.4,

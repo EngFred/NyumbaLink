@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/core/widgets/guest_banner.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,7 +12,6 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/saved_properties_provider.dart';
 
-import '../widgets/saved-properties/guest_banner.dart';
 import '../widgets/saved-properties/saved_header.dart';
 import '../widgets/saved-properties/saved_property_card.dart';
 import '../widgets/saved-properties/saved_skeleton.dart';
@@ -59,10 +59,17 @@ class SavedPage extends ConsumerWidget {
           // Guest banner
           if (!isAuthenticated)
             SliverToBoxAdapter(
-              child: const GuestBanner()
-                  .animate(delay: 60.ms)
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.05, end: 0, duration: 300.ms),
+              child:
+                  const GuestBanner(
+                        title: 'Sync across devices',
+                        subtitle:
+                            'Sign in to back up your saved properties and access them from any device.',
+                        icon: Icons.cloud_sync_rounded,
+                        marginBottom: 16.0,
+                      )
+                      .animate(delay: 60.ms)
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: 0.05, end: 0, duration: 300.ms),
             ),
 
           // List

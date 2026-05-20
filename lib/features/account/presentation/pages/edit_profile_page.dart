@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/account/presentation/widgets/edit-profile/profile_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -12,7 +13,6 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
-
   @override
   ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
@@ -90,9 +90,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
           children: [
-            // ── Avatar section ───────────────────────────────────────────
+            // ── Flat Avatar section ───────────────────────────────────────────
             Center(
                   child: ValueListenableBuilder(
                     valueListenable: _nameController,
@@ -100,34 +100,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       return Column(
                         children: [
                           Container(
-                            width: 88,
-                            height: 88,
+                            width: 80,
+                            height: 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [AppColors.primary, Color(0xFF1A3A6B)],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
+                              color: AppColors.primary.withOpacity(0.08),
                             ),
                             child: Center(
                               child: Text(
                                 _initials(value.text),
                                 style: AppTextStyles.h1.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
-                          const Gap(10),
+                          const Gap(12),
                           Text(
                             'Your display name drives\nthe initials above',
                             style: AppTextStyles.caption.copyWith(
@@ -179,11 +169,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       label: 'Email Address',
                       hint: 'you@example.com',
                       icon: Icons.email_outlined,
-                      enabled:
-                          false, // Locked down to preserve identity safety mapping
+                      enabled: false,
                       inputType: TextInputType.emailAddress,
                     ),
-                    // Contextual non-editable informative notice block
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                       child: Row(
@@ -212,8 +200,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 .animate(delay: 80.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.04, end: 0),
-            const Gap(32),
 
+            const Gap(32),
             // ── Save button ──────────────────────────────────────────────
             ElevatedButton(
               onPressed: isLoading ? null : _submit,

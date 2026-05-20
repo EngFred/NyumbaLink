@@ -159,7 +159,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // 1. Trigger the loading overlay
     state = state.copyWith(isLoading: true);
+
+    // 2. UX Polish: The local logout is so fast (< 5ms) that the user never sees
+    // the loading overlay. We add a short artificial delay here so the user
+    // sees the secure logout blur animation, confirming the action worked.
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    // 3. Perform the actual logout
     await _logoutUseCase();
     state = state.copyWith(clearUser: true, isLoading: false);
   }

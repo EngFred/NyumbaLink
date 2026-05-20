@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:rentora/core/widgets/guest_banner.dart';
 
 import 'package:rentora/features/bookings/domain/entities/booking_filter.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_card.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_filter_bar.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_Header.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_skeleton.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/guest_banner.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -111,10 +111,17 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
 
                 if (!isAuthenticated)
                   SliverToBoxAdapter(
-                    child: const GuestBanner()
-                        .animate(delay: 50.ms)
-                        .fadeIn(duration: 300.ms)
-                        .slideY(begin: 0.04, end: 0),
+                    child:
+                        const GuestBanner(
+                              title: 'Browsing as a guest',
+                              subtitle:
+                                  'Sign in to back up your bookings across all your devices.',
+                              icon: Icons.cloud_off_rounded,
+                              marginBottom: 8.0,
+                            )
+                            .animate(delay: 50.ms)
+                            .fadeIn(duration: 300.ms)
+                            .slideY(begin: 0.04, end: 0),
                   ),
 
                 if (state.bookings.isNotEmpty)
