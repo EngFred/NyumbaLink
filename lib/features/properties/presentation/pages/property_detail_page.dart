@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:rentora/features/properties/presentation/widgets/property-detail/circle_hero_button.dart';
@@ -215,6 +216,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   ),
 
                 // Favorite Button
+                // Favorite Button
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -223,9 +225,12 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                         : Icons.favorite_border_rounded,
                     iconColor: isSaved ? AppColors.error : Colors.white,
                     onTap: () {
+                      // Map the Property to a SavedProperty before passing it to the provider
+                      final savedProperty = property.toSavedProperty();
+
                       ref
                           .read(savedPropertiesProvider.notifier)
-                          .toggleSave(property);
+                          .toggleSave(savedProperty);
 
                       if (isSaved) {
                         ScaffoldMessenger.of(context).showSnackBar(

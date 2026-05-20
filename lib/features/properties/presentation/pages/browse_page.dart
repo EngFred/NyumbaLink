@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/results_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/search_bar.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -256,7 +257,7 @@ class _ListView extends ConsumerWidget {
                       isSaved: isSaved,
                       onSaveTap: () => ref
                           .read(savedPropertiesProvider.notifier)
-                          .toggleSave(property),
+                          .toggleSave(property.toSavedProperty()),
                     );
                   },
                 ),

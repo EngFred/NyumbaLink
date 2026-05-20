@@ -1,68 +1,8 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/datasources/favorites_remote_datasource.dart';
-import '../../data/mappers/property_mapper.dart';
-import '../../domain/entities/property_entities.dart';
-
-class SavedProperty {
-  const SavedProperty({
-    required this.id,
-    required this.title,
-    required this.price,
-    required this.location,
-    this.thumbnailUrl,
-    required this.type,
-  });
-
-  final String id;
-  final String title;
-  final double price;
-  final String location;
-  final String? thumbnailUrl;
-  final String type;
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'price': price,
-    'location': location,
-    'thumbnailUrl': thumbnailUrl,
-    'type': type,
-  };
-
-  factory SavedProperty.fromJson(Map<String, dynamic> json) => SavedProperty(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    price: double.parse(json['price'].toString()),
-    location: json['location'] as String,
-    thumbnailUrl: json['thumbnailUrl'] as String?,
-    type: json['type'] as String,
-  );
-
-  /// Fixed: Uses the same clean logic as Property.locationDisplay
-  factory SavedProperty.fromDomain(Property p) => SavedProperty(
-    id: p.id,
-    title: p.title,
-    price: p.price,
-    location: _buildLocation(p),
-    thumbnailUrl: p.thumbnailUrl,
-    type: p.type,
-  );
-
-  static String _buildLocation(Property p) {
-    final areaName = p.area?.name.trim();
-    if (areaName != null && areaName.isNotEmpty) {
-      return '$areaName, ${p.district.name}';
-    }
-    return p.district.name;
-  }
-}
-
-// ── State ─────────────────────────────────────────────────────────────────────
+import '../../domain/entities/saved_property.dart';
+import '../../domain/usecases/favorites_usecases.dart';
+import 'favorites_providers.dart';
 
 class SavedPropertiesState {
   const SavedPropertiesState({
@@ -84,18 +24,19 @@ class SavedPropertiesState {
   }
 }
 
-// ── Provider & Notifier (unchanged) ───────────────────────────────────────────
 final savedPropertiesProvider =
     StateNotifierProvider<SavedPropertiesNotifier, SavedPropertiesState>((ref) {
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
-      final remoteDataSource = ref.watch(favoritesRemoteDataSourceProvider);
+
       final notifier = SavedPropertiesNotifier(
-        isAuthenticated,
-        remoteDataSource,
+        isAuthenticated: isAuthenticated,
+        getFavorites: ref.watch(getFavoritesUseCaseProvider),
+        toggleFavoriteUseCase: ref.watch(toggleFavoriteUseCaseProvider),
+        syncFavoritesUseCase: ref.watch(syncFavoritesUseCaseProvider),
       );
 
       if (isAuthenticated) {
-        notifier.syncGuestData();
+        notifier.syncData();
       } else {
         notifier.load();
       }
@@ -104,91 +45,39 @@ final savedPropertiesProvider =
     });
 
 class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
-  SavedPropertiesNotifier(this._isAuthenticated, this._remoteDataSource)
-    : super(const SavedPropertiesState());
+  SavedPropertiesNotifier({
+    required this.isAuthenticated,
+    required this.getFavorites,
+    required this.toggleFavoriteUseCase,
+    required this.syncFavoritesUseCase,
+  }) : super(const SavedPropertiesState());
 
-  final bool _isAuthenticated;
-  final FavoritesRemoteDataSource _remoteDataSource;
-
-  static const _key = 'nyumbalink_saved_properties';
+  final bool isAuthenticated;
+  final GetFavoritesUseCase getFavorites;
+  final ToggleFavoriteUseCase toggleFavoriteUseCase;
+  final SyncFavoritesUseCase syncFavoritesUseCase;
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final data = prefs.getStringList(_key) ?? [];
-      final list = data
-          .map(
-            (e) =>
-                SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>),
-          )
-          .toList();
+      final list = await getFavorites();
       state = state.copyWith(savedList: list, isLoading: false);
     } catch (_) {
       state = state.copyWith(isLoading: false);
     }
   }
 
-  Future<void> toggleSave(Property property) async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_key) ?? [];
-
-    final existingIndex = data.indexWhere(
-      (e) =>
-          SavedProperty.fromJson(jsonDecode(e) as Map<String, dynamic>).id ==
-          property.id,
-    );
-
-    if (existingIndex >= 0) {
-      data.removeAt(existingIndex);
-    } else {
-      data.insert(0, jsonEncode(SavedProperty.fromDomain(property).toJson()));
-    }
-
-    await prefs.setStringList(_key, data);
+  Future<void> toggleSave(SavedProperty property) async {
+    await toggleFavoriteUseCase(property, isAuthenticated: isAuthenticated);
     await load();
-
-    if (_isAuthenticated) {
-      _remoteDataSource.toggleFavorite(property.id).catchError((_) {});
-    }
   }
 
   bool isSaved(String propertyId) =>
       state.savedList.any((p) => p.id == propertyId);
 
-  Future<void> syncGuestData() async {
+  Future<void> syncData() async {
     state = state.copyWith(isLoading: true);
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final localData = prefs.getStringList(_key) ?? [];
-      if (localData.isNotEmpty) {
-        final localIds = localData
-            .map(
-              (e) => SavedProperty.fromJson(
-                jsonDecode(e) as Map<String, dynamic>,
-              ).id,
-            )
-            .toList();
-        await _remoteDataSource.syncFavorites(localIds);
-      }
-    } catch (e) {
-      debugPrint('[SavedProperties] push sync failed: $e');
-    }
-
-    try {
-      final remoteModels = await _remoteDataSource.getFavorites();
-      final prefs = await SharedPreferences.getInstance();
-      final merged = remoteModels
-          .map(
-            (m) => jsonEncode(SavedProperty.fromDomain(m.toEntity()).toJson()),
-          )
-          .toList();
-      await prefs.setStringList(_key, merged);
-    } catch (e) {
-      debugPrint('[SavedProperties] pull sync failed: $e');
-    }
-
+    await syncFavoritesUseCase();
     await load();
   }
 }

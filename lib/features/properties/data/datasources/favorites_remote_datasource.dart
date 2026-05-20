@@ -1,28 +1,30 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../../core/network/dio_client.dart';
-import '../models/property_models.dart';
+import '../models/saved_property_model.dart';
 
-final favoritesRemoteDataSourceProvider = Provider<FavoritesRemoteDataSource>((
-  ref,
-) {
-  return FavoritesRemoteDataSource(ref.watch(dioProvider));
-});
+abstract class FavoritesRemoteDataSource {
+  Future<List<SavedPropertyModel>> getFavorites();
+  Future<void> toggleFavorite(String propertyId);
+  Future<void> syncFavorites(List<String> propertyIds);
+}
 
-class FavoritesRemoteDataSource {
-  const FavoritesRemoteDataSource(this._dio);
+class FavoritesRemoteDataSourceImpl implements FavoritesRemoteDataSource {
+  const FavoritesRemoteDataSourceImpl(this._dio);
   final Dio _dio;
 
-  Future<List<PropertyModel>> getFavorites() async {
+  @override
+  Future<List<SavedPropertyModel>> getFavorites() async {
     try {
       final res = await _dio.get<List<dynamic>>('/favorites');
-      return res.data!.map((e) => PropertyModel.fromJson(e)).toList();
+      return res.data!
+          .map((e) => SavedPropertyModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw handleDioException(e);
     }
   }
 
+  @override
   Future<void> toggleFavorite(String propertyId) async {
     try {
       await _dio.post('/favorites/$propertyId');
@@ -31,6 +33,7 @@ class FavoritesRemoteDataSource {
     }
   }
 
+  @override
   Future<void> syncFavorites(List<String> propertyIds) async {
     if (propertyIds.isEmpty) return;
     try {

@@ -232,10 +232,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void _syncGuestData() {
-    _ref
-        .read(savedPropertiesProvider.notifier)
-        .syncGuestData()
-        .catchError((_) {});
+    // 1. Updated to call syncData() instead of syncGuestData()
+    _ref.read(savedPropertiesProvider.notifier).syncData().catchError((_) {});
+
+    // 2. Booking repository remains unchanged
     _ref.read(bookingRepositoryProvider).syncGuestData().catchError((_) {});
   }
 }

@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:rentora/features/properties/presentation/providers/saved_properties_provider.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/thumbnail_fallback.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/type_pill.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/currency_formatter.dart';
+import '../../../domain/entities/saved_property.dart';
 
 class SavedPropertyCard extends StatelessWidget {
   const SavedPropertyCard({
