@@ -27,7 +27,9 @@ class SavedPage extends ConsumerWidget {
 
     if (state.isLoading) return const SavedSkeleton();
 
-    if (state.savedList.isEmpty && isAuthenticated) {
+    final list = state.savedList;
+
+    if (list.isEmpty && isAuthenticated) {
       return const AppEmptyState(
         icon: Icons.favorite_border_rounded,
         title: 'No saved spaces yet',
@@ -36,7 +38,6 @@ class SavedPage extends ConsumerWidget {
       );
     }
 
-    final list = state.savedList;
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: isAuthenticated
@@ -59,7 +60,7 @@ class SavedPage extends ConsumerWidget {
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.05, end: 0, duration: 300.ms),
             ),
-          // ── Empty guest ───────────────────────────────────────────────────
+          // ── Empty state ───────────────────────────────────────────────────
           if (list.isEmpty)
             SliverFillRemaining(
               child: Center(
@@ -112,7 +113,7 @@ class SavedPage extends ConsumerWidget {
                               delay: Duration(milliseconds: 80 + index * 50),
                             )
                             .fadeIn(duration: 280.ms)
-                            .slideX(begin: 0.04, end: 0, duration: 280.ms),
+                            .slideX(begin: 0.04, end: 0),
                   );
                 },
               ),
@@ -123,20 +124,20 @@ class SavedPage extends ConsumerWidget {
   }
 }
 
+// ── Adapter ───────────────────────────────────────────────────────────────────
 class _SavedPropertyAdapter {
+  /// Converts SavedProperty back to a minimal Property entity for toggleSave
   static Property toProperty(SavedProperty s) {
-    final parts = s.location.split(', ');
-    final areaName = parts.isNotEmpty ? parts[0] : s.location;
-    final districtName = parts.length > 1 ? parts[1] : '';
+    // Since we only need the ID for toggling favorites,
+    // we create a minimal valid Property object.
     return Property(
       id: s.id,
       title: s.title,
       description: '',
       type: s.type,
       price: s.price,
-      area: areaName.isNotEmpty ? Area(id: '', name: areaName) : null,
       status: 'AVAILABLE',
-      district: District(id: '', name: districtName),
+      district: const District(id: '', name: ''), // Not critical for toggle
       contact: const Contact(id: '', name: '', phone: '', role: ''),
       images: s.thumbnailUrl != null
           ? [
@@ -153,6 +154,7 @@ class _SavedPropertyAdapter {
       createdAt: DateTime.now(),
       numberOfRooms: 1,
       parkingAvailable: false,
+      // Area can be omitted or partially set - not needed for toggle operation
     );
   }
 }

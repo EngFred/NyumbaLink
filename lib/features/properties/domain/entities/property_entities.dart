@@ -79,6 +79,7 @@ class Property {
     this.lng,
     this.university,
   });
+
   final String id;
   final String title;
   final String description;
@@ -117,6 +118,16 @@ class Property {
     if (images.isEmpty) return null;
     final primary = images.where((i) => i.isPrimary).firstOrNull;
     return (primary ?? images.first).url;
+  }
+
+  /// Returns properly formatted location string
+  /// Example: "Kololo, Kampala" or "Kampala" if area is null
+  String get locationDisplay {
+    final areaName = area?.name?.trim();
+    if (areaName != null && areaName.isNotEmpty) {
+      return '$areaName, ${district.name}';
+    }
+    return district.name;
   }
 
   Property copyWith({

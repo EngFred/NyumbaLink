@@ -1,7 +1,8 @@
 import 'package:intl/intl.dart';
 import '../../domain/entities/booking_entities.dart';
 
-// ── EXTENSION MAPPER ──
+// ── EXTENSION MAPPER ──────────────────────────────────────────────────────────
+
 extension BookingRequestMapper on BookingRequest {
   Map<String, dynamic> toJson() {
     final fmt = DateFormat('yyyy-MM-dd');
@@ -22,13 +23,15 @@ extension BookingRequestMapper on BookingRequest {
   }
 }
 
-// ── RESPONSE MODEL ──
+// ── RESPONSE MODEL ────────────────────────────────────────────────────────────
+
 class BookingResponseModel {
   const BookingResponseModel({
     required this.id,
     required this.status,
     required this.cancellationToken,
   });
+
   final String id;
   final String status;
   final String cancellationToken;
@@ -50,7 +53,8 @@ class BookingResponseModel {
   }
 }
 
-// ── LOCAL (GUEST) BOOKING MODEL ──
+// ── LOCAL (GUEST) BOOKING MODEL ───────────────────────────────────────────────
+
 class LocalBookingModel {
   const LocalBookingModel({
     required this.id,
@@ -120,11 +124,16 @@ class LocalBookingModel {
   }
 }
 
-// ── REMOTE (AUTHENTICATED) BOOKING MODEL ──
+// ── REMOTE (AUTHENTICATED) BOOKING MODEL ──────────────────────────────────────
+//
+// The server returns a flat BookingSummaryDto — no nested relations.
+// All presentation logic (location, thumbnail, price) is handled server-side.
+
 class RemoteBookingModel {
   const RemoteBookingModel({
     required this.id,
     required this.status,
+    required this.isCancelled,
     required this.createdAt,
     required this.propertyId,
     required this.propertyTitle,
@@ -136,6 +145,7 @@ class RemoteBookingModel {
 
   final String id;
   final String status;
+  final bool isCancelled;
   final String createdAt;
   final String propertyId;
   final String propertyTitle;
@@ -145,44 +155,27 @@ class RemoteBookingModel {
   final String? roomNumber;
 
   factory RemoteBookingModel.fromJson(Map<String, dynamic> json) {
-    final property = json['property'] as Map<String, dynamic>? ?? {};
-    final images = property['images'] as List<dynamic>? ?? [];
-    final thumbnail = images.isNotEmpty
-        ? images.first['url']?.toString()
-        : null;
-
-    final area =
-        (property['area'] as Map<String, dynamic>?)?['name']?.toString() ?? '';
-    final district = property['district']?['name']?.toString() ?? '';
-    final loc = district.isNotEmpty ? '$area, $district' : area;
-
-    // Bulletproof price parsing (TypeORM sends decimals as strings)
-    final priceVal = property['price'];
-    double parsedPrice = 0.0;
-    if (priceVal is num) {
-      parsedPrice = priceVal.toDouble();
-    } else if (priceVal is String) {
-      parsedPrice = double.tryParse(priceVal) ?? 0.0;
-    }
-
     return RemoteBookingModel(
       id: json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
+      isCancelled: json['isCancelled'] == true,
       createdAt:
-          json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
-      propertyId: property['id']?.toString() ?? '',
-      propertyTitle: property['title']?.toString() ?? 'Unknown Property',
-      price: parsedPrice,
-      location: loc,
-      thumbnailUrl: thumbnail,
-      roomNumber: json['hostelRoom']?['roomNumber']?.toString(),
+          json['bookedAt']?.toString() ?? DateTime.now().toIso8601String(),
+      propertyId: json['propertyId']?.toString() ?? '',
+      propertyTitle: json['propertyTitle']?.toString() ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      location: json['location']?.toString() ?? '',
+      thumbnailUrl: json['thumbnailUrl']?.toString(),
+      roomNumber: json['roomNumber']?.toString(),
     );
   }
 
   SavedBooking toEntity() {
     return SavedBooking(
       id: id,
-      cancellationToken: '', // Merged securely in LocalDataSource
+      // Raw token is never returned by the server after initial creation.
+      // It is preserved from local storage by BookingsLocalDataSource.upsertFromRemote.
+      cancellationToken: '',
       propertyId: propertyId,
       propertyTitle: propertyTitle,
       price: price,
@@ -190,7 +183,7 @@ class RemoteBookingModel {
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: createdAt,
-      isCancelled: status == 'CANCELLED' || status == 'COMPLETED',
+      isCancelled: isCancelled,
     );
   }
 }

@@ -128,7 +128,7 @@ class FeaturedHeroCard extends StatelessWidget {
                       const Gap(3),
                       Flexible(
                         child: Text(
-                          '${property.area}, ${property.district.name}',
+                          property.locationDisplay,
                           style: AppTextStyles.caption.copyWith(
                             color: Colors.white70,
                           ),

@@ -387,6 +387,7 @@ class _StatusPill extends StatelessWidget {
 class _CardInfo extends StatelessWidget {
   const _CardInfo({required this.property});
   final Property property;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -411,7 +412,7 @@ class _CardInfo extends StatelessWidget {
               const Gap(3),
               Expanded(
                 child: Text(
-                  '${property.area}, ${property.district.name}',
+                  property.locationDisplay,
                   style: AppTextStyles.bodySm,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

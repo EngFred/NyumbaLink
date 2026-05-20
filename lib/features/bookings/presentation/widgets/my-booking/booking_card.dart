@@ -27,6 +27,7 @@ class BookingCard extends StatelessWidget {
     final dateStr = date != null
         ? DateFormat('MMM dd, yyyy · h:mm a').format(date)
         : 'Unknown Date';
+
     final isCancelled = booking.isCancelled;
 
     final currencyFormat = NumberFormat.currency(
@@ -46,9 +47,7 @@ class BookingCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: isCancelled ? AppColors.grey50 : AppColors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.grey200 ?? Colors.grey.withOpacity(0.2),
-            ),
+            border: Border.all(color: AppColors.grey200),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -74,16 +73,14 @@ class BookingCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Thumbnail (UPGRADED SIZE)
+                  // Thumbnail
                   Container(
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
                       color: AppColors.grey100,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.grey200 ?? Colors.transparent,
-                      ),
+                      border: Border.all(color: AppColors.grey200),
                     ),
                     clipBehavior: Clip.hardEdge,
                     child:
@@ -92,6 +89,11 @@ class BookingCard extends StatelessWidget {
                         ? Image.network(
                             booking.thumbnailUrl!,
                             fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.home_work_outlined,
+                              color: AppColors.grey400,
+                              size: 28,
+                            ),
                           )
                         : const Icon(
                             Icons.home_work_outlined,
@@ -126,9 +128,7 @@ class BookingCard extends StatelessWidget {
                             const Gap(4),
                             Expanded(
                               child: Text(
-                                booking.location.isNotEmpty
-                                    ? booking.location
-                                    : 'Location unavailable',
+                                booking.location,
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.textSecondary,
                                 ),

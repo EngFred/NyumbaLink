@@ -43,14 +43,23 @@ class SavedProperty {
     type: json['type'] as String,
   );
 
+  /// Fixed: Uses the same clean logic as Property.locationDisplay
   factory SavedProperty.fromDomain(Property p) => SavedProperty(
     id: p.id,
     title: p.title,
     price: p.price,
-    location: '${p.area?.name ?? ''}, ${p.district.name}',
+    location: _buildLocation(p),
     thumbnailUrl: p.thumbnailUrl,
     type: p.type,
   );
+
+  static String _buildLocation(Property p) {
+    final areaName = p.area?.name.trim();
+    if (areaName != null && areaName.isNotEmpty) {
+      return '$areaName, ${p.district.name}';
+    }
+    return p.district.name;
+  }
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -75,17 +84,7 @@ class SavedPropertiesState {
   }
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
-//
-// This provider watches authProvider. Riverpod recreates it whenever
-// isAuthenticated changes — including when checkAuthStatus() completes on
-// app start for an already-logged-in user. We use that moment to decide
-// whether to just read local (guest) or do a full bidirectional sync
-// (authenticated). This means sync happens automatically for:
-//   - A user who is already logged in when the app starts
-//   - A user who just logged in or registered
-// No manual trigger from auth_provider is needed for the already-logged-in case.
-
+// ── Provider & Notifier (unchanged) ───────────────────────────────────────────
 final savedPropertiesProvider =
     StateNotifierProvider<SavedPropertiesNotifier, SavedPropertiesState>((ref) {
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
@@ -96,20 +95,13 @@ final savedPropertiesProvider =
       );
 
       if (isAuthenticated) {
-        // Authenticated: bidirectional sync — push local to server, then pull
-        // server back to local so both are always consistent, regardless of
-        // whether the user just logged in or was already logged in from a
-        // previous session.
         notifier.syncGuestData();
       } else {
-        // Guest: just read local storage.
         notifier.load();
       }
 
       return notifier;
     });
-
-// ── Notifier ──────────────────────────────────────────────────────────────────
 
 class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   SavedPropertiesNotifier(this._isAuthenticated, this._remoteDataSource)
@@ -119,8 +111,6 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   final FavoritesRemoteDataSource _remoteDataSource;
 
   static const _key = 'nyumbalink_saved_properties';
-
-  // ── Read ──────────────────────────────────────────────────────────────────
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true);
@@ -138,8 +128,6 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
       state = state.copyWith(isLoading: false);
     }
   }
-
-  // ── Toggle ────────────────────────────────────────────────────────────────
 
   Future<void> toggleSave(Property property) async {
     final prefs = await SharedPreferences.getInstance();
@@ -160,7 +148,6 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     await prefs.setStringList(_key, data);
     await load();
 
-    // Fire-and-forget server sync when logged in.
     if (_isAuthenticated) {
       _remoteDataSource.toggleFavorite(property.id).catchError((_) {});
     }
@@ -169,23 +156,9 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   bool isSaved(String propertyId) =>
       state.savedList.any((p) => p.id == propertyId);
 
-  // ── Bidirectional sync ────────────────────────────────────────────────────
-  //
-  // Step 1 — Push: local IDs → POST /favorites/sync (idempotent, ON CONFLICT
-  //          DO NOTHING). Links any guest-saved properties to the account.
-  //
-  // Step 2 — Pull: GET /favorites → overwrite local storage with the server's
-  //          authoritative merged list. This is what keeps local and server
-  //          from diverging across sessions and devices.
-  //
-  // Called automatically by the provider on every authenticated init.
-  // Also called by auth_provider after login/register (harmless duplicate —
-  // both operations are idempotent).
-
   Future<void> syncGuestData() async {
     state = state.copyWith(isLoading: true);
 
-    // Step 1: push local → server (best-effort, failure is silent)
     try {
       final prefs = await SharedPreferences.getInstance();
       final localData = prefs.getStringList(_key) ?? [];
@@ -203,7 +176,6 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
       debugPrint('[SavedProperties] push sync failed: $e');
     }
 
-    // Step 2: pull server → local (critical path — SEPARATE try-catch)
     try {
       final remoteModels = await _remoteDataSource.getFavorites();
       final prefs = await SharedPreferences.getInstance();
@@ -214,11 +186,9 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
           .toList();
       await prefs.setStringList(_key, merged);
     } catch (e) {
-      // This will now print the real error instead of swallowing it
       debugPrint('[SavedProperties] pull sync failed: $e');
     }
 
-    // Step 3: always load from local regardless of outcome
     await load();
   }
 }

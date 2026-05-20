@@ -278,7 +278,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 AppRoutes.hostelRoomsPath(property.id),
                 extra: {
                   'title': property.title,
-                  'location': '${property.area}, ${property.district.name}',
+                  'location': property.locationDisplay,
                   'imageUrl': property.thumbnailUrl,
                   'universityName': property.university?.name,
                 },
@@ -289,7 +289,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 extra: {
                   'title': property.title,
                   'price': property.price,
-                  'location': '${property.area}, ${property.district.name}',
+                  'location': property.locationDisplay,
                   'imageUrl': property.thumbnailUrl,
                   'billingCycle': property.billingCycle,
                 },
