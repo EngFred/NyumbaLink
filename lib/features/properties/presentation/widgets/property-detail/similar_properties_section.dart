@@ -193,7 +193,7 @@ class _SimilarPropertyCard extends StatelessWidget {
                       const Gap(2),
                       Expanded(
                         child: Text(
-                          '${property.area}, ${property.district.name}',
+                          property.locationDisplay,
                           style: AppTextStyles.bodySm.copyWith(
                             fontSize: 11,
                             color: AppColors.grey500,
