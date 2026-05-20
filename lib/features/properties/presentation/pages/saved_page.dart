@@ -39,14 +39,6 @@ class SavedPage extends ConsumerWidget {
       },
       child: CustomScrollView(
         slivers: [
-          // ── Header ────────────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: SavedHeader(
-              count: list.length,
-              isAuthenticated: isAuthenticated,
-            ).animate().fadeIn(duration: 300.ms),
-          ),
-
           // ── Guest banner ──────────────────────────────────────────────────
           if (!isAuthenticated)
             SliverToBoxAdapter(
