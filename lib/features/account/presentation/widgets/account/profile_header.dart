@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../auth/domain/entities/auth_entities.dart';
@@ -15,82 +14,84 @@ class ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primary, Color(0xFF1A3A6B)],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-          child: Column(
-            children: [
-              // Avatar
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.2),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.4),
-                    width: 2.5,
-                  ),
+      color: AppColors.surface, // Clean, flat background blending with the app
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── Avatar ────────────────────────────────────────────────────────
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary.withOpacity(
+                0.08,
+              ), // Subtle, premium tint
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: AppTextStyles.h2.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 26,
                 ),
-                child: Center(
+              ),
+            ),
+          ),
+          const Gap(16),
+
+          // ── User Details ──────────────────────────────────────────────────
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  user.name,
+                  style: AppTextStyles.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Gap(2),
+                Text(
+                  user.email,
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Gap(8),
+
+                // ── Role Pill ───────────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.grey100, // Very subtle gray background
+                    borderRadius: BorderRadius.circular(
+                      6,
+                    ), // Slightly squared looks more professional than fully rounded here
+                  ),
                   child: Text(
-                    initials,
-                    style: AppTextStyles.h1.copyWith(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
+                    user.role.toUpperCase(),
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
-              ),
-              const Gap(14),
-
-              Text(
-                user.name,
-                style: AppTextStyles.h2.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Gap(4),
-              Text(
-                user.email,
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-              const Gap(12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.25)),
-                ),
-                child: Text(
-                  user.role,
-                  style: AppTextStyles.labelSm.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
