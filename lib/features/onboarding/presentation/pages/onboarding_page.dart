@@ -39,7 +39,7 @@ const _slides = [
   ),
   // ── NEW SLIDE ────────────────────────────────────────────────────────────
   _OnboardingSlide(
-    image: 'assets/images/onboarding_4.jpeg',
+    image: 'assets/images/onboarding_2.webp',
     tag: 'Never Miss Out',
     title: 'Get Notified\nInstantly',
     subtitle:
@@ -48,7 +48,7 @@ const _slides = [
   ),
   // ─────────────────────────────────────────────────────────────────────────
   _OnboardingSlide(
-    image: 'assets/images/onboarding_2.webp',
+    image: 'assets/images/onboarding_4.jpeg',
     tag: 'Book with Ease',
     title: 'Book a Viewing\nin Minutes',
     subtitle:
