@@ -190,7 +190,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
       return BookingSuccess(
         propertyTitle: widget.propertyTitle,
         roomNumber: widget.roomNumber,
-        cancellationToken: state.successResponse!.cancellationToken,
         onDone: () {
           ref.read(propertiesProvider.notifier).refresh();
           context.go('/browse');

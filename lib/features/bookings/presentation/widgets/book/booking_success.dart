@@ -9,14 +9,12 @@ class BookingSuccess extends StatelessWidget {
   const BookingSuccess({
     super.key,
     required this.propertyTitle,
-    required this.cancellationToken,
     required this.onDone,
     this.roomNumber,
   });
 
   final String propertyTitle;
   final String? roomNumber;
-  final String cancellationToken;
   final VoidCallback onDone;
 
   @override
@@ -76,69 +74,7 @@ class BookingSuccess extends StatelessWidget {
                 textAlign: TextAlign.center,
               ).animate(delay: 260.ms).fadeIn(duration: 300.ms),
 
-              const Gap(48),
-
-              // ── Premium Flat Token Display ───────────────────────────────
-              Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.grey50,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.grey200),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'CANCELLATION TOKEN',
-                          style: AppTextStyles.labelSm.copyWith(
-                            color: AppColors.textHint,
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Gap(16),
-                        Text(
-                          cancellationToken,
-                          style: AppTextStyles.h1.copyWith(
-                            color: AppColors.primary,
-                            letterSpacing: 8,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 36,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const Gap(24),
-                        const Divider(height: 1, color: AppColors.grey200),
-                        const Gap(16),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.security_rounded,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                            const Gap(12),
-                            Expanded(
-                              child: Text(
-                                'Save this token to cancel your booking later. It has also been saved to your "My Bookings" tab.',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textSecondary,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate(delay: 360.ms)
-                  .fadeIn(duration: 400.ms)
-                  .slideY(begin: 0.06, end: 0),
-
-              const Gap(48),
+              const Gap(64),
 
               // ── What's next ──────────────────────────────────────────────
               Column(
@@ -150,23 +86,23 @@ class BookingSuccess extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Gap(20),
+                  const Gap(24),
                   ..._nextSteps.map(
                     (step) => Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(bottom: 24),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.05),
+                              color: AppColors.primary.withOpacity(0.08),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               step.$2,
-                              size: 16,
+                              size: 18,
                               color: AppColors.primary,
                             ),
                           ),
@@ -188,7 +124,7 @@ class BookingSuccess extends StatelessWidget {
                     ),
                   ),
                 ],
-              ).animate(delay: 460.ms).fadeIn(duration: 400.ms),
+              ).animate(delay: 360.ms).fadeIn(duration: 400.ms),
 
               const Gap(48),
 
@@ -206,7 +142,7 @@ class BookingSuccess extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-              ).animate(delay: 540.ms).fadeIn(duration: 300.ms),
+              ).animate(delay: 460.ms).fadeIn(duration: 300.ms),
 
               const Gap(16),
             ],

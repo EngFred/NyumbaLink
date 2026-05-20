@@ -7,7 +7,6 @@ import 'package:rentora/core/widgets/guest_banner.dart';
 import 'package:rentora/features/bookings/domain/entities/booking_filter.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_card.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/booking_filter_bar.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_Header.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/bookings_skeleton.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -55,15 +54,6 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
         onRefresh: () => ref.read(myBookingsProvider.notifier).load(),
         child: CustomScrollView(
           slivers: [
-            SliverSafeArea(
-              bottom: false,
-              sliver: SliverToBoxAdapter(
-                child: BookingsHeader(
-                  total: state.bookings.length,
-                  isAuthenticated: isAuthenticated,
-                ).animate().fadeIn(duration: 300.ms),
-              ),
-            ),
             if (!isAuthenticated)
               SliverToBoxAdapter(
                 child:
@@ -89,23 +79,27 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                   ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
                 ),
               ),
+
+            // UX POLISH: Switched to SliverToBoxAdapter with padding
             if (state.bookings.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: AppEmptyState(
-                  icon: Icons.receipt_long_rounded,
-                  title: isAuthenticated
-                      ? 'No bookings yet'
-                      : 'Sign in to view bookings',
-                  subtitle: isAuthenticated
-                      ? 'Your property requests and applications will appear here.'
-                      : 'Keep tabs on your scheduled visits and leases.',
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 48.0, bottom: 48.0),
+                  child: AppEmptyState(
+                    icon: Icons.receipt_long_rounded,
+                    title: isAuthenticated
+                        ? 'No bookings yet'
+                        : 'Sign in to view bookings',
+                    subtitle: isAuthenticated
+                        ? 'Your property requests and applications will appear here.'
+                        : 'Keep tabs on your scheduled visits and leases.',
+                  ),
                 ),
               )
             else if (filtered.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 64.0, bottom: 48.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
