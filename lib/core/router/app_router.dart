@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rentora/features/account/presentation/pages/about_page.dart';
+import 'package:rentora/features/bookings/presentation/pages/booking_detail_page.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
 import '../../features/account/presentation/pages/edit_profile_page.dart';
@@ -248,6 +249,19 @@ final GoRouter appRouter = GoRouter(
         child: const AboutPage(),
         transitionsBuilder: _slideUpTransition,
       ),
+    ),
+    // Add this inside your GoRouter routes list:
+    GoRoute(
+      path: AppRoutes.bookingDetail,
+      name: 'bookingDetail',
+      pageBuilder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: BookingDetailPage(bookingId: id),
+          transitionsBuilder: _slideUpTransition,
+        );
+      },
     ),
   ],
 );

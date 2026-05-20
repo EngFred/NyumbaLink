@@ -2,34 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/status_badge.dart';
-import 'package:rentora/features/bookings/presentation/widgets/my-booking/token_section.dart';
+
+import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/booking_entities.dart';
 
 class BookingCard extends StatelessWidget {
-  const BookingCard({
-    super.key,
-    required this.booking,
-    required this.isAuthenticated,
-    required this.onCancel,
-  });
+  const BookingCard({super.key, required this.booking});
 
   final SavedBooking booking;
-  final bool isAuthenticated;
-  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
     final date = DateTime.tryParse(booking.bookedAt);
     final dateStr = date != null
-        ? DateFormat('MMM dd, yyyy · h:mm a').format(date)
+        ? DateFormat('MMM dd, yyyy').format(date)
         : 'Unknown Date';
-
     final isCancelled = booking.isCancelled;
-
     final currencyFormat = NumberFormat.currency(
       symbol: 'UGX ',
       decimalDigits: 0,
@@ -38,11 +29,8 @@ class BookingCard extends StatelessWidget {
     return Opacity(
       opacity: isCancelled ? 0.65 : 1.0,
       child: GestureDetector(
-        onTap: () {
-          if (booking.propertyId.isNotEmpty) {
-            context.push('/p/${booking.propertyId}');
-          }
-        },
+        // UX Polish: Now taps navigate to the BOOKING detail, not the property
+        onTap: () => context.push(AppRoutes.bookingDetailPath(booking.id)),
         child: Container(
           decoration: BoxDecoration(
             color: isCancelled ? AppColors.grey50 : AppColors.surface,
@@ -62,21 +50,19 @@ class BookingCard extends StatelessWidget {
                     dateStr,
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
               const Gap(16),
-
               // ── Middle: Property Info ───────────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Thumbnail
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
                       color: AppColors.grey100,
                       borderRadius: BorderRadius.circular(12),
@@ -92,18 +78,16 @@ class BookingCard extends StatelessWidget {
                             errorBuilder: (_, __, ___) => const Icon(
                               Icons.home_work_outlined,
                               color: AppColors.grey400,
-                              size: 28,
+                              size: 24,
                             ),
                           )
                         : const Icon(
                             Icons.home_work_outlined,
                             color: AppColors.grey400,
-                            size: 28,
+                            size: 24,
                           ),
                   ),
                   const Gap(16),
-
-                  // Title, Location & Price
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,15 +98,15 @@ class BookingCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             height: 1.3,
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Gap(6),
+                        const Gap(4),
                         Row(
                           children: [
                             const Icon(
                               Icons.location_on_outlined,
-                              size: 12,
+                              size: 14,
                               color: AppColors.textSecondary,
                             ),
                             const Gap(4),
@@ -148,81 +132,16 @@ class BookingCard extends StatelessWidget {
                             ),
                           ),
                         ],
-                        if (booking.roomNumber != null) ...[
-                          const Gap(8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Room ${booking.roomNumber}',
-                              style: AppTextStyles.labelSm.copyWith(
-                                color: AppColors.accent,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
+                  const Gap(8),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.grey400,
+                  ),
                 ],
               ),
-              const Gap(16),
-              const Divider(height: 1, thickness: 1, color: AppColors.grey100),
-              const Gap(16),
-
-              // ── Bottom: Actions / Token ─────────────────────────────────────
-              if (!isCancelled)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: TokenSection(
-                        token: booking.cancellationToken,
-                        isAuthenticated: isAuthenticated,
-                      ),
-                    ),
-                    const Gap(12),
-                    TextButton.icon(
-                      onPressed: onCancel,
-                      icon: const Icon(Icons.close_rounded, size: 16),
-                      label: const Text('Cancel'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      size: 16,
-                      color: AppColors.textHint,
-                    ),
-                    const Gap(8),
-                    Text(
-                      'This request has been cancelled.',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textHint,
-                      ),
-                    ),
-                  ],
-                ),
             ],
           ),
         ),

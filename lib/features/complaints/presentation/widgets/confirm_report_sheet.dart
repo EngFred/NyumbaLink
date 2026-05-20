@@ -29,7 +29,6 @@ class ConfirmReportSheet extends StatelessWidget {
     final categoryIcon =
         CategoryGrid.icons[category] ?? Icons.feedback_outlined;
 
-    // ── NEW PRO UX: Solid background with rounded top corners ──
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface, // Fixes transparent overlap
