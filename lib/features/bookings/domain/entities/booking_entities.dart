@@ -10,7 +10,6 @@ class BookingRequest {
     this.notes,
     this.userId,
   });
-
   final String renterName;
   final String renterPhone;
   final String? renterEmail;
@@ -28,7 +27,6 @@ class BookingResponse {
     required this.status,
     required this.cancellationToken,
   });
-
   final String id;
   final String status;
   final String cancellationToken;
@@ -42,6 +40,8 @@ class SavedBooking {
     required this.propertyTitle,
     required this.price,
     required this.location,
+    this.billingCycle,
+    this.universityName,
     this.thumbnailUrl,
     this.roomNumber,
     required this.bookedAt,
@@ -54,6 +54,8 @@ class SavedBooking {
   final String propertyTitle;
   final double price;
   final String location;
+  final String? billingCycle;
+  final String? universityName;
   final String? thumbnailUrl;
   final String? roomNumber;
   final String bookedAt;
@@ -69,6 +71,8 @@ class SavedBooking {
     required double price,
     required String? areaName,
     required String districtName,
+    String? billingCycle,
+    String? universityName,
     String? thumbnailUrl,
     String? roomNumber,
     required String bookedAt,
@@ -82,6 +86,8 @@ class SavedBooking {
       propertyTitle: propertyTitle,
       price: price,
       location: location,
+      billingCycle: billingCycle,
+      universityName: universityName,
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: bookedAt,

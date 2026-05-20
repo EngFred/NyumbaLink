@@ -2,7 +2,6 @@ import 'package:intl/intl.dart';
 import '../../domain/entities/booking_entities.dart';
 
 // ── EXTENSION MAPPER ──────────────────────────────────────────────────────────
-
 extension BookingRequestMapper on BookingRequest {
   Map<String, dynamic> toJson() {
     final fmt = DateFormat('yyyy-MM-dd');
@@ -24,14 +23,12 @@ extension BookingRequestMapper on BookingRequest {
 }
 
 // ── RESPONSE MODEL ────────────────────────────────────────────────────────────
-
 class BookingResponseModel {
   const BookingResponseModel({
     required this.id,
     required this.status,
     required this.cancellationToken,
   });
-
   final String id;
   final String status;
   final String cancellationToken;
@@ -54,7 +51,6 @@ class BookingResponseModel {
 }
 
 // ── LOCAL (GUEST) BOOKING MODEL ───────────────────────────────────────────────
-
 class LocalBookingModel {
   const LocalBookingModel({
     required this.id,
@@ -63,6 +59,8 @@ class LocalBookingModel {
     required this.propertyTitle,
     required this.price,
     required this.location,
+    this.billingCycle,
+    this.universityName,
     this.thumbnailUrl,
     this.roomNumber,
     required this.bookedAt,
@@ -75,6 +73,8 @@ class LocalBookingModel {
   final String propertyTitle;
   final double price;
   final String location;
+  final String? billingCycle;
+  final String? universityName;
   final String? thumbnailUrl;
   final String? roomNumber;
   final String bookedAt;
@@ -87,6 +87,8 @@ class LocalBookingModel {
     'propertyTitle': propertyTitle,
     'price': price,
     'location': location,
+    'billingCycle': billingCycle,
+    'universityName': universityName,
     'thumbnailUrl': thumbnailUrl,
     'roomNumber': roomNumber,
     'bookedAt': bookedAt,
@@ -102,6 +104,8 @@ class LocalBookingModel {
     propertyTitle: json['propertyTitle']?.toString() ?? '',
     price: (json['price'] as num?)?.toDouble() ?? 0.0,
     location: json['location']?.toString() ?? '',
+    billingCycle: json['billingCycle']?.toString(),
+    universityName: json['universityName']?.toString(),
     thumbnailUrl: json['thumbnailUrl']?.toString(),
     roomNumber: json['roomNumber']?.toString(),
     bookedAt: json['bookedAt']?.toString() ?? DateTime.now().toIso8601String(),
@@ -116,6 +120,8 @@ class LocalBookingModel {
       propertyTitle: propertyTitle,
       price: price,
       location: location,
+      billingCycle: billingCycle,
+      universityName: universityName,
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: bookedAt,
@@ -125,10 +131,6 @@ class LocalBookingModel {
 }
 
 // ── REMOTE (AUTHENTICATED) BOOKING MODEL ──────────────────────────────────────
-//
-// The server returns a flat BookingSummaryDto — no nested relations.
-// All presentation logic (location, thumbnail, price) is handled server-side.
-
 class RemoteBookingModel {
   const RemoteBookingModel({
     required this.id,
@@ -139,6 +141,8 @@ class RemoteBookingModel {
     required this.propertyTitle,
     required this.price,
     required this.location,
+    this.billingCycle,
+    this.universityName,
     this.thumbnailUrl,
     this.roomNumber,
   });
@@ -151,6 +155,8 @@ class RemoteBookingModel {
   final String propertyTitle;
   final double price;
   final String location;
+  final String? billingCycle;
+  final String? universityName;
   final String? thumbnailUrl;
   final String? roomNumber;
 
@@ -165,6 +171,8 @@ class RemoteBookingModel {
       propertyTitle: json['propertyTitle']?.toString() ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       location: json['location']?.toString() ?? '',
+      billingCycle: json['billingCycle']?.toString(),
+      universityName: json['universityName']?.toString(),
       thumbnailUrl: json['thumbnailUrl']?.toString(),
       roomNumber: json['roomNumber']?.toString(),
     );
@@ -180,6 +188,8 @@ class RemoteBookingModel {
       propertyTitle: propertyTitle,
       price: price,
       location: location,
+      billingCycle: billingCycle,
+      universityName: universityName,
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: createdAt,

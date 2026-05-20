@@ -9,6 +9,7 @@ class BookingState {
     this.error,
     this.successResponse,
   });
+
   final bool isLoading;
   final String? error;
   final BookingResponse? successResponse;
@@ -34,6 +35,7 @@ final bookingProvider =
 
 class BookingNotifier extends StateNotifier<BookingState> {
   BookingNotifier(this._createBooking) : super(const BookingState());
+
   final CreateBookingUseCase _createBooking;
 
   Future<void> submitBooking({
@@ -43,6 +45,8 @@ class BookingNotifier extends StateNotifier<BookingState> {
     required String location,
     String? thumbnailUrl,
     String? roomNumber,
+    String? billingCycle,
+    String? universityName,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -53,6 +57,8 @@ class BookingNotifier extends StateNotifier<BookingState> {
         location,
         thumbnailUrl,
         roomNumber,
+        billingCycle,
+        universityName,
       );
       state = state.copyWith(isLoading: false, successResponse: response);
     } catch (e) {

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../domain/entities/booking_entities.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../datasources/bookings_local_datasource.dart';
@@ -27,11 +26,12 @@ class BookingRepositoryImpl implements BookingRepository {
     String location,
     String? thumbnailUrl,
     String? roomNumber,
+    String? billingCycle,
+    String? universityName,
   ) async {
     final responseModel = await _remoteDataSource.createBooking(
       request.toJson(),
     );
-
     // Save immediately with ALL rich data so the UI looks perfect instantly
     await _localDataSource.saveBookingLocally(
       bookingId: responseModel.id,
@@ -40,10 +40,11 @@ class BookingRepositoryImpl implements BookingRepository {
       propertyTitle: propertyTitle,
       price: price,
       location: location,
+      billingCycle: billingCycle,
+      universityName: universityName,
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
     );
-
     return responseModel.toEntity();
   }
 
@@ -72,11 +73,9 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<void> syncGuestData() async {
     final localBookings = await _localDataSource.getLocalBookings();
     if (localBookings.isEmpty) return;
-
     final payload = localBookings
         .map((b) => {'id': b.id, 'cancellationToken': b.cancellationToken})
         .toList();
-
     try {
       await _remoteDataSource.syncBookings(payload);
     } catch (_) {}
@@ -87,7 +86,6 @@ class BookingRepositoryImpl implements BookingRepository {
     try {
       await syncGuestData();
       final remoteBookings = await _remoteDataSource.getMyBookings();
-
       final remoteAsLocal = remoteBookings.map((r) {
         return LocalBookingModel(
           id: r.id,
@@ -96,13 +94,14 @@ class BookingRepositoryImpl implements BookingRepository {
           propertyTitle: r.propertyTitle,
           price: r.price,
           location: r.location,
+          billingCycle: r.billingCycle,
+          universityName: r.universityName,
           thumbnailUrl: r.thumbnailUrl,
           roomNumber: r.roomNumber,
           bookedAt: r.createdAt,
           isCancelled: r.status == 'CANCELLED' || r.status == 'COMPLETED',
         );
       }).toList();
-
       await _localDataSource.upsertFromRemote(remoteAsLocal);
     } catch (_) {}
   }

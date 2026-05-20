@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:rentora/features/bookings/presentation/widgets/book/section_header.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -119,7 +118,6 @@ class _BookingPageState extends ConsumerState<BookingPage> {
   Future<void> _onSubmitTap() async {
     if (ref.read(bookingProvider).isLoading) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
-
     if (_moveInDate == null) {
       AppSnackbar.error(context, 'Please select a move-in date');
       return;
@@ -149,6 +147,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
   void _submitBooking() {
     final user = ref.read(authProvider).user;
+
+    // Pass ALL local display properties directly into the provider
     ref
         .read(bookingProvider.notifier)
         .submitBooking(
@@ -171,6 +171,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           location: widget.location,
           thumbnailUrl: widget.imageUrl,
           roomNumber: widget.roomNumber,
+          billingCycle: widget.billingCycle,
+          universityName: widget.universityName,
         );
   }
 
@@ -230,8 +232,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               roomNumber: widget.roomNumber,
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
 
-            // ──────────────────────────────────────────────────────────────────
             const Gap(16),
+
             Row(
               children: [
                 Text(
@@ -251,12 +253,14 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate().fadeIn(duration: 200.ms),
 
             const Gap(16),
+
             const SectionHeader(
               number: '01',
               title: 'Your Details',
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             BookingTextField(
               controller: _nameController,
               label: 'Full Name',
@@ -270,6 +274,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 60.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             BookingTextField(
               controller: _phoneController,
               label: 'Phone Number',
@@ -280,9 +285,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               phonePrefix: '+256',
               maxLength: 9,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) {
+                if (v == null || v.trim().isEmpty)
                   return 'Phone number is required';
-                }
                 final digits = v.trim().replaceAll(RegExp(r'\D'), '');
                 if (digits.length < 9) return 'Enter 9 digits after +256';
                 return null;
@@ -290,6 +294,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             BookingTextField(
               controller: _emailController,
               label: 'Email Address',
@@ -311,6 +316,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 120.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             DatePickerField(
               selectedDate: _moveInDate,
               enabled: !state.isLoading,
@@ -319,6 +325,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
 
             const Gap(16),
+
             BookingTextField(
               controller: _notesController,
               label: 'Notes / Questions',
@@ -331,6 +338,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ).animate(delay: 160.ms).fadeIn(duration: 300.ms),
 
             const Gap(32),
+
             const AppInfoCard(
               icon: Icons.info_outline_rounded,
               message:

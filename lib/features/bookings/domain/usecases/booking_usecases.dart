@@ -12,6 +12,8 @@ class CreateBookingUseCase {
     String location,
     String? thumbnailUrl,
     String? roomNumber,
+    String? billingCycle,
+    String? universityName,
   ) {
     return _repo.createBooking(
       request,
@@ -20,6 +22,8 @@ class CreateBookingUseCase {
       location,
       thumbnailUrl,
       roomNumber,
+      billingCycle,
+      universityName,
     );
   }
 }

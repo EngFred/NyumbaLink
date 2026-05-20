@@ -8,6 +8,8 @@ abstract class BookingRepository {
     String location,
     String? thumbnailUrl,
     String? roomNumber,
+    String? billingCycle,
+    String? universityName,
   );
 
   Future<void> cancelBooking(
@@ -18,8 +20,6 @@ abstract class BookingRepository {
   });
 
   Future<List<SavedBooking>> getMyBookings(bool isAuthenticated);
-
   Future<void> syncGuestData();
-
   Future<void> syncFromServer();
 }

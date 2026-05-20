@@ -15,8 +15,8 @@ class BookingsLocalDataSource {
   Future<void> upsertFromRemote(List<LocalBookingModel> remoteEntries) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getStringList(_savedBookingsKey) ?? [];
-
     final map = <String, LocalBookingModel>{};
+
     for (final raw in existing) {
       try {
         final m = LocalBookingModel.fromJson(jsonDecode(raw));
@@ -26,7 +26,6 @@ class BookingsLocalDataSource {
 
     for (final entry in remoteEntries) {
       final existingEntry = map[entry.id];
-
       // CRITICAL FIX: Preserve the cancellation token if the remote doesn't have it
       final tokenToKeep = (existingEntry?.cancellationToken.isNotEmpty == true)
           ? existingEntry!.cancellationToken
@@ -39,6 +38,8 @@ class BookingsLocalDataSource {
         propertyTitle: entry.propertyTitle,
         price: entry.price,
         location: entry.location,
+        billingCycle: entry.billingCycle,
+        universityName: entry.universityName,
         thumbnailUrl: entry.thumbnailUrl,
         roomNumber: entry.roomNumber,
         bookedAt: entry.bookedAt,
@@ -57,6 +58,8 @@ class BookingsLocalDataSource {
     required String propertyTitle,
     required double price,
     required String location,
+    String? billingCycle,
+    String? universityName,
     String? thumbnailUrl,
     String? roomNumber,
     String? remoteStatus,
@@ -71,6 +74,8 @@ class BookingsLocalDataSource {
       propertyTitle: propertyTitle,
       price: price,
       location: location,
+      billingCycle: billingCycle,
+      universityName: universityName,
       thumbnailUrl: thumbnailUrl,
       roomNumber: roomNumber,
       bookedAt: DateTime.now().toIso8601String(),
@@ -110,6 +115,8 @@ class BookingsLocalDataSource {
             propertyTitle: m.propertyTitle,
             price: m.price,
             location: m.location,
+            billingCycle: m.billingCycle,
+            universityName: m.universityName,
             thumbnailUrl: m.thumbnailUrl,
             roomNumber: m.roomNumber,
             bookedAt: m.bookedAt,

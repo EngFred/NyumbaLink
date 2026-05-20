@@ -61,6 +61,26 @@ class BookingDetailPage extends ConsumerWidget {
     );
   }
 
+  String _formatBillingCycle(String? cycle) {
+    if (cycle == null || cycle.isEmpty) return '';
+    switch (cycle.toUpperCase()) {
+      case 'DAILY':
+        return ' / day';
+      case 'MONTHLY':
+        return ' / month';
+      case 'QUARTERLY':
+        return ' / quarter';
+      case 'BIANNUAL':
+        return ' / 6 months';
+      case 'ANNUAL':
+        return ' / year';
+      case 'SEMESTER':
+        return ' / semester';
+      default:
+        return ' / ${cycle.toLowerCase()}';
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(myBookingsProvider);
@@ -139,7 +159,6 @@ class BookingDetailPage extends ConsumerWidget {
                   ),
                 ],
               ),
-
               const Gap(32),
               Text('Property Details', style: AppTextStyles.h4),
               const Gap(12),
@@ -205,13 +224,76 @@ class BookingDetailPage extends ConsumerWidget {
                                   ),
                                 ],
                               ),
+
+                              // ── University display for Hostels ────────────
+                              if (booking.universityName != null &&
+                                  booking.universityName!.isNotEmpty) ...[
+                                const Gap(4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.school_outlined,
+                                      size: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const Gap(4),
+                                    Expanded(
+                                      child: Text(
+                                        booking.universityName!,
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+
+                              // ── Price and Billing Cycle ───────────────────
                               if (booking.price > 0) ...[
                                 const Gap(6),
-                                Text(
-                                  currencyFormat.format(booking.price),
-                                  style: AppTextStyles.labelMd.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      currencyFormat.format(booking.price),
+                                      style: AppTextStyles.labelMd.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatBillingCycle(booking.billingCycle),
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+
+                              // ── Room Number Badge (UX Polish) ─────────────
+                              if (booking.roomNumber != null &&
+                                  booking.roomNumber!.isNotEmpty) ...[
+                                const Gap(8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'Room ${booking.roomNumber}',
+                                    style: AppTextStyles.labelSm.copyWith(
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -236,7 +318,6 @@ class BookingDetailPage extends ConsumerWidget {
                   ],
                 ),
               ),
-
               const Gap(32),
 
               // ── Security & Cancellation Token ───────────────────────────────
@@ -255,7 +336,6 @@ class BookingDetailPage extends ConsumerWidget {
                     isAuthenticated: isAuthenticated,
                   ),
                 ),
-
                 const Gap(48),
 
                 // ── Destructive Action ────────────────────────────────────────
