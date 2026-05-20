@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/circle_hero_button.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/cta_bar.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/detail_skeleton.dart';
@@ -12,7 +13,6 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/full_screen_gallery.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_carousel.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_content.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/notification_permission_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -23,14 +23,13 @@ import '../../domain/entities/property_entities.dart';
 import '../providers/property_detail_provider.dart';
 import '../providers/saved_properties_provider.dart';
 import '../../../hostel-alerts/presentation/providers/hostel_alerts_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
-
   final String propertyId;
-
   @override
   ConsumerState<PropertyDetailPage> createState() => _PropertyDetailPageState();
 }
@@ -77,26 +76,18 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   }
 
   /// Ensures notification permission is in place before doing anything
-  /// notification-related.
-  ///
-  /// Returns true if the caller can proceed, false if they should abort.
   Future<bool> _ensureNotificationPermission() async {
-    // Already granted — nothing to do.
     if (await NotificationPermissionService.isGranted()) return true;
-
-    // Not asked yet — request now (this is the right moment: the user is
-    // actively trying to subscribe, so the "why" is obvious).
     if (await NotificationPermissionService.isNotDetermined()) {
       await NotificationPermissionService.requestPermission();
       return NotificationPermissionService.isGranted();
     }
-
-    // Denied — we can't re-show the system prompt. Explain and offer Settings.
     if (!mounted) return false;
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Notifications blocked', style: AppTextStyles.h4),
         content: Text(
@@ -113,6 +104,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
+              elevation: 0,
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -126,24 +118,110 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     return false;
   }
 
+  /// UX Polish: Beautiful intercept dialog for unauthenticated users
+  void _showAuthRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_active_outlined,
+                size: 28,
+                color: AppColors.primary,
+              ),
+            ),
+            const Gap(20),
+            Text('Sign in for Alerts', style: AppTextStyles.h3),
+            const Gap(8),
+            Text(
+              'Sign in to receive instant push notifications the moment rooms become available here.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMd.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const Gap(32),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.push(AppRoutes.login);
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Sign In',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const Gap(12),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                foregroundColor: AppColors.textSecondary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Not Now',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Toggle hostel alerts — only callable for HOSTEL properties.
   Future<void> _toggleHostelAlert(Property property) async {
     if (!property.isHostel) return;
+
+    // 1. Check Authentication FIRST
+    final isAuthenticated = ref.read(authProvider).isAuthenticated;
+    if (!isAuthenticated) {
+      _showAuthRequiredDialog();
+      return;
+    }
 
     final isSubscribed = ref
         .read(hostelAlertsProvider)
         .isSubscribed(property.id);
 
-    // Only check permission when subscribing, not when unsubscribing.
+    // 2. Only check permission when subscribing
     if (!isSubscribed) {
       final allowed = await _ensureNotificationPermission();
       if (!allowed || !mounted) return;
     }
 
+    // 3. Confirm action
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           isSubscribed ? 'Stop alerts?' : 'Get room alerts?',
@@ -160,7 +238,12 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppTextStyles.labelMd.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -168,6 +251,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                   ? AppColors.error
                   : AppColors.primary,
               foregroundColor: Colors.white,
+              elevation: 0,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(isSubscribed ? 'Unsubscribe' : 'Subscribe'),
@@ -179,7 +263,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     if (confirm != true || !mounted) return;
 
     final notifier = ref.read(hostelAlertsProvider.notifier);
-
     try {
       if (isSubscribed) {
         await notifier.unsubscribe(property.id);
@@ -268,7 +351,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                     onTap: () => _shareProperty(property),
                   ),
                 ),
-
                 // ── Hostel alert bell (hostels only) ──────────────────────
                 if (property.isHostel)
                   Padding(
@@ -285,7 +367,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                             onTap: () => _toggleHostelAlert(property),
                           ),
                   ),
-
                 // ── Favourite ─────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(8),
@@ -373,10 +454,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 }
 
 // ── Loading placeholder that matches CircleHeroButton's visual footprint ──────
-
 class _CircleLoadingButton extends StatelessWidget {
   const _CircleLoadingButton();
-
   @override
   Widget build(BuildContext context) {
     return Container(
