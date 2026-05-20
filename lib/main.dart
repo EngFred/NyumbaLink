@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentora/core/services/fcm_service.dart';
+import 'package:rentora/features/properties/presentation/providers/favorites_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 
 import 'core/router/app_router.dart';
@@ -27,7 +29,6 @@ void main() async {
 
   // ── Firebase ─────────────────────────────────────────────────────────────
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Foreground FCM listener.
@@ -49,9 +50,15 @@ void main() async {
     ),
   );
 
+  // ── Initialize SharedPreferences here ────────────────────────────────────
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
-    // ProviderScope is the Riverpod root — must wrap the entire app.
-    const ProviderScope(child: RentoraApp()),
+    // Inject the initialized instance into the ProviderScope
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const RentoraApp(),
+    ),
   );
 }
 
