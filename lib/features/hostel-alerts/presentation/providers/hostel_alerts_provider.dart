@@ -88,7 +88,7 @@ class HostelAlertsNotifier extends StateNotifier<HostelAlertsState> {
   Future<void> loadSubscriptions() async {
     state = state.copyWith(isLoading: true);
     try {
-      final res = await _dio.get<List<dynamic>>(_base);
+      final res = await _dio.get<List<dynamic>>('$_base/my');
       final list = (res.data ?? [])
           .map(
             (e) => HostelAlertSubscription.fromJson(e as Map<String, dynamic>),
@@ -171,7 +171,7 @@ class HostelAlertsNotifier extends StateNotifier<HostelAlertsState> {
         orElse: () =>
             HostelAlertSubscription(id: propertyId, propertyId: propertyId),
       );
-      await _dio.delete<void>('$_base/${sub.id}');
+      await _dio.delete<void>('$_base/${sub.propertyId}');
     } on DioException catch (e) {
       debugPrint('[HostelAlerts] unsubscribe failed: $e');
       // Revert optimistic change.
