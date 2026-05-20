@@ -57,6 +57,7 @@ dependencies:
   share_plus: ^13.1.0
   app_links: ^7.0.0
   toastification: ^3.2.0
+  app_settings: ^7.0.0
 
 dev_dependencies:
   flutter_test:

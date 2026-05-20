@@ -14,6 +14,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_content.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/notification_permission_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -75,15 +76,69 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     Share.share(shareText, subject: property.title);
   }
 
+  /// Ensures notification permission is in place before doing anything
+  /// notification-related.
+  ///
+  /// Returns true if the caller can proceed, false if they should abort.
+  Future<bool> _ensureNotificationPermission() async {
+    // Already granted — nothing to do.
+    if (await NotificationPermissionService.isGranted()) return true;
+
+    // Not asked yet — request now (this is the right moment: the user is
+    // actively trying to subscribe, so the "why" is obvious).
+    if (await NotificationPermissionService.isNotDetermined()) {
+      await NotificationPermissionService.requestPermission();
+      return NotificationPermissionService.isGranted();
+    }
+
+    // Denied — we can't re-show the system prompt. Explain and offer Settings.
+    if (!mounted) return false;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Notifications blocked', style: AppTextStyles.h4),
+        content: Text(
+          'To receive room availability alerts, please enable notifications '
+          'for Rentora in your device settings.',
+          style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Not now'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              NotificationPermissionService.openSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    return false;
+  }
+
   /// Toggle hostel alerts — only callable for HOSTEL properties.
   Future<void> _toggleHostelAlert(Property property) async {
     if (!property.isHostel) return;
 
-    // Read current state synchronously before showing the dialog so the
-    // dialog copy is always consistent with what the user sees.
     final isSubscribed = ref
         .read(hostelAlertsProvider)
         .isSubscribed(property.id);
+
+    // Only check permission when subscribing, not when unsubscribing.
+    if (!isSubscribed) {
+      final allowed = await _ensureNotificationPermission();
+      if (!allowed || !mounted) return;
+    }
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -150,7 +205,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     final savedState = ref.watch(savedPropertiesProvider);
     final hostelState = ref.watch(hostelAlertsProvider);
 
-    // Derived from in-memory Riverpod state — always reflects optimistic taps.
     final isSaved = savedState.savedList.any((p) => p.id == widget.propertyId);
 
     if (state.isLoading) return const DetailSkeleton();
@@ -177,8 +231,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     }
 
     final property = state.property!;
-
-    // Use the state helper so this is always consistent with the alerts list.
     final isHostelSubscribed =
         property.isHostel && hostelState.isSubscribed(widget.propertyId);
 
@@ -221,8 +273,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 if (property.isHostel)
                   Padding(
                     padding: const EdgeInsets.all(8),
-                    // Show a spinner inside the same circular container while
-                    // the subscribe / unsubscribe request is in-flight.
                     child: hostelState.isPending(property.id)
                         ? const _CircleLoadingButton()
                         : CircleHeroButton(
@@ -245,14 +295,10 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                         : Icons.favorite_border_rounded,
                     iconColor: isSaved ? AppColors.error : Colors.white,
                     onTap: () {
-                      // Capture the state BEFORE toggling so the snackbar
-                      // message is always correct.
                       final wasSaved = isSaved;
-
                       ref
                           .read(savedPropertiesProvider.notifier)
                           .toggleSave(property.toSavedProperty());
-
                       ScaffoldMessenger.of(context)
                         ..hideCurrentSnackBar()
                         ..showSnackBar(

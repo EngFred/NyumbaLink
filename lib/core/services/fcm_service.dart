@@ -6,13 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Handles everything FCM-related on the client side:
-///   1. Requesting permission from the OS.
-///   2. Fetching the FCM registration token and posting it to our backend.
+///   1. Requesting OS permission (call [requestPermission] after login).
+///   2. Fetching the FCM token and posting it to the backend (call [init]).
 ///   3. Showing a local notification banner when the app is in the foreground.
 ///
-/// Usage:
-///   await FcmService().init(jwtToken);          // after login / on resume
-///   FcmService().setupForegroundHandler();       // once, after Firebase.initializeApp
+/// Correct call order:
+///   FcmService().setupForegroundHandler();   // once, in main() after Firebase.initializeApp
+///   FcmService().requestPermission();        // once, after the user logs in / registers
+///   FcmService().init(dio);                  // after login or when a stored session is restored
 class FcmService {
   static final FcmService _instance = FcmService._();
   factory FcmService() => _instance;
@@ -23,7 +24,7 @@ class FcmService {
   static final _localNotifications = FlutterLocalNotificationsPlugin();
 
   static const _androidChannel = AndroidNotificationChannel(
-    'rentora_high_importance', // must match the channel configured in AndroidManifest
+    'rentora_high_importance',
     'Rentora Alerts',
     description: 'Property listing and area alert notifications',
     importance: Importance.high,
@@ -33,20 +34,47 @@ class FcmService {
 
   // ── Public API ───────────────────────────────────────────────────────────
 
-  /// Call once after the user logs in or when a stored session is restored.
+  /// Requests OS-level notification permission.
   ///
-  /// [dio]  — an already-configured Dio instance (with the Bearer token set).
-  /// The method is completely silent on error — it will never throw.
-  Future<void> init(Dio dio) async {
+  /// Call this AFTER the user has logged in or registered — never on splash or
+  /// onboarding. That way the user understands WHY the app needs the permission
+  /// and is far less likely to deny it.
+  ///
+  /// On iOS the system prompt only appears once ever; on Android 13+ it appears
+  /// once per install. This method is a no-op if already granted or denied.
+  Future<void> requestPermission() async {
     try {
-      await _initLocalNotifications();
+      final current = await FirebaseMessaging.instance
+          .getNotificationSettings();
 
-      // Request OS-level permission (shows the system prompt on first call).
-      final settings = await FirebaseMessaging.instance.requestPermission(
+      // Already settled — don't re-prompt.
+      if (current.authorizationStatus == AuthorizationStatus.authorized ||
+          current.authorizationStatus == AuthorizationStatus.provisional ||
+          current.authorizationStatus == AuthorizationStatus.denied) {
+        return;
+      }
+
+      await FirebaseMessaging.instance.requestPermission(
         alert: true,
         badge: true,
         sound: true,
       );
+    } catch (e) {
+      debugPrint('[FCM] requestPermission() failed silently: $e');
+    }
+  }
+
+  /// Registers the FCM token with the backend.
+  ///
+  /// Call this after login or when a stored session is restored.
+  /// [dio] must already have the Bearer token configured.
+  /// This method is completely silent on error — it will never throw.
+  Future<void> init(Dio dio) async {
+    try {
+      await _initLocalNotifications();
+
+      final settings = await FirebaseMessaging.instance
+          .getNotificationSettings();
 
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
         debugPrint('[FCM] Permission denied — skipping token registration.');
@@ -71,14 +99,14 @@ class FcmService {
 
       debugPrint('[FCM] Token registered successfully.');
     } catch (e) {
-      // Best-effort — never block the auth flow.
       debugPrint('[FCM] init() failed silently: $e');
     }
   }
 
-  /// Sets up the foreground message listener. Call this once after
-  /// [Firebase.initializeApp()] — typically at the end of [main()], or from a
-  /// root widget's [initState].
+  /// Sets up the foreground message listener.
+  ///
+  /// Call this once after [Firebase.initializeApp()] in [main()].
+  /// Does NOT request permission — that is [requestPermission]'s job.
   void setupForegroundHandler() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
@@ -119,7 +147,6 @@ class FcmService {
 
     await _localNotifications.initialize(settings: initSettings);
 
-    // Create the Android channel once (no-op on subsequent calls).
     await _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin

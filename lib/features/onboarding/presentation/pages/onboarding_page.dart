@@ -16,10 +16,7 @@ class _OnboardingSlide {
     required this.subtitle,
   });
 
-  /// Asset path — place onboarding_1.png / _2.png / _3.png in assets/images/
   final String image;
-
-  /// Small pill label above the title
   final String tag;
   final String title;
   final String subtitle;
@@ -40,6 +37,16 @@ const _slides = [
     subtitle:
         'Bookmark your favourite listings and come back to them any time. Compare side by side before you decide.',
   ),
+  // ── NEW SLIDE ────────────────────────────────────────────────────────────
+  _OnboardingSlide(
+    image: 'assets/images/onboarding_3.jpeg', // add a relevant image asset
+    tag: 'Never Miss Out',
+    title: 'Get Notified\nInstantly',
+    subtitle:
+        'Subscribe to areas and get a ping the moment a new listing drops. '
+        'Following a hostel? We\'ll tell you the second a room opens up.',
+  ),
+  // ─────────────────────────────────────────────────────────────────────────
   _OnboardingSlide(
     image: 'assets/images/onboarding_2.webp',
     tag: 'Book with Ease',
@@ -92,14 +99,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Force light icons on the status bar (images are dark / full-bleed)
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: Colors.black,
         body: Stack(
           children: [
-            // ── Slides ──
             PageView.builder(
               controller: _pageController,
               itemCount: _slides.length,
@@ -109,8 +114,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 isActive: index == _currentPage,
               ),
             ),
-
-            // ── Bottom UI overlay ──
             Positioned(
               left: 0,
               right: 0,
@@ -143,26 +146,19 @@ class _SlideView extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Background image
         Image.asset(
           slide.image,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) =>
               Container(color: const Color(0xFF1A1A2E)),
         ),
-
-        // Dark gradient — heavier at bottom for text legibility
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               stops: [0.0, 0.4, 1.0],
-              colors: [
-                Color(0x33000000), // subtle top tint
-                Color(0x00000000), // clear middle
-                Color(0xEE000000), // heavy bottom for text
-              ],
+              colors: [Color(0x33000000), Color(0x00000000), Color(0xEE000000)],
             ),
           ),
         ),
@@ -201,7 +197,7 @@ class _BottomControls extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Tag pill ──
+          // Tag pill
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: Container(
@@ -226,7 +222,7 @@ class _BottomControls extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          // ── Title ──
+          // Title
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             transitionBuilder: (child, animation) => FadeTransition(
@@ -254,7 +250,7 @@ class _BottomControls extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // ── Subtitle ──
+          // Subtitle
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
             child: Text(
@@ -271,10 +267,9 @@ class _BottomControls extends StatelessWidget {
 
           const SizedBox(height: 36),
 
-          // ── Indicator + buttons row ──
+          // Dots + buttons row
           Row(
             children: [
-              // Page dots
               SmoothPageIndicator(
                 controller: pageController,
                 count: total,
@@ -287,10 +282,7 @@ class _BottomControls extends StatelessWidget {
                   spacing: 5,
                 ),
               ),
-
               const Spacer(),
-
-              // Skip (hidden on last slide)
               if (!_isLast)
                 GestureDetector(
                   onTap: onSkip,
@@ -309,10 +301,7 @@ class _BottomControls extends StatelessWidget {
                     ),
                   ),
                 ),
-
               const SizedBox(width: 8),
-
-              // Next / Get Started button
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,

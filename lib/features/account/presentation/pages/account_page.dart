@@ -2,12 +2,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rentora/features/account/presentation/widgets/account/guest_view.dart';
 import 'package:rentora/features/account/presentation/widgets/account/profile_view.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/notification_nudge_banner.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class AccountPage extends ConsumerWidget {
@@ -27,10 +28,9 @@ class AccountPage extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Log Out', style: AppTextStyles.h3),
-        content: Text(
+        title: const Text('Log Out'),
+        content: const Text(
           'Are you sure you want to log out of your account?',
-          style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -59,11 +59,20 @@ class AccountPage extends ConsumerWidget {
 
     final Widget baseContent;
     if (auth.isAuthenticated && auth.user != null) {
-      baseContent = ProfileView(
-        user: auth.user!,
-        initials: _initials(auth.user!.name),
-        onLogout: () => _confirmLogout(context, ref),
-        onAreaAlerts: () => context.push('/area-alerts'),
+      baseContent = Column(
+        children: [
+          // Nudge banner — renders nothing when notifications are already on.
+          const NotificationNudgeBanner(),
+          const Gap(12),
+          Expanded(
+            child: ProfileView(
+              user: auth.user!,
+              initials: _initials(auth.user!.name),
+              onLogout: () => _confirmLogout(context, ref),
+              onAreaAlerts: () => context.push('/area-alerts'),
+            ),
+          ),
+        ],
       );
     } else {
       baseContent = const GuestView();

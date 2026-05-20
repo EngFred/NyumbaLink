@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rentora/features/area-alerts/domain/entities/area_alert.dart';
 import 'package:rentora/features/area-alerts/presentation/widgets/alert_tile.dart';
 
+import '../../../../../core/services/notification_permission_service.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/widgets/app_snackbar.dart';
@@ -29,6 +30,55 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
         ref.read(areaAlertsProvider.notifier).load();
       }
     });
+  }
+
+  /// Ensures notification permission is in place before subscribing to an area.
+  ///
+  /// Returns true if the caller can proceed, false if they should abort.
+  Future<bool> _ensureNotificationPermission() async {
+    // Already granted — nothing to do.
+    if (await NotificationPermissionService.isGranted()) return true;
+
+    // Not asked yet — request now. The user is actively trying to subscribe
+    // so the reason is obvious and they're likely to accept.
+    if (await NotificationPermissionService.isNotDetermined()) {
+      await NotificationPermissionService.requestPermission();
+      return NotificationPermissionService.isGranted();
+    }
+
+    // Denied — explain and offer a shortcut to Settings.
+    if (!mounted) return false;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Notifications blocked', style: AppTextStyles.h4),
+        content: Text(
+          'To receive alerts when new properties are listed in this area, '
+          'please enable notifications for Rentora in your device settings.',
+          style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Not now'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              NotificationPermissionService.openSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    return false;
   }
 
   @override
@@ -60,7 +110,7 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
       ),
       floatingActionButton: isAuth
           ? FloatingActionButton.extended(
-              onPressed: () => _showAddAreaSheet(context),
+              onPressed: () => _onAddAreaTapped(context),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add_rounded),
@@ -72,7 +122,7 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
           : state.isLoading && state.alerts.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : state.alerts.isEmpty
-          ? EmptyState(onAdd: () => _showAddAreaSheet(context))
+          ? EmptyState(onAdd: () => _onAddAreaTapped(context))
           : RefreshIndicator(
               color: AppColors.primary,
               onRefresh: () => ref.read(areaAlertsProvider.notifier).load(),
@@ -92,6 +142,13 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage> {
   }
 
   void _goToLogin() => context.go('/login');
+
+  /// Called when the user taps "Add area" — checks permission first.
+  Future<void> _onAddAreaTapped(BuildContext context) async {
+    final allowed = await _ensureNotificationPermission();
+    if (!allowed || !mounted) return;
+    _showAddAreaSheet(context);
+  }
 
   Future<void> _unsubscribe(AreaAlert alert) async {
     final confirm = await showDialog<bool>(
