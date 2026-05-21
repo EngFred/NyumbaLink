@@ -11,7 +11,6 @@ import '../../../../core/widgets/app_dismiss_background.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/saved_properties_provider.dart';
-import '../widgets/saved-properties/saved_header.dart';
 import '../widgets/saved-properties/saved_property_card.dart';
 import '../widgets/saved-properties/saved_skeleton.dart';
 

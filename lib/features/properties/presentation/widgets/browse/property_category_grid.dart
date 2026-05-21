@@ -18,7 +18,7 @@ class PropertyCategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final types = PropertyTypeHelper.all;
+    const types = PropertyTypeHelper.all;
 
     return ColoredBox(
       color: AppColors.background, // Match page background
@@ -97,9 +97,7 @@ class _CategoryTile extends StatelessWidget {
               : AppColors.surface,
           borderRadius: BorderRadius.circular(12), // Smaller, tighter corners
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : (AppColors.grey200 ?? Colors.grey.withOpacity(0.2)),
+            color: isSelected ? AppColors.primary : (AppColors.grey200),
             width: 1.0,
           ),
           boxShadow: isSelected
