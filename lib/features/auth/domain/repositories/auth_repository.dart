@@ -15,4 +15,10 @@ abstract class AuthRepository {
 
   /// Schedules permanent account deletion. Clears local session data.
   Future<void> deleteAccount();
+
+  /// Triggers the native Google sign-in flow and authenticates with the backend.
+  Future<AuthResponse> googleSignIn();
+
+  /// Triggers the native Apple sign-in flow and authenticates with the backend.
+  Future<AuthResponse> appleSignIn();
 }

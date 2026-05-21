@@ -35,6 +35,12 @@ final resetPasswordUseCaseProvider = Provider(
 final deleteAccountUseCaseProvider = Provider(
   (ref) => DeleteAccountUseCase(ref.watch(authRepositoryProvider)),
 );
+final googleSignInUseCaseProvider = Provider(
+  (ref) => GoogleSignInUseCase(ref.watch(authRepositoryProvider)),
+);
+final appleSignInUseCaseProvider = Provider(
+  (ref) => AppleSignInUseCase(ref.watch(authRepositoryProvider)),
+);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -75,6 +81,8 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
     ref.watch(forgotPasswordUseCaseProvider),
     ref.watch(resetPasswordUseCaseProvider),
     ref.watch(deleteAccountUseCaseProvider),
+    ref.watch(googleSignInUseCaseProvider),
+    ref.watch(appleSignInUseCaseProvider),
     ref,
   )..checkAuthStatus();
 });
@@ -92,6 +100,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     this._forgotPasswordUseCase,
     this._resetPasswordUseCase,
     this._deleteAccountUseCase,
+    this._googleSignInUseCase,
+    this._appleSignInUseCase,
     this._ref,
   ) : super(const AuthState());
 
@@ -104,6 +114,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final ForgotPasswordUseCase _forgotPasswordUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
   final DeleteAccountUseCase _deleteAccountUseCase;
+  final GoogleSignInUseCase _googleSignInUseCase;
+  final AppleSignInUseCase _appleSignInUseCase;
   final Ref _ref;
 
   Future<void> checkAuthStatus() async {
@@ -232,6 +244,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _deleteAccountUseCase();
       state = state.copyWith(clearUser: true, isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> googleSignIn() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final response = await _googleSignInUseCase();
+      state = state.copyWith(user: response.user, isLoading: false);
+      _syncGuestData();
+
+      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      final dio = _ref.read(dioProvider);
+      FcmService().init(dio).ignore();
+
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> appleSignIn() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final response = await _appleSignInUseCase();
+      state = state.copyWith(user: response.user, isLoading: false);
+      _syncGuestData();
+
+      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      final dio = _ref.read(dioProvider);
+      FcmService().init(dio).ignore();
+
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

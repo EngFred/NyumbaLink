@@ -98,4 +98,47 @@ class AuthRemoteDataSource {
       throw handleDioException(e);
     }
   }
+
+  /// Exchanges a Google ID token for a Rentora access token.
+  Future<AuthResponseModel> googleSignIn(String idToken) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/google',
+        data: {'idToken': idToken},
+      );
+      return AuthResponseModel.fromJson(res.data!);
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
+
+  /// Exchanges an Apple identity token for a Rentora access token.
+  /// The [email], [firstName], and [lastName] fields are only sent on the
+  /// VERY FIRST Apple sign-in — Apple only provides them once.
+  Future<AuthResponseModel> appleSignIn({
+    required String identityToken,
+    String? firstName,
+    String? lastName,
+    String? email,
+  }) async {
+    try {
+      final data = <String, dynamic>{'identityToken': identityToken};
+
+      // Only include the user object when email is present (first sign-in).
+      if (email != null) {
+        data['user'] = {
+          'name': {'firstName': firstName ?? '', 'lastName': lastName ?? ''},
+          'email': email,
+        };
+      }
+
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/auth/apple',
+        data: data,
+      );
+      return AuthResponseModel.fromJson(res.data!);
+    } on DioException catch (e) {
+      throw handleDioException(e);
+    }
+  }
 }

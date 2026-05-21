@@ -8,6 +8,7 @@ import 'package:rentora/features/auth/presentation/widgets/auth_field.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_footer_link.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_hero.dart';
 import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
+import 'package:rentora/features/auth/presentation/widgets/social_auth_buttons.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -51,6 +52,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           );
       if (success && mounted) context.go('/browse');
     }
+  }
+
+  void _googleSignIn() async {
+    final success = await ref.read(authProvider.notifier).googleSignIn();
+    if (success && mounted) context.go('/browse');
+  }
+
+  void _appleSignIn() async {
+    final success = await ref.read(authProvider.notifier).appleSignIn();
+    if (success && mounted) context.go('/browse');
   }
 
   @override
@@ -178,6 +189,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
 
+                    const Gap(24),
+
+                    // ── Social Auth ───────────────────────────────────────
+                    SocialAuthButtons(
+                      isLoading: isLoading,
+                      onGoogleTap: _googleSignIn,
+                      onAppleTap: _appleSignIn,
+                    ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
+
                     const Gap(32),
 
                     AuthFooterLink(
@@ -186,7 +206,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       onTap: isLoading
                           ? null
                           : () => context.go(AppRoutes.login),
-                    ).animate(delay: 160.ms).fadeIn(duration: 300.ms),
+                    ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
                   ],
                 ),
               ),

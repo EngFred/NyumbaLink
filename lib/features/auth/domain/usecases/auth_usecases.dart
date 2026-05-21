@@ -59,3 +59,15 @@ class DeleteAccountUseCase {
   final AuthRepository _repo;
   Future<void> call() => _repo.deleteAccount();
 }
+
+class GoogleSignInUseCase {
+  const GoogleSignInUseCase(this._repo);
+  final AuthRepository _repo;
+  Future<AuthResponse> call() => _repo.googleSignIn();
+}
+
+class AppleSignInUseCase {
+  const AppleSignInUseCase(this._repo);
+  final AuthRepository _repo;
+  Future<AuthResponse> call() => _repo.appleSignIn();
+}
