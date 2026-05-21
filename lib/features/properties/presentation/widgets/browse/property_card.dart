@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/currency_formatter.dart';
@@ -20,6 +21,7 @@ class PropertyCard extends StatefulWidget {
     this.isSaved = false,
     this.onSaveTap,
   });
+
   final Property property;
   final VoidCallback onTap;
   final bool isSaved;
@@ -81,6 +83,7 @@ class _CardBody extends StatelessWidget {
     required this.isSaved,
     this.onSaveTap,
   });
+
   final Property property;
   final bool isSaved;
   final VoidCallback? onSaveTap;
@@ -127,6 +130,7 @@ class _ImageHero extends StatelessWidget {
     required this.isSaved,
     this.onSaveTap,
   });
+
   final Property property;
   final bool isSaved;
   final VoidCallback? onSaveTap;
@@ -139,17 +143,19 @@ class _ImageHero extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           _PropertyImage(property: property),
-          // Bottom gradient
+
+          // Bottom gradient for text readability
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 stops: [0.35, 1.0],
-                colors: [Colors.transparent, Color(0xCC000000)],
+                colors: [Colors.transparent, Color(0xDC000000)],
               ),
             ),
           ),
+
           // Top row: type badge/featured badge + save button
           Positioned(
             top: 12,
@@ -167,7 +173,8 @@ class _ImageHero extends StatelessWidget {
               ],
             ),
           ),
-          // Bottom row: price + status pill
+
+          // Bottom row: price + action button
           Positioned(
             bottom: 12,
             left: 14,
@@ -186,8 +193,10 @@ class _ImageHero extends StatelessWidget {
                           color: Colors.white,
                           fontSize: 18,
                           height: 1.1,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                      const Gap(2),
                       Text(
                         BillingCycleHelper.full(property.billingCycle),
                         style: AppTextStyles.caption.copyWith(
@@ -198,9 +207,57 @@ class _ImageHero extends StatelessWidget {
                     ],
                   ),
                 ),
-                _StatusPill(status: property.status),
+
+                // ── NEW PRO UX: Book/Enquire CTA instead of static Available badge ──
+                if (property.isAvailable)
+                  const _ActionPill()
+                else
+                  _StatusPill(status: property.status),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── NEW: Action Pill CTA ──────────────────────────────────────────────────────
+class _ActionPill extends StatelessWidget {
+  const _ActionPill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Book / Enquire',
+            style: AppTextStyles.labelSm.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const Gap(6),
+          const Icon(
+            Icons.arrow_forward_rounded,
+            size: 12,
+            color: Colors.white,
           ),
         ],
       ),
@@ -211,10 +268,11 @@ class _ImageHero extends StatelessWidget {
 // ── Featured Badge ────────────────────────────────────────────────────────────
 class _FeaturedBadge extends StatelessWidget {
   const _FeaturedBadge();
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: _kFeaturedGold,
         borderRadius: BorderRadius.circular(20),
@@ -230,8 +288,8 @@ class _FeaturedBadge extends StatelessWidget {
         '★ Featured',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
           letterSpacing: 0.3,
         ),
       ),
@@ -242,6 +300,7 @@ class _FeaturedBadge extends StatelessWidget {
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;
+
   @override
   Widget build(BuildContext context) {
     return property.thumbnailUrl != null
@@ -259,6 +318,7 @@ class _PropertyImage extends StatelessWidget {
 class _Fallback extends StatelessWidget {
   const _Fallback(this.type);
   final String type;
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -283,6 +343,7 @@ class _Fallback extends StatelessWidget {
 class _TypeBadge extends StatelessWidget {
   const _TypeBadge({required this.type});
   final String type;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -314,6 +375,7 @@ class _SaveButton extends StatelessWidget {
   const _SaveButton({required this.isSaved, required this.onTap});
   final bool isSaved;
   final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -346,34 +408,32 @@ class _SaveButton extends StatelessWidget {
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
+
   @override
   Widget build(BuildContext context) {
-    final isAvailable = status == 'AVAILABLE';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isAvailable
-            ? AppColors.success.withOpacity(0.88)
-            : AppColors.grey600.withOpacity(0.88),
+        color: AppColors.grey600.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 5,
-            height: 5,
+            width: 6,
+            height: 6,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Colors.white70,
               shape: BoxShape.circle,
             ),
           ),
-          const Gap(4),
+          const Gap(6),
           Text(
-            isAvailable ? 'Available' : 'Rented',
+            'Unavailable',
             style: AppTextStyles.labelSm.copyWith(
               color: Colors.white,
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -433,6 +493,7 @@ class _CardInfo extends StatelessWidget {
 class _MetaRow extends StatelessWidget {
   const _MetaRow({required this.property});
   final Property property;
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -460,6 +521,7 @@ class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.icon, required this.label});
   final IconData icon;
   final String label;
+
   @override
   Widget build(BuildContext context) {
     return Container(

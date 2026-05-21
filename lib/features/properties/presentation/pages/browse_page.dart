@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/results_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/search_bar.dart';
@@ -13,11 +15,12 @@ import '../../domain/entities/property_filters.dart';
 import '../providers/featured_properties_provider.dart';
 import '../providers/properties_provider.dart';
 import '../providers/saved_properties_provider.dart';
+
 import '../widgets/browse/featured_carousel_section.dart';
 import '../widgets/browse/filter_sheet.dart';
 import '../widgets/browse/property_card.dart';
 import '../widgets/browse/property_shimmer.dart';
-import '../widgets/browse/property_type_filter_bar.dart';
+import '../widgets/browse/property_category_grid.dart';
 import '../widgets/browse/section_label.dart';
 
 const kFeaturedGold = Color(0xFFD4A017);
@@ -30,6 +33,7 @@ class BrowsePage extends ConsumerStatefulWidget {
 
 class _BrowsePageState extends ConsumerState<BrowsePage> {
   final _searchCtrl = TextEditingController();
+  final _searchFocusNode = FocusNode();
   final _scrollCtrl = ScrollController();
   Timer? _debounce;
 
@@ -40,12 +44,21 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
   }
 
   @override
+  void deactivate() {
+    // Fires when navigating away (tab switch / push navigation).
+    // Clears focus and dismisses the keyboard before the page leaves the tree.
+    _searchFocusNode.unfocus();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _debounce?.cancel();
     _scrollCtrl
       ..removeListener(_onScroll)
       ..dispose();
     _searchCtrl.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -94,48 +107,79 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(propertiesProvider);
     final filters = state.filters;
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        children: [
-          ExploreSearchBar(
-            controller: _searchCtrl,
-            onChanged: _onSearchChanged,
-            onFilterTap: _openFilters,
-            hasActiveFilters: filters.hasActiveFilters,
-          ),
-          PropertyTypeFilterBar(
-            selected: filters.type,
-            onTypeSelected: (type) {
-              final updated = type == null
-                  ? filters.copyWith(clearType: true)
-                  : filters.copyWith(type: type);
-              ref.read(propertiesProvider.notifier).applyFilters(updated);
-            },
-          ),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              switchInCurve: Curves.easeOut,
-              child: state.isLoading
-                  ? const PropertyShimmerGrid(key: ValueKey('shimmer'))
-                  : _ListView(
-                      key: const ValueKey('list'),
-                      state: state,
-                      scrollController: _scrollCtrl,
-                      onRefresh: () =>
-                          ref.read(propertiesProvider.notifier).refresh(),
-                      onClearFilters: _clearAll,
-                    ),
+
+    // Create the grid once to pass it down. Keeps the code clean.
+    final categoryGrid = PropertyCategoryGrid(
+      selected: filters.type,
+      onTypeSelected: (type) {
+        final updated = type == null
+            ? filters.copyWith(clearType: true)
+            : filters.copyWith(type: type);
+        ref.read(propertiesProvider.notifier).applyFilters(updated);
+      },
+    );
+
+    return GestureDetector(
+      // Taps pass through to children too; tapping anywhere outside the
+      // search field dismisses the keyboard.
+      behavior: HitTestBehavior.translucent,
+      onTap: () => _searchFocusNode.unfocus(),
+      child: ColoredBox(
+        color: AppColors.background,
+        child: Column(
+          children: [
+            // Pinned Search Bar
+            ExploreSearchBar(
+              controller: _searchCtrl,
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
+              onFilterTap: _openFilters,
+              hasActiveFilters: filters.hasActiveFilters,
             ),
-          ),
-        ],
+
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                switchInCurve: Curves.easeOut,
+                child: state.isLoading
+                    ? Column(
+                        key: const ValueKey('shimmer'),
+                        children: [
+                          // When loading, we show the grid pinned so the user can still tap it
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: categoryGrid,
+                          ),
+                          const Expanded(child: PropertyShimmerGrid()),
+                        ],
+                      )
+                    : _ListView(
+                        key: const ValueKey('list'),
+                        state: state,
+                        scrollController: _scrollCtrl,
+                        onRefresh: () =>
+                            ref.read(propertiesProvider.notifier).refresh(),
+                        onClearFilters: _clearAll,
+                        categoryGrid:
+                            categoryGrid, // Passed down to scroll with the list
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ── List Items ──────────────────────────────────────────────────────────────
 sealed class _ListItem {}
+
+// NEW: Wrapper to let the grid scroll inside the ListView
+class _CategoryGridItem extends _ListItem {
+  _CategoryGridItem(this.widget);
+  final Widget widget;
+}
 
 class _FeaturedShimmerItem extends _ListItem {}
 
@@ -159,6 +203,7 @@ class _PropertyItem extends _ListItem {
 
 class _FooterItem extends _ListItem {}
 
+// ── List View ───────────────────────────────────────────────────────────────
 class _ListView extends ConsumerWidget {
   const _ListView({
     super.key,
@@ -166,24 +211,39 @@ class _ListView extends ConsumerWidget {
     required this.scrollController,
     required this.onRefresh,
     required this.onClearFilters,
+    required this.categoryGrid,
   });
+
   final PropertiesState state;
   final ScrollController scrollController;
   final Future<void> Function() onRefresh;
   final VoidCallback onClearFilters;
+  final Widget categoryGrid;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.error != null && state.properties.isEmpty) {
       return AppErrorState(onRetry: onRefresh);
     }
+
     if (state.properties.isEmpty) {
-      return AppEmptyState(
-        icon: Icons.search_off_rounded,
-        title: 'No matching properties',
-        subtitle: 'Try adjustments or reset current filters to start over.',
-        buttonLabel: 'Reset All Filters',
-        onButtonTap: onClearFilters,
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: categoryGrid,
+          ),
+          Expanded(
+            child: AppEmptyState(
+              icon: Icons.search_off_rounded,
+              title: 'No matching properties',
+              subtitle:
+                  'Try adjustments or reset current filters to start over.',
+              buttonLabel: 'Reset All Filters',
+              onButtonTap: onClearFilters,
+            ),
+          ),
+        ],
       );
     }
 
@@ -192,23 +252,42 @@ class _ListView extends ConsumerWidget {
     final hasFeaturedCarousel =
         !isFeaturedLoading && featuredState.properties.isNotEmpty;
 
-    final nonFeaturedProperties = state.properties
-        .where((p) => !p.isFeatured)
-        .toList();
+    // ── NEW FIX: Client requested UI logic ──
+    // The carousel should ONLY show when NO filters are active (no category, no search text, etc).
+    final isDefaultView = !state.filters.hasActiveFilters;
+
+    // If default view, strip featured properties from the main list to prevent duplicates.
+    // Otherwise, keep ALL properties in the main list (API handles sorting them to the top).
+    final mainListProperties = isDefaultView
+        ? state.properties.where((p) => !p.isFeatured).toList()
+        : state.properties;
 
     final items = <_ListItem>[];
-    if (isFeaturedLoading) {
-      items.add(_FeaturedShimmerItem());
-    } else if (hasFeaturedCarousel) {
-      items.add(_FeaturedCarouselItem());
+
+    // 1. Add Category Grid to the top so it scrolls naturally
+    items.add(_CategoryGridItem(categoryGrid));
+
+    // 2. Only show the featured carousel on the absolute default view
+    if (isDefaultView) {
+      if (isFeaturedLoading) {
+        items.add(_FeaturedShimmerItem());
+      } else if (hasFeaturedCarousel) {
+        items.add(_FeaturedCarouselItem());
+      }
     }
 
+    // 3. Results Header
     items.add(_ResultsHeaderItem(state.total));
 
-    if (nonFeaturedProperties.isNotEmpty) {
-      items.add(_SectionDividerItem(isFeatured: false));
-      for (var i = 0; i < nonFeaturedProperties.length; i++) {
-        items.add(_PropertyItem(nonFeaturedProperties[i], i));
+    // 4. Main Properties List
+    if (mainListProperties.isNotEmpty) {
+      // Only show the "All Properties" section divider if the carousel was rendered above it
+      if (isDefaultView && (isFeaturedLoading || hasFeaturedCarousel)) {
+        items.add(_SectionDividerItem(isFeatured: false));
+      }
+
+      for (var i = 0; i < mainListProperties.length; i++) {
+        items.add(_PropertyItem(mainListProperties[i], i));
       }
     }
 
@@ -224,7 +303,9 @@ class _ListView extends ConsumerWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
+
           return switch (item) {
+            _CategoryGridItem(:final widget) => widget,
             _FeaturedShimmerItem() => const Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: FeaturedCarouselShimmer(),
@@ -241,7 +322,7 @@ class _ListView extends ConsumerWidget {
             ),
             _PropertyItem(:final property, :final index) => Padding(
               padding: EdgeInsets.only(
-                bottom: index < nonFeaturedProperties.length - 1 ? 16 : 0,
+                bottom: index < mainListProperties.length - 1 ? 16 : 0,
               ),
               child: RepaintBoundary(
                 child: Consumer(
@@ -251,6 +332,7 @@ class _ListView extends ConsumerWidget {
                         (s) => s.savedList.any((p) => p.id == property.id),
                       ),
                     );
+
                     return PropertyCard(
                       property: property,
                       onTap: () => context.push('/properties/${property.id}'),

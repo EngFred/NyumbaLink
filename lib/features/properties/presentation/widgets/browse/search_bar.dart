@@ -9,12 +9,14 @@ class ExploreSearchBar extends StatelessWidget {
   const ExploreSearchBar({
     super.key,
     required this.controller,
+    required this.focusNode,
     required this.onChanged,
     required this.onFilterTap,
     required this.hasActiveFilters,
   });
 
   final TextEditingController controller;
+  final FocusNode focusNode;
   final ValueChanged<String> onChanged;
   final VoidCallback onFilterTap;
   final bool hasActiveFilters;
@@ -32,6 +34,7 @@ class ExploreSearchBar extends StatelessWidget {
                 valueListenable: controller,
                 builder: (_, value, __) => TextField(
                   controller: controller,
+                  focusNode: focusNode,
                   onChanged: onChanged,
                   style: AppTextStyles.bodyMd,
                   textInputAction: TextInputAction.search,
