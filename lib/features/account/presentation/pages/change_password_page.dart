@@ -8,6 +8,7 @@ import 'package:rentora/features/account/presentation/widgets/change-password/pw
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../auth/domain/validators/password_validator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ChangePasswordPage extends ConsumerStatefulWidget {
@@ -141,7 +142,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
             const Gap(40),
 
-            // ── Standalone Fields ──────────────────────────────────────────
             Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -153,6 +153,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                       enabled: !isLoading,
                       onToggle: () =>
                           setState(() => _obscureCurrent = !_obscureCurrent),
+                      // ✅ Current password is just a presence check — no policy
                       validator: (v) =>
                           (v?.isEmpty ?? true) ? 'Required' : null,
                     ),
@@ -166,11 +167,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                       onToggle: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       onChanged: (_) => setState(() {}),
-                      validator: (v) {
-                        if (v == null || v.length < 8)
-                          return 'At least 8 characters';
-                        return null;
-                      },
+                      // ✅ Delegates to the domain validator
+                      validator: PasswordValidator.validate,
                     ),
 
                     if (_newCtrl.text.isNotEmpty)

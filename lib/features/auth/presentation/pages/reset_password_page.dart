@@ -10,6 +10,7 @@ import 'package:rentora/features/auth/presentation/widgets/auth_section.dart';
 import 'package:rentora/features/auth/presentation/widgets/submit_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../domain/validators/password_validator.dart';
 import '../providers/auth_provider.dart';
 
 class ResetPasswordPage extends ConsumerStatefulWidget {
@@ -101,7 +102,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
 
-                    // UX Polish: Removed Gap(16)
                     AuthSection(
                           children: [
                             AuthField(
@@ -124,23 +124,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'Password is required';
-                                }
-                                if (v.length < 8) {
-                                  return 'At least 8 characters required';
-                                }
-                                if (!v.contains(RegExp(r'[A-Z]'))) {
-                                  return 'Requires an uppercase letter';
-                                }
-                                if (!v.contains(RegExp(r'[0-9]'))) {
-                                  return 'Requires a number';
-                                }
-                                return null;
-                              },
+                              // ✅ Delegates to the domain validator
+                              validator: PasswordValidator.validate,
                             ),
-                            // UX Polish: Removed FieldDivider
                             AuthField(
                               controller: _confirmController,
                               label: 'Confirm Password',
@@ -162,12 +148,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                                   () => _obscureConfirm = !_obscureConfirm,
                                 ),
                               ),
-                              validator: (v) {
-                                if (v != _passwordController.text) {
-                                  return 'Passwords do not match';
-                                }
-                                return null;
-                              },
+                              validator: (v) => v != _passwordController.text
+                                  ? 'Passwords do not match'
+                                  : null,
                             ),
                           ],
                         )
