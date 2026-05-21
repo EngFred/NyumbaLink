@@ -46,7 +46,7 @@ class DeleteAccountButton extends ConsumerWidget {
             const Gap(12),
             Text(
               'Your account will be scheduled for permanent deletion. '
-              'You have 30 days to contact support at support@rentora.ug '
+              'You have 30 days to contact support at rentorahouselink@gmail.com '
               'to cancel this request.',
               style: AppTextStyles.bodySm.copyWith(
                 color: AppColors.textSecondary,

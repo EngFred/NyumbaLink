@@ -68,10 +68,16 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 
   void _shareProperty(Property property) {
     final publicUrl = '$_kPublicBaseUrl/p/${property.id}';
+
+    final location = property.area == null
+        ? property.district.name
+        : '${property.area!.name}, ${property.district.name}';
+
     final shareText =
         '${property.title}\n'
-        '${property.area}, ${property.district.name}\n\n'
+        '$location\n\n'
         '$publicUrl';
+
     Share.share(shareText, subject: property.title);
   }
 
@@ -361,9 +367,7 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                             icon: isHostelSubscribed
                                 ? Icons.notifications_rounded
                                 : Icons.notifications_outlined,
-                            iconColor: isHostelSubscribed
-                                ? AppColors.primary
-                                : Colors.white,
+                            iconColor: Colors.white,
                             onTap: () => _toggleHostelAlert(property),
                           ),
                   ),
