@@ -37,9 +37,10 @@ class MainShell extends ConsumerWidget {
   List<Widget> _buildActions(BuildContext context, WidgetRef ref, int index) {
     final unreadCount = ref.watch(notificationsProvider).unreadCount;
     return [
+      // ── NEW PRO UX: Changed to a clean 'help' icon instead of a headset ──
       IconButton(
-        icon: const Icon(Icons.feedback_outlined),
-        tooltip: 'Report an issue',
+        icon: const Icon(Icons.help_outline_rounded),
+        tooltip: 'Get Help or Report an Issue',
         onPressed: () => context.push('/complaint'),
       ),
       if (index == 0)
@@ -80,10 +81,7 @@ class MainShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = navigationShell.currentIndex;
-
     return PopScope(
-      // Allow normal pop only when already on the Explore tab.
-      // On any other tab, intercept and jump to Explore first.
       canPop: currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && currentIndex != 0) {
@@ -94,6 +92,9 @@ class MainShell extends ConsumerWidget {
         appBar: AppBar(
           title: _buildTitle(currentIndex),
           actions: _buildActions(context, ref, currentIndex),
+          scrolledUnderElevation: 0,
+          backgroundColor: AppColors.surface, // Forces pure white
+          surfaceTintColor: Colors.transparent,
         ),
         body: navigationShell,
         bottomNavigationBar: Container(

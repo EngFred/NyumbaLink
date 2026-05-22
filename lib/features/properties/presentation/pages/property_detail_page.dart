@@ -13,6 +13,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/full_screen_gallery.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_carousel.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_content.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/notification_permission_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -30,6 +31,7 @@ const _kPublicBaseUrl = 'https://rentora-houselink.vercel.app';
 class PropertyDetailPage extends ConsumerStatefulWidget {
   const PropertyDetailPage({super.key, required this.propertyId});
   final String propertyId;
+
   @override
   ConsumerState<PropertyDetailPage> createState() => _PropertyDetailPageState();
 }
@@ -68,20 +70,16 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
 
   void _shareProperty(Property property) {
     final publicUrl = '$_kPublicBaseUrl/p/${property.id}';
-
     final location = property.area == null
         ? property.district.name
         : '${property.area!.name}, ${property.district.name}';
-
     final shareText =
         '${property.title}\n'
         '$location\n\n'
         '$publicUrl';
-
     Share.share(shareText, subject: property.title);
   }
 
-  /// Ensures notification permission is in place before doing anything
   Future<bool> _ensureNotificationPermission() async {
     if (await NotificationPermissionService.isGranted()) return true;
     if (await NotificationPermissionService.isNotDetermined()) {
@@ -124,7 +122,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     return false;
   }
 
-  /// UX Polish: Beautiful intercept dialog for unauthenticated users
   void _showAuthRequiredDialog() {
     showDialog(
       context: context,
@@ -201,11 +198,9 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     );
   }
 
-  /// Toggle hostel alerts — only callable for HOSTEL properties.
   Future<void> _toggleHostelAlert(Property property) async {
     if (!property.isHostel) return;
 
-    // 1. Check Authentication FIRST
     final isAuthenticated = ref.read(authProvider).isAuthenticated;
     if (!isAuthenticated) {
       _showAuthRequiredDialog();
@@ -216,13 +211,11 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         .read(hostelAlertsProvider)
         .isSubscribed(property.id);
 
-    // 2. Only check permission when subscribing
     if (!isSubscribed) {
       final allowed = await _ensureNotificationPermission();
       if (!allowed || !mounted) return;
     }
 
-    // 3. Confirm action
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -235,10 +228,8 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
         ),
         content: Text(
           isSubscribed
-              ? 'You will no longer receive notifications when new rooms '
-                    'become available in this hostel.'
-              : 'You will be notified when new rooms are added or become '
-                    'available again.',
+              ? 'You will no longer receive notifications when new rooms become available in this hostel.'
+              : 'You will be notified when new rooms are added or become available again.',
           style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
@@ -293,12 +284,15 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
     final state = ref.watch(propertyDetailProvider(widget.propertyId));
     final savedState = ref.watch(savedPropertiesProvider);
     final hostelState = ref.watch(hostelAlertsProvider);
-
     final isSaved = savedState.savedList.any((p) => p.id == widget.propertyId);
 
     if (state.isLoading) return const DetailSkeleton();
 
+    // ── NEW PRO UX: Context-aware Error Handling ──
     if (state.error != null || state.property == null) {
+      final isNotFound =
+          state.error?.toLowerCase().contains('not found') == true;
+
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -311,13 +305,26 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
           ),
         ),
         body: AppErrorState(
-          message: state.error ?? 'Failed to load property details.',
-          onRetry: () => ref
-              .read(propertyDetailProvider(widget.propertyId).notifier)
-              .load(),
+          title: isNotFound ? 'Property Unavailable' : 'Connection Issue',
+          message: isNotFound
+              ? 'This property may have been removed, rented out, or is no longer available on Rentora.'
+              : state.error ??
+                    'We couldn\'t load the property details. Please check your connection.',
+          icon: isNotFound ? Icons.search_off_rounded : Icons.cloud_off_rounded,
+          buttonLabel: isNotFound ? 'Go Back' : 'Try Again',
+          onRetry: () {
+            if (isNotFound) {
+              context.pop();
+            } else {
+              ref
+                  .read(propertyDetailProvider(widget.propertyId).notifier)
+                  .load();
+            }
+          },
         ),
       );
     }
+    // ───────────────────────────────────────────────
 
     final property = state.property!;
     final isHostelSubscribed =
@@ -348,7 +355,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                 ),
               ),
               actions: [
-                // ── Share ─────────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -357,7 +363,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                     onTap: () => _shareProperty(property),
                   ),
                 ),
-                // ── Hostel alert bell (hostels only) ──────────────────────
                 if (property.isHostel)
                   Padding(
                     padding: const EdgeInsets.all(8),
@@ -371,7 +376,6 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
                             onTap: () => _toggleHostelAlert(property),
                           ),
                   ),
-                // ── Favourite ─────────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleHeroButton(
@@ -457,9 +461,9 @@ class _PropertyDetailPageState extends ConsumerState<PropertyDetailPage> {
   }
 }
 
-// ── Loading placeholder that matches CircleHeroButton's visual footprint ──────
 class _CircleLoadingButton extends StatelessWidget {
   const _CircleLoadingButton();
+
   @override
   Widget build(BuildContext context) {
     return Container(

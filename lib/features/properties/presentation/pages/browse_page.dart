@@ -44,8 +44,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
 
   @override
   void deactivate() {
-    // Fires when navigating away (tab switch / push navigation).
-    // Clears focus and dismisses the keyboard before the page leaves the tree.
     _searchFocusNode.unfocus();
     super.deactivate();
   }
@@ -107,7 +105,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
     final state = ref.watch(propertiesProvider);
     final filters = state.filters;
 
-    // Create the grid once to pass it down. Keeps the code clean.
     final categoryGrid = PropertyCategoryGrid(
       selected: filters.type,
       onTypeSelected: (type) {
@@ -119,15 +116,13 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
     );
 
     return GestureDetector(
-      // Taps pass through to children too; tapping anywhere outside the
-      // search field dismisses the keyboard.
       behavior: HitTestBehavior.translucent,
       onTap: () => _searchFocusNode.unfocus(),
       child: ColoredBox(
-        color: AppColors.background,
+        // ── NEW FIX: Set entirely to surface (pure white) so the list and grid blend perfectly ──
+        color: AppColors.surface,
         child: Column(
           children: [
-            // Pinned Search Bar
             ExploreSearchBar(
               controller: _searchCtrl,
               focusNode: _searchFocusNode,
@@ -144,11 +139,7 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
                     ? Column(
                         key: const ValueKey('shimmer'),
                         children: [
-                          // When loading, we show the grid pinned so the user can still tap it
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: categoryGrid,
-                          ),
+                          categoryGrid,
                           const Expanded(child: PropertyShimmerGrid()),
                         ],
                       )
@@ -159,8 +150,7 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
                         onRefresh: () =>
                             ref.read(propertiesProvider.notifier).refresh(),
                         onClearFilters: _clearAll,
-                        categoryGrid:
-                            categoryGrid, // Passed down to scroll with the list
+                        categoryGrid: categoryGrid,
                       ),
               ),
             ),
@@ -174,7 +164,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
 // ── List Items ──────────────────────────────────────────────────────────────
 sealed class _ListItem {}
 
-// NEW: Wrapper to let the grid scroll inside the ListView
 class _CategoryGridItem extends _ListItem {
   _CategoryGridItem(this.widget);
   final Widget widget;
@@ -228,10 +217,7 @@ class _ListView extends ConsumerWidget {
     if (state.properties.isEmpty) {
       return Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: categoryGrid,
-          ),
+          categoryGrid,
           Expanded(
             child: AppEmptyState(
               icon: Icons.search_off_rounded,
@@ -251,22 +237,16 @@ class _ListView extends ConsumerWidget {
     final hasFeaturedCarousel =
         !isFeaturedLoading && featuredState.properties.isNotEmpty;
 
-    // ── NEW FIX: Client requested UI logic ──
-    // The carousel should ONLY show when NO filters are active (no category, no search text, etc).
     final isDefaultView = !state.filters.hasActiveFilters;
 
-    // If default view, strip featured properties from the main list to prevent duplicates.
-    // Otherwise, keep ALL properties in the main list (API handles sorting them to the top).
     final mainListProperties = isDefaultView
         ? state.properties.where((p) => !p.isFeatured).toList()
         : state.properties;
 
     final items = <_ListItem>[];
 
-    // 1. Add Category Grid to the top so it scrolls naturally
     items.add(_CategoryGridItem(categoryGrid));
 
-    // 2. Only show the featured carousel on the absolute default view
     if (isDefaultView) {
       if (isFeaturedLoading) {
         items.add(_FeaturedShimmerItem());
@@ -275,16 +255,12 @@ class _ListView extends ConsumerWidget {
       }
     }
 
-    // 3. Results Header
     items.add(_ResultsHeaderItem(state.total));
 
-    // 4. Main Properties List
     if (mainListProperties.isNotEmpty) {
-      // Only show the "All Properties" section divider if the carousel was rendered above it
       if (isDefaultView && (isFeaturedLoading || hasFeaturedCarousel)) {
         items.add(_SectionDividerItem(isFeatured: false));
       }
-
       for (var i = 0; i < mainListProperties.length; i++) {
         items.add(_PropertyItem(mainListProperties[i], i));
       }
@@ -298,29 +274,40 @@ class _ListView extends ConsumerWidget {
       strokeWidth: 2,
       child: ListView.builder(
         controller: scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 32),
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
 
           return switch (item) {
             _CategoryGridItem(:final widget) => widget,
+
             _FeaturedShimmerItem() => const Padding(
-              padding: EdgeInsets.only(bottom: 4),
+              padding: EdgeInsets.only(left: 16, right: 16, bottom: 4),
               child: FeaturedCarouselShimmer(),
             ),
+
             _FeaturedCarouselItem() => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 4),
               child: FeaturedCarouselSection(
                 properties: featuredState.properties,
               ),
             ),
-            _ResultsHeaderItem(:final total) => ResultsHeader(total: total),
-            _SectionDividerItem(:final isFeatured) => SectionLabel(
-              isFeatured: isFeatured,
+
+            _ResultsHeaderItem(:final total) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ResultsHeader(total: total),
             ),
+
+            _SectionDividerItem(:final isFeatured) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SectionLabel(isFeatured: isFeatured),
+            ),
+
             _PropertyItem(:final property, :final index) => Padding(
               padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
                 bottom: index < mainListProperties.length - 1 ? 16 : 0,
               ),
               child: RepaintBoundary(
@@ -344,6 +331,7 @@ class _ListView extends ConsumerWidget {
                 ),
               ),
             ),
+
             _FooterItem() =>
               state.isLoadingMore
                   ? const Padding(

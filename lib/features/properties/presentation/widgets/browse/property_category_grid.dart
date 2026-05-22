@@ -20,13 +20,14 @@ class PropertyCategoryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     const types = PropertyTypeHelper.all;
 
+    // ── NEW FIX: Ensures the background matches the Search Bar perfectly ──
     return ColoredBox(
-      color: AppColors.background, // Match page background
+      color: AppColors.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             child: GridView.builder(
               shrinkWrap: true,
               physics:
@@ -34,13 +35,12 @@ class PropertyCategoryGrid extends StatelessWidget {
               padding: EdgeInsets.zero,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
-                mainAxisSpacing: 8, // Tighter spacing for a compact look
+                mainAxisSpacing: 10, // Tighter spacing for a compact look
                 crossAxisSpacing: 10,
-                childAspectRatio: 1.15, // Perfect square
+                childAspectRatio: 1.15, // Slightly rectangular for text balance
               ),
               itemCount: 1 + types.length,
               itemBuilder: (context, index) {
-                // The first item is always "All"
                 if (index == 0) {
                   return _CategoryTile(
                     label: 'All',
@@ -50,7 +50,6 @@ class PropertyCategoryGrid extends StatelessWidget {
                   );
                 }
 
-                // Subsequent items map to the enums
                 final type = types[index - 1];
                 final isSelected = selected == type;
 
@@ -63,7 +62,9 @@ class PropertyCategoryGrid extends StatelessWidget {
               },
             ),
           ),
-          const Divider(height: 1, color: AppColors.grey200),
+
+          // Clean separation between the grid area and the list view below it
+          const Divider(height: 1, thickness: 1, color: AppColors.grey200),
         ],
       ),
     );
@@ -95,16 +96,18 @@ class _CategoryTile extends StatelessWidget {
           color: isSelected
               ? AppColors.primary.withOpacity(0.08)
               : AppColors.surface,
-          borderRadius: BorderRadius.circular(12), // Smaller, tighter corners
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : (AppColors.grey200),
+            color: isSelected
+                ? AppColors.primary
+                : (AppColors.grey200 ?? Colors.grey.withOpacity(0.2)),
             width: 1.0,
           ),
           boxShadow: isSelected
               ? []
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02), // Very subtle depth
+                    color: Colors.black.withOpacity(0.02),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -115,10 +118,10 @@ class _CategoryTile extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 24, // Scaled down to prevent overwhelming the card
+              size: 24, // Optimized icon size
               color: isSelected ? AppColors.primary : AppColors.grey700,
             ),
-            const Gap(6), // Tighter gap
+            const Gap(6),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
@@ -128,7 +131,7 @@ class _CategoryTile extends StatelessWidget {
                       ? AppColors.primary
                       : AppColors.textSecondary,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  fontSize: 10, // Scaled down text for a compact fit
+                  fontSize: 10,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
