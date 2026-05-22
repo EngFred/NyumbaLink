@@ -199,10 +199,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // sees the secure logout blur animation, confirming the action worked.
     await Future.delayed(const Duration(milliseconds: 600));
 
-    // 3. Perform the actual logout (invalidates the token on the server)
+    // 3. Remove this device's FCM token from the backend BEFORE invalidating
+    // the session — dio still carries a valid Bearer token at this point.
+    // Fire-and-forget — a failed delete must never block the logout flow.
+    final dio = _ref.read(dioProvider);
+    FcmService().removeFcmToken(dio).ignore();
+
+    // 4. Perform the actual logout (invalidates the token on the server)
     await _logoutUseCase();
 
-    // 4. Wipe all locally cached user data so the next guest session starts
+    // 5. Wipe all locally cached user data so the next guest session starts
     // with a clean slate. This must happen BEFORE clearUser is set — that
     // flip triggers provider rebuilds which call load(), and by then
     // SharedPreferences must already be empty.
@@ -211,7 +217,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _clearLocalBookingsUseCase(),
     ]);
 
-    // 5. Clear the in-memory user → isAuthenticated becomes false →
+    // 6. Clear the in-memory user → isAuthenticated becomes false →
     // savedPropertiesProvider and myBookingsProvider rebuild and call
     // load() which now reads empty SharedPreferences → empty UI ✓
     state = state.copyWith(clearUser: true, isLoading: false);

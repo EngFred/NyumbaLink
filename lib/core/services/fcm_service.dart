@@ -233,4 +233,23 @@ class FcmService {
 
     _localNotificationsInitialised = true;
   }
+
+  /// Removes this device's FCM token from the backend.
+  ///
+  /// Call this during logout so the signed-out account stops receiving push
+  /// notifications on this device. Always fire-and-forget — never throws.
+  /// [dio] must still have the Bearer token configured at the point of calling,
+  /// so call this BEFORE invalidating the session.
+  Future<void> removeFcmToken(Dio dio) async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null || token.isEmpty) return;
+
+      await dio.delete<void>('/device-tokens', data: {'token': token});
+
+      debugPrint('[FCM] Token removed from backend on logout.');
+    } catch (e) {
+      debugPrint('[FCM] removeFcmToken() failed silently: $e');
+    }
+  }
 }
