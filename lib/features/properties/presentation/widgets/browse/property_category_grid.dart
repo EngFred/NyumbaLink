@@ -98,9 +98,7 @@ class _CategoryTile extends StatelessWidget {
               : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : (AppColors.grey200 ?? Colors.grey.withOpacity(0.2)),
+            color: isSelected ? AppColors.primary : (AppColors.grey200),
             width: 1.0,
           ),
           boxShadow: isSelected

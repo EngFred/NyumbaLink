@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/core/widgets/nav_Item.dart';
 
@@ -37,7 +38,6 @@ class MainShell extends ConsumerWidget {
   List<Widget> _buildActions(BuildContext context, WidgetRef ref, int index) {
     final unreadCount = ref.watch(notificationsProvider).unreadCount;
     return [
-      // ── NEW PRO UX: Changed to a clean 'help' icon instead of a headset ──
       IconButton(
         icon: const Icon(Icons.help_outline_rounded),
         tooltip: 'Get Help or Report an Issue',
@@ -75,6 +75,8 @@ class MainShell extends ConsumerWidget {
               ),
           ],
         ),
+      // ── NEW FIX: Added a Gap here to give the right edge breathing room ──
+      const Gap(8),
     ];
   }
 
