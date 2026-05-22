@@ -57,10 +57,10 @@ class AreaAlertsNotifier extends StateNotifier<AreaAlertsState> {
     }
   }
 
-  Future<void> subscribe(String areaId) async {
+  Future<void> subscribe(String areaId, {List<String>? propertyTypes}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final alert = await _subscribe.call(areaId);
+      final alert = await _subscribe.call(areaId, propertyTypes: propertyTypes);
       state = state.copyWith(
         alerts: [alert, ...state.alerts],
         isLoading: false,

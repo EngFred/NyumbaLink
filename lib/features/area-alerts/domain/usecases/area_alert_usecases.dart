@@ -9,10 +9,11 @@ class GetMyAreaAlerts {
 }
 
 class SubscribeToAreaAlert {
-  final AreaAlertRepository repository;
-  const SubscribeToAreaAlert(this.repository);
+  const SubscribeToAreaAlert(this._repo);
+  final AreaAlertRepository _repo;
 
-  Future<AreaAlert> call(String areaId) => repository.subscribe(areaId);
+  Future<AreaAlert> call(String areaId, {List<String>? propertyTypes}) =>
+      _repo.subscribe(areaId, propertyTypes: propertyTypes);
 }
 
 class UnsubscribeFromAreaAlert {

@@ -1,40 +1,42 @@
 import '../../domain/entities/area_alert.dart';
 
-class AreaAlertModel {
-  final String id;
-  final String areaId;
-  final String areaName;
-  final String districtName;
-  final DateTime createdAt;
-
+class AreaAlertModel extends AreaAlert {
   const AreaAlertModel({
-    required this.id,
-    required this.areaId,
-    required this.areaName,
-    required this.districtName,
-    required this.createdAt,
+    required super.areaId,
+    required super.areaName,
+    required super.districtName,
+    required super.createdAt,
+    super.propertyTypes,
   });
 
   factory AreaAlertModel.fromJson(Map<String, dynamic> json) {
-    final area = json['area'] as Map<String, dynamic>? ?? {};
-    final district = area['district'] as Map<String, dynamic>? ?? {};
+    final area = json['area'] as Map<String, dynamic>;
+    final district = area['district'] as Map<String, dynamic>;
+
+    // propertyTypes arrives as a comma-separated string from TypeORM
+    // simple-array, or null if the user subscribed to all types.
+    final rawTypes = json['propertyTypes'];
+    List<String>? types;
+    if (rawTypes is String && rawTypes.isNotEmpty) {
+      types = rawTypes.split(',').map((t) => t.trim()).toList();
+    } else if (rawTypes is List) {
+      types = rawTypes.cast<String>();
+    }
 
     return AreaAlertModel(
-      id: json['id'] as String,
-      areaId: json['areaId'] as String,
-      areaName: area['name'] as String? ?? '',
-      districtName: district['name'] as String? ?? '',
-      createdAt:
-          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-          DateTime.now(),
+      areaId: area['id'] as String,
+      areaName: area['name'] as String,
+      districtName: district['name'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      propertyTypes: types,
     );
   }
 
   AreaAlert toEntity() => AreaAlert(
-    id: id,
     areaId: areaId,
     areaName: areaName,
     districtName: districtName,
     createdAt: createdAt,
+    propertyTypes: propertyTypes,
   );
 }

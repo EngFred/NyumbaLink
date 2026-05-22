@@ -14,8 +14,14 @@ class AreaAlertRepositoryImpl implements AreaAlertRepository {
   }
 
   @override
-  Future<AreaAlert> subscribe(String areaId) async {
-    final model = await remoteDataSource.subscribe(areaId);
+  Future<AreaAlert> subscribe(
+    String areaId, {
+    List<String>? propertyTypes,
+  }) async {
+    final model = await remoteDataSource.subscribe(
+      areaId,
+      propertyTypes: propertyTypes,
+    );
     return model.toEntity();
   }
 

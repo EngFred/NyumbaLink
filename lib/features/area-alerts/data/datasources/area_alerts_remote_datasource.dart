@@ -21,10 +21,19 @@ class AreaAlertsRemoteDataSource {
         .toList();
   }
 
-  Future<AreaAlertModel> subscribe(String areaId) async {
+  Future<AreaAlertModel> subscribe(
+    String areaId, {
+    List<String>? propertyTypes,
+  }) async {
     final res = await _dio.post<Map<String, dynamic>>(
       '/user-area-alerts',
-      data: {'areaId': areaId},
+      data: {
+        'areaId': areaId,
+        // Omit the key entirely when subscribing to all types —
+        // the backend treats a missing / empty array as null (all types).
+        if (propertyTypes != null && propertyTypes.isNotEmpty)
+          'propertyTypes': propertyTypes,
+      },
     );
     return AreaAlertModel.fromJson(res.data!);
   }
