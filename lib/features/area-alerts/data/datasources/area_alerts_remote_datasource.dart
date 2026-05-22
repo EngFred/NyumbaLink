@@ -38,6 +38,21 @@ class AreaAlertsRemoteDataSource {
     return AreaAlertModel.fromJson(res.data!);
   }
 
+  Future<AreaAlertModel> updateSubscription(
+    String areaId, {
+    List<String>? propertyTypes,
+  }) async {
+    final res = await _dio.patch<Map<String, dynamic>>(
+      '/user-area-alerts/$areaId',
+      data: {
+        'propertyTypes': (propertyTypes != null && propertyTypes.isNotEmpty)
+            ? propertyTypes
+            : null,
+      },
+    );
+    return AreaAlertModel.fromJson(res.data!);
+  }
+
   Future<void> unsubscribe(String areaId) async {
     await _dio.delete('/user-area-alerts/$areaId');
   }

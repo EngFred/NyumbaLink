@@ -157,6 +157,15 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
                     onUnsubscribe: _deletingId != null
                         ? null
                         : () => _unsubscribe(alert),
+                    // ── NEW: Open sheet in edit mode ─────────────────────────
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AddAreaSheet(existingAlert: alert),
+                      );
+                    },
                   );
                 },
               ),

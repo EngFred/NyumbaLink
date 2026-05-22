@@ -22,3 +22,10 @@ class UnsubscribeFromAreaAlert {
 
   Future<void> call(String areaId) => repository.unsubscribe(areaId);
 }
+
+class UpdateAreaAlert {
+  const UpdateAreaAlert(this._repo);
+  final AreaAlertRepository _repo;
+  Future<AreaAlert> call(String areaId, {List<String>? propertyTypes}) =>
+      _repo.update(areaId, propertyTypes: propertyTypes);
+}

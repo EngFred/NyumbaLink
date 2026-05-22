@@ -10,11 +10,13 @@ class AlertTile extends StatelessWidget {
     super.key,
     required this.alert,
     required this.onUnsubscribe,
+    this.onTap,
     this.isDeleting = false,
   });
 
   final AreaAlert alert;
   final VoidCallback? onUnsubscribe;
+  final VoidCallback? onTap;
   final bool isDeleting;
 
   @override
@@ -22,80 +24,84 @@ class AlertTile extends StatelessWidget {
     final hasTypes =
         alert.propertyTypes != null && alert.propertyTypes!.isNotEmpty;
 
-    return Container(
+    return Material(
       color: AppColors.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.notifications_active_outlined,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
-          const Gap(16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  alert.areaName,
-                  style: AppTextStyles.h4.copyWith(fontSize: 16),
+      child: InkWell(
+        onTap: isDeleting ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                const Gap(4),
-                Text(
-                  alert.districtName,
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                child: const Icon(
+                  Icons.notifications_active_outlined,
+                  color: AppColors.primary,
+                  size: 22,
                 ),
-
-                // ── Property Types Chips ─────────────────────────────────────
-                if (hasTypes) ...[
-                  const Gap(8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: alert.propertyTypes!
-                        .map((type) => _TypeChip(label: type))
-                        .toList(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // UI Polish: Show inline deletion spinner
-          isDeleting
-              ? const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.error,
+              ),
+              const Gap(16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      alert.areaName,
+                      style: AppTextStyles.h4.copyWith(fontSize: 16),
                     ),
-                  ),
-                )
-              : IconButton(
-                  onPressed: onUnsubscribe,
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    // Grey out icon if disabled (onUnsubscribe == null)
-                    color: onUnsubscribe == null
-                        ? AppColors.grey200
-                        : AppColors.grey400,
-                  ),
-                  tooltip: 'Remove alert',
-                  highlightColor: AppColors.error.withOpacity(0.1),
+                    const Gap(4),
+                    Text(
+                      alert.districtName,
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+
+                    // ── Property Types Chips ─────────────────────────────────────
+                    if (hasTypes) ...[
+                      const Gap(10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: alert.propertyTypes!
+                            .map((type) => _TypeChip(label: type))
+                            .toList(),
+                      ),
+                    ],
+                  ],
                 ),
-        ],
+              ),
+              // UI Polish: Show inline deletion spinner
+              isDeleting
+                  ? const Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    )
+                  : IconButton(
+                      onPressed: onUnsubscribe,
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: onUnsubscribe == null
+                            ? AppColors.grey200
+                            : AppColors.grey400,
+                      ),
+                      tooltip: 'Remove alert',
+                      highlightColor: AppColors.error.withOpacity(0.1),
+                    ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -128,7 +134,6 @@ class _TypeChip extends StatelessWidget {
   }
 
   String _formatTypeLabel(String value) {
-    // Optional: Convert enum-like values to readable labels
     switch (value) {
       case 'RESIDENTIAL_HOUSE':
         return 'House';
