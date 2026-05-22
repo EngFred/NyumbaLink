@@ -33,7 +33,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Foreground FCM listener.
+  // Foreground FCM listener + background tap handler.
   FcmService().setupForegroundHandler();
 
   // Lock to portrait — rental browsing app doesn't need landscape.
@@ -62,6 +62,14 @@ void main() async {
       child: const RentoraApp(),
     ),
   );
+
+  // ── Terminated (cold-start) notification tap ──────────────────────────────
+  // Must run after runApp() so GoRouter is fully mounted before we navigate.
+  // addPostFrameCallback guarantees the first frame — and therefore the
+  // navigator — is ready before handleInitialMessage() tries to push a route.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    FcmService().handleInitialMessage();
+  });
 }
 
 class RentoraApp extends StatelessWidget {

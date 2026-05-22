@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/core/router/router_key.dart';
 
 import 'package:rentora/features/account/presentation/pages/about_page.dart';
 import 'package:rentora/features/bookings/presentation/pages/booking_detail_page.dart';
@@ -25,6 +26,7 @@ import '../constants/app_constants.dart';
 import '../widgets/main_shell.dart';
 
 final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: AppRoutes.splash,
   debugLogDiagnostics: true,
   routes: [
