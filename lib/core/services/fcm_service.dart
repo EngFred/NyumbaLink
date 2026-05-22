@@ -36,6 +36,8 @@ class FcmService {
   );
 
   static bool _localNotificationsInitialised = false;
+  static bool _foregroundHandlerSetup =
+      false; // ← Prevents duplicate listeners on hot restart
 
   // ── Public API ───────────────────────────────────────────────────────────
 
@@ -123,6 +125,9 @@ class FcmService {
   ///   3. Terminated  — app is fully closed; handled separately in
   ///                    [handleInitialMessage] which must be called after runApp().
   void setupForegroundHandler() {
+    if (_foregroundHandlerSetup) return; // ← Guard against duplicate listeners
+    _foregroundHandlerSetup = true; // ← Mark as setup before registering
+
     // ── 1. Foreground: show a local banner ──────────────────────────────────
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
