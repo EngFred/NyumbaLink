@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../../domain/repositories/booking_repository.dart';
+import '../../domain/usecases/booking_usecases.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -42,11 +43,16 @@ class MyBookingsState {
 // Riverpod recreates this notifier whenever isAuthenticated changes, which
 // covers app start (checkAuthStatus), login, and register — all automatically.
 
+final clearLocalBookingsUseCaseProvider = Provider(
+  (ref) => ClearLocalBookingsUseCase(ref.watch(bookingRepositoryProvider)),
+);
+
 final myBookingsProvider =
     StateNotifierProvider<MyBookingsNotifier, MyBookingsState>((ref) {
       final isAuthenticated = ref.watch(authProvider).isAuthenticated;
       final notifier = MyBookingsNotifier(
         ref.watch(bookingRepositoryProvider),
+        ref.watch(clearLocalBookingsUseCaseProvider),
         isAuthenticated,
       );
 
@@ -56,8 +62,10 @@ final myBookingsProvider =
         // in sync without requiring the user to log out and back in.
         notifier.syncAndLoad();
       } else {
-        // Guest: just read local storage.
-        notifier.load();
+        // On logout, isAuthenticated flips to false and Riverpod recreates
+        // this notifier — clearAndLoad() wipes the local cache before
+        // displaying the empty guest state.
+        notifier.clearAndLoad();
       }
 
       return notifier;
@@ -66,10 +74,14 @@ final myBookingsProvider =
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class MyBookingsNotifier extends StateNotifier<MyBookingsState> {
-  MyBookingsNotifier(this._repository, this._isAuthenticated)
-    : super(const MyBookingsState());
+  MyBookingsNotifier(
+    this._repository,
+    this._clearLocalBookingsUseCase,
+    this._isAuthenticated,
+  ) : super(const MyBookingsState());
 
   final BookingRepository _repository;
+  final ClearLocalBookingsUseCase _clearLocalBookingsUseCase;
   final bool _isAuthenticated;
 
   // ── Read from local (always) ──────────────────────────────────────────────
@@ -104,6 +116,15 @@ class MyBookingsNotifier extends StateNotifier<MyBookingsState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  /// Clears locally cached bookings then loads the (now empty) local list.
+  /// Called when the provider detects a transition to the unauthenticated
+  /// state so that a guest session never sees a previous user's bookings.
+  Future<void> clearAndLoad() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    await _clearLocalBookingsUseCase();
+    await load();
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────

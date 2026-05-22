@@ -56,11 +56,10 @@ class SavedPage extends ConsumerWidget {
 
           // ── Content ───────────────────────────────────────────────────────
           if (list.isEmpty)
-            // UX POLISH: Changed from SliverFillRemaining to SliverToBoxAdapter
-            // so it flows naturally below the banner without awkward centering.
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 48.0, bottom: 48.0),
+            // ── NEW PRO FIX: SliverFillRemaining perfectly centers the empty state ──
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
                 child: AppEmptyState(
                   icon: Icons.favorite_border_rounded,
                   title: 'No saved spaces yet',

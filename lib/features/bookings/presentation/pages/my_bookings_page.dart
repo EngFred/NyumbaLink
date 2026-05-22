@@ -80,11 +80,11 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                 ),
               ),
 
-            // UX POLISH: Switched to SliverToBoxAdapter with padding
+            // ── NEW PRO FIX: SliverFillRemaining perfectly centers content in a scroll view ──
             if (state.bookings.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 48.0, bottom: 48.0),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
                   child: AppEmptyState(
                     icon: Icons.receipt_long_rounded,
                     title: isAuthenticated
@@ -97,9 +97,9 @@ class _MyBookingsPageState extends ConsumerState<MyBookingsPage> {
                 ),
               )
             else if (filtered.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 64.0, bottom: 48.0),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

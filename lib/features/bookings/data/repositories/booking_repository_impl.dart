@@ -105,4 +105,7 @@ class BookingRepositoryImpl implements BookingRepository {
       await _localDataSource.upsertFromRemote(remoteAsLocal);
     } catch (_) {}
   }
+
+  @override
+  Future<void> clearLocalBookings() => _localDataSource.clear();
 }

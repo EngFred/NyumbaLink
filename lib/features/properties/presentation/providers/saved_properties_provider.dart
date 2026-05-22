@@ -38,12 +38,18 @@ final savedPropertiesProvider =
         getFavorites: ref.watch(getFavoritesUseCaseProvider),
         toggleFavoriteUseCase: ref.watch(toggleFavoriteUseCaseProvider),
         syncFavoritesUseCase: ref.watch(syncFavoritesUseCaseProvider),
+        clearLocalFavoritesUseCase: ref.watch(
+          clearLocalFavoritesUseCaseProvider,
+        ),
       );
 
       if (isAuthenticated) {
         notifier.syncData();
       } else {
-        notifier.load();
+        // On logout, isAuthenticated flips to false and Riverpod recreates
+        // this notifier — clearAndLoad() wipes the local cache before
+        // displaying the empty guest state.
+        notifier.clearAndLoad();
       }
 
       return notifier;
@@ -57,12 +63,14 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     required this.getFavorites,
     required this.toggleFavoriteUseCase,
     required this.syncFavoritesUseCase,
+    required this.clearLocalFavoritesUseCase,
   }) : super(const SavedPropertiesState());
 
   final bool isAuthenticated;
   final GetFavoritesUseCase getFavorites;
   final ToggleFavoriteUseCase toggleFavoriteUseCase;
   final SyncFavoritesUseCase syncFavoritesUseCase;
+  final ClearLocalFavoritesUseCase clearLocalFavoritesUseCase;
 
   /// One pending timer per propertyId.  Any new tap cancels the old timer.
   final Map<String, Timer> _pendingTimers = {};
@@ -106,6 +114,15 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     } catch (_) {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  /// Clears locally cached favourites then loads the (now empty) local list.
+  /// Called when the provider detects a transition to the unauthenticated
+  /// state so that a guest session never sees a previous user's saved items.
+  Future<void> clearAndLoad() async {
+    state = state.copyWith(isLoading: true);
+    await clearLocalFavoritesUseCase();
+    await load();
   }
 
   /// Instantly updates the UI (optimistic) and debounces the network call.

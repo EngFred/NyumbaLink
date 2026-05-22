@@ -50,3 +50,12 @@ class GetMyBookingsUseCase {
     return _repo.getMyBookings(isAuthenticated);
   }
 }
+
+/// Wipes locally cached bookings. Called when the user logs out so the
+/// next guest session starts with a clean slate.
+class ClearLocalBookingsUseCase {
+  const ClearLocalBookingsUseCase(this._repo);
+  final BookingRepository _repo;
+
+  Future<void> call() => _repo.clearLocalBookings();
+}

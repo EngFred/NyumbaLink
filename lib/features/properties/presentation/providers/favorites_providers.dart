@@ -42,3 +42,7 @@ final toggleFavoriteUseCaseProvider = Provider<ToggleFavoriteUseCase>((ref) {
 final syncFavoritesUseCaseProvider = Provider<SyncFavoritesUseCase>((ref) {
   return SyncFavoritesUseCase(ref.watch(favoritesRepositoryProvider));
 });
+
+final clearLocalFavoritesUseCaseProvider = Provider(
+  (ref) => ClearLocalFavoritesUseCase(ref.watch(favoritesRepositoryProvider)),
+);

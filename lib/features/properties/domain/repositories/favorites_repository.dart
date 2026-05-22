@@ -10,4 +10,7 @@ abstract class FavoritesRepository {
   });
 
   Future<void> syncFavorites();
+
+  /// Wipes all locally cached favourites (called on logout).
+  Future<void> clearLocalFavorites();
 }

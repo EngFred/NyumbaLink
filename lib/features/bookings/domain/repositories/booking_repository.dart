@@ -22,4 +22,7 @@ abstract class BookingRepository {
   Future<List<SavedBooking>> getMyBookings(bool isAuthenticated);
   Future<void> syncGuestData();
   Future<void> syncFromServer();
+
+  /// Wipes all locally cached bookings (called on logout).
+  Future<void> clearLocalBookings();
 }

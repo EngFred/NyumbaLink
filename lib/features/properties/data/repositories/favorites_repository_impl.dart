@@ -52,6 +52,9 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     }
   }
 
+  @override
+  Future<void> clearLocalFavorites() => _local.saveProperties([]);
+
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   Future<bool> _toggleLocal(SavedProperty property) async {

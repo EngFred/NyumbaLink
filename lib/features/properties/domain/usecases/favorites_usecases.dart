@@ -23,3 +23,12 @@ class SyncFavoritesUseCase {
 
   Future<void> call() => _repository.syncFavorites();
 }
+
+/// Wipes locally cached favourites. Called when the user logs out so the
+/// next guest session starts with a clean slate.
+class ClearLocalFavoritesUseCase {
+  const ClearLocalFavoritesUseCase(this._repository);
+  final FavoritesRepository _repository;
+
+  Future<void> call() => _repository.clearLocalFavorites();
+}
