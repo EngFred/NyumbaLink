@@ -14,6 +14,7 @@ import '../providers/auth_provider.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({super.key});
+
   @override
   ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
@@ -57,15 +58,16 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const AuthHero(
-            title: 'Reset Password',
-            subtitle: 'Enter your email to receive a recovery code',
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
+      // ── FIX: SingleChildScrollView wraps the ENTIRE body ──
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const AuthHero(
+              title: 'Reset Password',
+              subtitle: 'Enter your email to receive a recovery code',
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -106,8 +108,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

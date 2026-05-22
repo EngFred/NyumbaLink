@@ -18,6 +18,7 @@ import '../providers/auth_provider.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
+
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
@@ -76,15 +77,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const AuthHero(
-            title: 'Create account',
-            subtitle: 'Find your perfect home in Uganda',
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      // ── FIX: SingleChildScrollView wraps the ENTIRE body ──
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const AuthHero(
+              title: 'Create account',
+              subtitle: 'Find your perfect home in Uganda',
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -143,7 +145,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
-                              // ✅ Delegates to the domain validator
                               validator: PasswordValidator.validate,
                             ),
                             AuthField(
@@ -191,7 +192,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                     const Gap(24),
 
-                    // ── Social Auth ───────────────────────────────────────
                     SocialAuthButtons(
                       isLoading: isLoading,
                       onGoogleTap: _googleSignIn,
@@ -211,8 +211,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

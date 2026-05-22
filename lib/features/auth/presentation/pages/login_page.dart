@@ -18,6 +18,7 @@ import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
+
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
@@ -67,15 +68,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const AuthHero(
-            title: 'Welcome back',
-            subtitle: 'Sign in to continue your search',
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      // ── FIX: SingleChildScrollView wraps the ENTIRE body ──
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const AuthHero(
+              title: 'Welcome back',
+              subtitle: 'Sign in to continue your search',
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -101,7 +103,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
 
-                    // UX Polish: Removed the Gap(16) here because AuthField already handles bottom spacing
                     AuthSection(
                           children: [
                             AuthField(
@@ -135,7 +136,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.05, end: 0),
 
-                    // Slightly negative transform to pull the "Forgot Password" link closer to the input
                     Transform.translate(
                       offset: const Offset(0, -12),
                       child: Align(
@@ -168,7 +168,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                     const Gap(24),
 
-                    // ── Social Auth ───────────────────────────────────────
                     SocialAuthButtons(
                       isLoading: isLoading,
                       onGoogleTap: _googleSignIn,
@@ -188,8 +187,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

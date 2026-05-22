@@ -69,15 +69,16 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const AuthHero(
-            title: 'Create New Password',
-            subtitle: 'Enter the 6-digit code sent to your email',
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      // ── FIX: SingleChildScrollView wraps the ENTIRE body ──
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const AuthHero(
+              title: 'Create New Password',
+              subtitle: 'Enter the 6-digit code sent to your email',
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -124,7 +125,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                               ),
-                              // ✅ Delegates to the domain validator
                               validator: PasswordValidator.validate,
                             ),
                             AuthField(
@@ -173,8 +173,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
