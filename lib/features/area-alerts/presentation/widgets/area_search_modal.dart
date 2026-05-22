@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:rentora/features/area-alerts/data/datasources/area_alerts_remote_datasource.dart';
 import 'package:rentora/features/area-alerts/data/models/area_option.dart';
+import 'package:rentora/features/area-alerts/presentation/providers/area_alerts_provider.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
-import '../providers/area_alerts_provider.dart';
 
 class AreaSearchModal extends ConsumerStatefulWidget {
   const AreaSearchModal({super.key, this.initialArea});
+
   final AreaOption? initialArea;
 
   @override
@@ -44,7 +45,6 @@ class _AreaSearchModalState extends ConsumerState<AreaSearchModal> {
 
   @override
   Widget build(BuildContext context) {
-    // ── NEW PRO FIX: Grab the list of areas the user is already subscribed to ──
     final subscribedIds = ref
         .watch(areaAlertsProvider)
         .alerts
@@ -63,7 +63,6 @@ class _AreaSearchModalState extends ConsumerState<AreaSearchModal> {
               )
               .toList();
 
-    // Grouping logic
     final Map<String, List<AreaOption>> grouped = {};
     for (final area in filtered) {
       grouped.putIfAbsent(area.districtName, () => []).add(area);
@@ -106,15 +105,16 @@ class _AreaSearchModalState extends ConsumerState<AreaSearchModal> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        CloseButton(color: AppColors.grey500),
+                        const CloseButton(color: AppColors.grey500),
                       ],
                     ),
                     const Gap(12),
                     TextField(
-                      autofocus: true,
+                      autofocus:
+                          false, // ── PRO UX FIX: Keyboard only shows when user taps ──
                       decoration: InputDecoration(
                         hintText: 'Search by area or district...',
-                        hintStyle: TextStyle(color: AppColors.textHint),
+                        hintStyle: const TextStyle(color: AppColors.textHint),
                         prefixIcon: const Icon(
                           Icons.search_rounded,
                           size: 22,
@@ -174,7 +174,6 @@ class _AreaSearchModalState extends ConsumerState<AreaSearchModal> {
                               ),
                             ),
                             ...entry.value.map((area) {
-                              // ── NEW PRO FIX: Check subscription state ──
                               final isAlreadySubscribed = subscribedIds
                                   .contains(area.id);
                               final isSelected =
@@ -229,8 +228,6 @@ class _AreaSearchModalState extends ConsumerState<AreaSearchModal> {
                                         color: AppColors.primary,
                                       )
                                     : null,
-
-                                // Disable the tap entirely if they are already subscribed
                                 onTap: isAlreadySubscribed
                                     ? null
                                     : () => Navigator.pop(context, area),

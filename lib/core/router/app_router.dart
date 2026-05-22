@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:rentora/core/router/router_key.dart';
 
 import 'package:rentora/features/account/presentation/pages/about_page.dart';
+import 'package:rentora/features/area-alerts/domain/entities/area_alert.dart';
+import 'package:rentora/features/area-alerts/presentation/pages/add_area_alert_page.dart';
 import 'package:rentora/features/bookings/presentation/pages/booking_detail_page.dart';
 import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/account/presentation/pages/change_password_page.dart';
@@ -224,6 +226,18 @@ final GoRouter appRouter = GoRouter(
         child: const AreaAlertsPage(),
         transitionsBuilder: _slideUpTransition,
       ),
+    ),
+    GoRoute(
+      path: '/add-area-alert',
+      name: 'addAreaAlert',
+      pageBuilder: (context, state) {
+        final alert = state.extra as AreaAlert?; // Used for edit mode
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: AddAreaAlertPage(existingAlert: alert),
+          transitionsBuilder: _slideUpTransition,
+        );
+      },
     ),
     GoRoute(
       path: '/edit-profile',

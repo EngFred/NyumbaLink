@@ -9,7 +9,6 @@ import '../../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/area_alert.dart';
 import '../providers/area_alerts_provider.dart';
-import '../widgets/add_area_sheet.dart';
 import '../widgets/alert_tile.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/unauthenticated_view.dart';
@@ -159,12 +158,10 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
                         : () => _unsubscribe(alert),
                     // ── NEW: Open sheet in edit mode ─────────────────────────
                     onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => AddAreaSheet(existingAlert: alert),
-                      );
+                      context.push(
+                        '/add-area-alert',
+                        extra: alert,
+                      ); // Edit mode
                     },
                   );
                 },
@@ -235,7 +232,7 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
   Future<void> _onAddAreaTapped(BuildContext context) async {
     final allowed = await _ensureNotificationPermission();
     if (!allowed || !mounted) return;
-    _showAddAreaSheet(context);
+    context.push('/add-area-alert');
   }
 
   Future<void> _unsubscribe(AreaAlert alert) async {
@@ -284,14 +281,5 @@ class _AreaAlertsPageState extends ConsumerState<AreaAlertsPage>
         }
       }
     }
-  }
-
-  void _showAddAreaSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddAreaSheet(),
-    );
   }
 }
