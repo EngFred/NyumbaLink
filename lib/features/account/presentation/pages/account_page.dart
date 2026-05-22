@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:rentora/features/account/presentation/widgets/account/guest_view.dart';
@@ -66,14 +65,16 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+
     final Widget baseContent;
 
     if (auth.isAuthenticated && auth.user != null) {
       baseContent = Column(
         children: [
-          // Nudge banner — renders nothing when notifications are already on.
+          // Nudge banner — renders nothing (and adds no gap) when notifications are already on.
           const NotificationNudgeBanner(),
-          const Gap(12),
+
+          // REMOVED THE GAP HERE
           Expanded(
             child: ProfileView(
               user: auth.user!,
@@ -91,7 +92,6 @@ class AccountPage extends ConsumerWidget {
     return Stack(
       children: [
         baseContent,
-
         // This existing overlay will now gracefully appear during logout!
         if (auth.isLoading)
           Positioned.fill(

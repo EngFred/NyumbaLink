@@ -39,11 +39,12 @@ class _NotificationNudgeBannerState extends State<NotificationNudgeBanner> {
 
   @override
   Widget build(BuildContext context) {
-    // Don't flash anything while we're checking.
+    // Don't flash anything (and don't consume space) while checking or hidden.
     if (_show != true) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      // Handles its own spacing so the parent layout stays perfectly flush when hidden
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E7),
