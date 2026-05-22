@@ -38,18 +38,17 @@ final savedPropertiesProvider =
         getFavorites: ref.watch(getFavoritesUseCaseProvider),
         toggleFavoriteUseCase: ref.watch(toggleFavoriteUseCaseProvider),
         syncFavoritesUseCase: ref.watch(syncFavoritesUseCaseProvider),
-        clearLocalFavoritesUseCase: ref.watch(
-          clearLocalFavoritesUseCaseProvider,
-        ),
       );
 
       if (isAuthenticated) {
         notifier.syncData();
       } else {
-        // On logout, isAuthenticated flips to false and Riverpod recreates
-        // this notifier — clearAndLoad() wipes the local cache before
-        // displaying the empty guest state.
-        notifier.clearAndLoad();
+        // Guest cold-start OR post-logout: just read SharedPreferences.
+        // Clearing is handled explicitly in AuthNotifier.logout() BEFORE
+        // this rebuild fires, so by the time load() runs here the
+        // SharedPreferences are already empty on logout, and still intact
+        // on a normal guest cold-start.
+        notifier.load();
       }
 
       return notifier;
@@ -63,14 +62,12 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
     required this.getFavorites,
     required this.toggleFavoriteUseCase,
     required this.syncFavoritesUseCase,
-    required this.clearLocalFavoritesUseCase,
   }) : super(const SavedPropertiesState());
 
   final bool isAuthenticated;
   final GetFavoritesUseCase getFavorites;
   final ToggleFavoriteUseCase toggleFavoriteUseCase;
   final SyncFavoritesUseCase syncFavoritesUseCase;
-  final ClearLocalFavoritesUseCase clearLocalFavoritesUseCase;
 
   /// One pending timer per propertyId.  Any new tap cancels the old timer.
   final Map<String, Timer> _pendingTimers = {};
@@ -99,6 +96,8 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
         }
       }
 
+      if (!mounted) return; // notifier was disposed mid-flight
+
       if (_pendingTimers.isEmpty) {
         // No pending taps — safe to replace the whole list.
         state = state.copyWith(savedList: list, isLoading: false);
@@ -112,17 +111,9 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
         state = state.copyWith(savedList: merged, isLoading: false);
       }
     } catch (_) {
+      if (!mounted) return; // notifier was disposed mid-flight
       state = state.copyWith(isLoading: false);
     }
-  }
-
-  /// Clears locally cached favourites then loads the (now empty) local list.
-  /// Called when the provider detects a transition to the unauthenticated
-  /// state so that a guest session never sees a previous user's saved items.
-  Future<void> clearAndLoad() async {
-    state = state.copyWith(isLoading: true);
-    await clearLocalFavoritesUseCase();
-    await load();
   }
 
   /// Instantly updates the UI (optimistic) and debounces the network call.
@@ -165,6 +156,7 @@ class SavedPropertiesNotifier extends StateNotifier<SavedPropertiesState> {
   Future<void> syncData() async {
     state = state.copyWith(isLoading: true);
     await syncFavoritesUseCase();
+    if (!mounted) return; // notifier was disposed mid-flight
     await load();
   }
 

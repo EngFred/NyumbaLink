@@ -4,7 +4,10 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_entities.dart';
 import '../../domain/usecases/auth_usecases.dart';
 import '../../../properties/presentation/providers/saved_properties_provider.dart';
+import '../../../properties/domain/usecases/favorites_usecases.dart';
+import '../../../properties/presentation/providers/favorites_providers.dart';
 import '../../../bookings/data/repositories/booking_repository_impl.dart';
+import '../../../bookings/domain/usecases/booking_usecases.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/services/fcm_service.dart';
 
@@ -40,6 +43,17 @@ final googleSignInUseCaseProvider = Provider(
 );
 final appleSignInUseCaseProvider = Provider(
   (ref) => AppleSignInUseCase(ref.watch(authRepositoryProvider)),
+);
+
+// ── Clear-on-logout use cases ─────────────────────────────────────────────────
+// Defined here to avoid circular imports. Both booking and favorites files
+// do not import auth_provider, so this direction is safe.
+
+final clearLocalFavoritesUseCaseProvider = Provider(
+  (ref) => ClearLocalFavoritesUseCase(ref.watch(favoritesRepositoryProvider)),
+);
+final clearLocalBookingsUseCaseProvider = Provider(
+  (ref) => ClearLocalBookingsUseCase(ref.watch(bookingRepositoryProvider)),
 );
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -83,6 +97,8 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
     ref.watch(deleteAccountUseCaseProvider),
     ref.watch(googleSignInUseCaseProvider),
     ref.watch(appleSignInUseCaseProvider),
+    ref.watch(clearLocalFavoritesUseCaseProvider),
+    ref.watch(clearLocalBookingsUseCaseProvider),
     ref,
   )..checkAuthStatus();
 });
@@ -102,6 +118,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     this._deleteAccountUseCase,
     this._googleSignInUseCase,
     this._appleSignInUseCase,
+    this._clearLocalFavoritesUseCase,
+    this._clearLocalBookingsUseCase,
     this._ref,
   ) : super(const AuthState());
 
@@ -116,6 +134,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final DeleteAccountUseCase _deleteAccountUseCase;
   final GoogleSignInUseCase _googleSignInUseCase;
   final AppleSignInUseCase _appleSignInUseCase;
+  final ClearLocalFavoritesUseCase _clearLocalFavoritesUseCase;
+  final ClearLocalBookingsUseCase _clearLocalBookingsUseCase;
   final Ref _ref;
 
   Future<void> checkAuthStatus() async {
@@ -179,8 +199,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // sees the secure logout blur animation, confirming the action worked.
     await Future.delayed(const Duration(milliseconds: 600));
 
-    // 3. Perform the actual logout
+    // 3. Perform the actual logout (invalidates the token on the server)
     await _logoutUseCase();
+
+    // 4. Wipe all locally cached user data so the next guest session starts
+    // with a clean slate. This must happen BEFORE clearUser is set — that
+    // flip triggers provider rebuilds which call load(), and by then
+    // SharedPreferences must already be empty.
+    await Future.wait([
+      _clearLocalFavoritesUseCase(),
+      _clearLocalBookingsUseCase(),
+    ]);
+
+    // 5. Clear the in-memory user → isAuthenticated becomes false →
+    // savedPropertiesProvider and myBookingsProvider rebuild and call
+    // load() which now reads empty SharedPreferences → empty UI ✓
     state = state.copyWith(clearUser: true, isLoading: false);
   }
 
