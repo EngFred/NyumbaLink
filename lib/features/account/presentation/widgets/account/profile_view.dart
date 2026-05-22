@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/account/presentation/widgets/account/delete_account_button.dart';
 import 'package:rentora/features/account/presentation/widgets/account/logout_button.dart';
 import 'package:rentora/features/account/presentation/widgets/account/section_label.dart';
@@ -51,19 +52,49 @@ class ProfileView extends StatelessWidget {
                           label: 'Edit Profile',
                           onTap: () => context.push('/edit-profile'),
                         ),
-                        // Only LOCAL accounts have a password to change
-                        if (!user.isSocialAuth)
-                          SettingsTile(
-                            icon: Icons.lock_outline_rounded,
-                            label: 'Change Password',
-                            onTap: () => context.push('/change-password'),
-                          ),
+                        // ── PRO UX: Always visible, dynamically disabled ──
+                        SettingsTile(
+                          icon: Icons.lock_outline_rounded,
+                          label: 'Change Password',
+                          onTap: user.isSocialAuth
+                              ? () {} // Disabled action
+                              : () => context.push('/change-password'),
+                        ),
                       ],
                     )
                     .animate(delay: 80.ms)
                     .fadeIn(duration: 300.ms)
                     .slideY(begin: 0.04, end: 0),
-                const Gap(20),
+
+                // ── PRO UX: Contextual explanation for disabled state ──
+                if (user.isSocialAuth) ...[
+                  const Gap(10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: AppColors.textHint.withOpacity(0.8),
+                        ),
+                        const Gap(6),
+                        Expanded(
+                          child: Text(
+                            'Password changes are disabled because you signed in with a social account.',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textHint,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate(delay: 100.ms).fadeIn(duration: 300.ms),
+                ],
+
+                const Gap(24),
 
                 const SectionLabel('Support'),
                 const Gap(10),
