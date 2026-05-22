@@ -51,11 +51,13 @@ class ProfileView extends StatelessWidget {
                           label: 'Edit Profile',
                           onTap: () => context.push('/edit-profile'),
                         ),
-                        SettingsTile(
-                          icon: Icons.lock_outline_rounded,
-                          label: 'Change Password',
-                          onTap: () => context.push('/change-password'),
-                        ),
+                        // Only LOCAL accounts have a password to change
+                        if (!user.isSocialAuth)
+                          SettingsTile(
+                            icon: Icons.lock_outline_rounded,
+                            label: 'Change Password',
+                            onTap: () => context.push('/change-password'),
+                          ),
                       ],
                     )
                     .animate(delay: 80.ms)

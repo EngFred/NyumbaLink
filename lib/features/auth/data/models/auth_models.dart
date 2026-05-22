@@ -6,6 +6,7 @@ class AuthUserModel extends AuthUser {
     required super.name,
     required super.email,
     required super.role,
+    required super.provider,
   });
 
   factory AuthUserModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +15,7 @@ class AuthUserModel extends AuthUser {
       name: json['name'] as String,
       email: json['email'] as String,
       role: json['role'] as String,
+      provider: json['provider'] as String? ?? 'LOCAL',
     );
   }
 
@@ -22,6 +24,7 @@ class AuthUserModel extends AuthUser {
     'name': name,
     'email': email,
     'role': role,
+    'provider': provider,
   };
 }
 
