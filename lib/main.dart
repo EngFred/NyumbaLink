@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:rentora/core/providers/theme_provider.dart';
 import 'package:rentora/core/services/fcm_service.dart';
-import 'package:rentora/features/properties/presentation/providers/favorites_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 

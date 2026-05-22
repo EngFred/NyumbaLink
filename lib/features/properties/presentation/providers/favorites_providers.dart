@@ -1,16 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/providers/theme_provider.dart';
 import '../../data/datasources/favorites_local_datasource.dart';
 import '../../data/datasources/favorites_remote_datasource.dart';
 import '../../data/repositories/favorites_repository_impl.dart';
 import '../../domain/repositories/favorites_repository.dart';
 import '../../domain/usecases/favorites_usecases.dart';
-
-// Needs to be overridden in main.dart or initialized beforehand
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('sharedPreferencesProvider must be overridden');
-});
 
 final favoritesLocalDataSourceProvider = Provider<FavoritesLocalDataSource>((
   ref,
