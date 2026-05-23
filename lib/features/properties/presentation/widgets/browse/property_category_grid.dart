@@ -86,8 +86,8 @@ class PropertyCategoryGrid extends StatelessWidget {
           child: SizedBox(
             height: _tileHeight,
             child: _CategoryTile(
-              label: isAll ? 'All' : PropertyTypeHelper.label(type!),
-              icon: isAll ? Icons.apps_rounded : PropertyTypeHelper.icon(type!),
+              label: isAll ? 'All' : PropertyTypeHelper.label(type),
+              icon: isAll ? Icons.apps_rounded : PropertyTypeHelper.icon(type),
               isSelected: isSelected,
               onTap: () => isAll
                   ? onTypeSelected(null)
