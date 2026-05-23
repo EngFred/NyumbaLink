@@ -3,16 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rentora/features/account/presentation/widgets/about/section_header.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../widgets/about/section_header.dart';
 import '../widgets/about/action_tile.dart';
 import '../widgets/about/animated_section.dart';
 import '../widgets/about/feature_row.dart';
 
-class AboutPage extends StatelessWidget {
+import '../../../../core/providers/app_version_provider.dart';
+
+class AboutPage extends ConsumerWidget {
   const AboutPage({super.key});
 
   Future<void> _launch(String url) async {
@@ -24,7 +27,10 @@ class AboutPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch live app version
+    final version = ref.watch(appVersionProvider).valueOrNull ?? '...';
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
@@ -101,7 +107,7 @@ class AboutPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Version 1.0.0',
+                    'Version $version',
                     style: AppTextStyles.labelSm.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
@@ -237,6 +243,7 @@ class AboutPage extends StatelessWidget {
 
 class _Divider extends StatelessWidget {
   const _Divider();
+
   @override
   Widget build(BuildContext context) {
     return const Divider(height: 1, thickness: 1, color: AppColors.grey100);

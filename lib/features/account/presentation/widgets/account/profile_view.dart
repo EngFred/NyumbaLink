@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:rentora/features/account/presentation/widgets/account/delete_account_button.dart';
 import 'package:rentora/features/account/presentation/widgets/account/logout_button.dart';
@@ -13,7 +14,9 @@ import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../auth/domain/entities/auth_entities.dart';
 import 'profile_header.dart';
 
-class ProfileView extends StatelessWidget {
+import '../../../../../core/providers/app_version_provider.dart';
+
+class ProfileView extends ConsumerWidget {
   const ProfileView({
     super.key,
     required this.user,
@@ -28,7 +31,10 @@ class ProfileView extends StatelessWidget {
   final VoidCallback onAreaAlerts;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Watch live app version
+    final version = ref.watch(appVersionProvider).valueOrNull ?? '...';
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Column(
@@ -52,7 +58,6 @@ class ProfileView extends StatelessWidget {
                           label: 'Edit Profile',
                           onTap: () => context.push('/edit-profile'),
                         ),
-                        // ── PRO UX: Always visible, dynamically disabled ──
                         SettingsTile(
                           icon: Icons.lock_outline_rounded,
                           label: 'Change Password',
@@ -66,7 +71,6 @@ class ProfileView extends StatelessWidget {
                     .fadeIn(duration: 300.ms)
                     .slideY(begin: 0.04, end: 0),
 
-                // ── PRO UX: Contextual explanation for disabled state ──
                 if (user.isSocialAuth) ...[
                   const Gap(10),
                   Padding(
@@ -115,7 +119,7 @@ class ProfileView extends StatelessWidget {
                           label: 'About Rentora',
                           onTap: () => context.push('/about'),
                           trailing: Text(
-                            'v1.0.0',
+                            'v$version',
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.grey500,
                             ),
