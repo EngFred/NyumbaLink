@@ -12,12 +12,12 @@ class _TypeOption {
 }
 
 const _propertyTypes = [
-  _TypeOption('RESIDENTIAL_HOUSE', 'House', Icons.home_outlined),
+  _TypeOption('RESIDENTIAL_HOUSE', 'Rentals', Icons.home_outlined),
   _TypeOption('APARTMENT', 'Apartment', Icons.apartment_outlined),
   _TypeOption('AIRBNB', 'Airbnb', Icons.king_bed_outlined),
-  _TypeOption('OFFICE_SPACE', 'Office', Icons.business_outlined),
-  _TypeOption('BUSINESS_SPACE', 'Business', Icons.storefront_outlined),
-  _TypeOption('HOSTEL', 'Hostel', Icons.school_outlined),
+  _TypeOption('OFFICE_SPACE', 'Office Space', Icons.business_outlined),
+  _TypeOption('BUSINESS_SPACE', 'Business Space', Icons.storefront_outlined),
+  // _TypeOption('HOSTEL', 'Hostel', Icons.school_outlined),
   _TypeOption('HOTEL_LODGE', 'Hotel/Lodge', Icons.hotel_outlined),
 ];
 

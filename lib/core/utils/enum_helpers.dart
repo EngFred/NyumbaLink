@@ -5,11 +5,11 @@ import '../config/feature_flags.dart';
 
 abstract final class PropertyTypeHelper {
   static const _labels = {
-    'RESIDENTIAL_HOUSE': 'House',
+    'RESIDENTIAL_HOUSE': 'Rentals',
     'APARTMENT': 'Apartment',
     'AIRBNB': 'Airbnb',
-    'OFFICE_SPACE': 'Office',
-    'BUSINESS_SPACE': 'Commercial',
+    'OFFICE_SPACE': 'Office Space',
+    'BUSINESS_SPACE': 'Business Space',
     'HOSTEL': 'Hostel',
     'HOTEL_LODGE': 'Hotel / Lodge',
   };
