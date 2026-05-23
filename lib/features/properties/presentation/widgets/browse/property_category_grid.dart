@@ -7,9 +7,10 @@ import '../../../../../core/utils/enum_helpers.dart';
 
 /// A modern, decoupled grid layout for property categories.
 ///
-/// Uses a [Wrap] instead of [GridView] so that when the total item count
-/// doesn't divide evenly into rows (e.g. 7 items at 4-per-row leaves 3),
-/// the trailing row is centered rather than left-aligned and visually broken.
+/// Uses two explicit [Row]s with [Expanded] tiles instead of a [Wrap]/[GridView]
+/// so that each row always fills the full available width. This means the 3 tiles
+/// in the second row are naturally wider than the 4 in the first row — labels
+/// like "Business Space" and "Hotel / Lodge" never truncate.
 class PropertyCategoryGrid extends StatelessWidget {
   const PropertyCategoryGrid({
     super.key,
@@ -20,21 +21,26 @@ class PropertyCategoryGrid extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onTypeSelected;
 
-  // How many tiles to target per row. The actual tile width is calculated
-  // dynamically from available space so this works on any screen size.
-  static const int _perRow = 4;
   static const double _spacing = 10;
+  // Tile height is fixed — width expands to fill the row.
+  static const double _tileHeight = 76;
 
   @override
   Widget build(BuildContext context) {
-    // `final` instead of `const` because PropertyTypeHelper.all is a getter
-    // that filters based on FeatureFlags at runtime — not a compile-time constant.
+    // `final` not `const` — PropertyTypeHelper.all is a runtime getter
+    // that respects FeatureFlags, not a compile-time constant.
     final types = PropertyTypeHelper.all;
 
-    // Build the full ordered list: "All" tile first, then each type.
-    final allItems = <Widget>[];
+    // Build the full flat list: "All" first, then each visible type.
+    final allTypes = <String?>[null, ...types]; // null = "All" sentinel
 
-    // ── NEW FIX: Ensures the background matches the Search Bar perfectly ──
+    // Split into rows of 4. First row gets 4, second row gets the rest.
+    // If Hostel is re-enabled later (8 items total) we get two perfect rows of 4.
+    const firstRowCount = 4;
+    final firstRow = allTypes.take(firstRowCount).toList();
+    final secondRow = allTypes.skip(firstRowCount).toList();
+
+    // ── Ensures the background matches the Search Bar perfectly ──
     return ColoredBox(
       color: AppColors.surface,
       child: Column(
@@ -42,60 +48,18 @@ class PropertyCategoryGrid extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Compute a tile width that fits exactly _perRow columns with
-                // _spacing gaps between them, regardless of screen width.
-                final totalSpacing = _spacing * (_perRow - 1);
-                final tileWidth =
-                    (constraints.maxWidth - totalSpacing) / _perRow;
+            child: Column(
+              children: [
+                // ── Row 1: 4 tiles, equally wide ──────────────────────────
+                _buildRow(firstRow),
 
-                // Tile height follows the same aspect ratio as before (1.15).
-                // childAspectRatio = w/h  →  h = w / ratio
-                final tileHeight = tileWidth / 1.15;
+                const Gap(_spacing),
 
-                allItems.clear();
-
-                // "All" tile
-                allItems.add(
-                  SizedBox(
-                    width: tileWidth,
-                    height: tileHeight,
-                    child: _CategoryTile(
-                      label: 'All',
-                      icon: Icons.apps_rounded,
-                      isSelected: selected == null,
-                      onTap: () => onTypeSelected(null),
-                    ),
-                  ),
-                );
-
-                // One tile per visible property type
-                for (final type in types) {
-                  final isSelected = selected == type;
-                  allItems.add(
-                    SizedBox(
-                      width: tileWidth,
-                      height: tileHeight,
-                      child: _CategoryTile(
-                        label: PropertyTypeHelper.label(type),
-                        icon: PropertyTypeHelper.icon(type),
-                        isSelected: isSelected,
-                        onTap: () => onTypeSelected(isSelected ? null : type),
-                      ),
-                    ),
-                  );
-                }
-
-                // Wrap centers any trailing row that doesn't fill all columns,
-                // e.g. 7 items → row 1: 4 tiles, row 2: 3 tiles centered.
-                return Wrap(
-                  spacing: _spacing,
-                  runSpacing: _spacing,
-                  alignment: WrapAlignment.center,
-                  children: allItems,
-                );
-              },
+                // ── Row 2: remaining tiles — each Expanded to fill width ──
+                // This is the key fix: 3 tiles share the full row width so
+                // "Business Space" and "Hotel / Lodge" never truncate.
+                if (secondRow.isNotEmpty) _buildRow(secondRow),
+              ],
             ),
           ),
 
@@ -104,6 +68,37 @@ class PropertyCategoryGrid extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Builds a full-width row where every tile shares equal width via [Expanded].
+  Widget _buildRow(List<String?> rowTypes) {
+    final tiles = <Widget>[];
+
+    for (var i = 0; i < rowTypes.length; i++) {
+      if (i > 0) tiles.add(const Gap(_spacing));
+
+      final type = rowTypes[i];
+      final isAll = type == null;
+      final isSelected = isAll ? selected == null : selected == type;
+
+      tiles.add(
+        Expanded(
+          child: SizedBox(
+            height: _tileHeight,
+            child: _CategoryTile(
+              label: isAll ? 'All' : PropertyTypeHelper.label(type!),
+              icon: isAll ? Icons.apps_rounded : PropertyTypeHelper.icon(type!),
+              isSelected: isSelected,
+              onTap: () => isAll
+                  ? onTypeSelected(null)
+                  : onTypeSelected(isSelected ? null : type),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(children: tiles);
   }
 }
 
@@ -167,7 +162,8 @@ class _CategoryTile extends StatelessWidget {
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                   fontSize: 10,
                 ),
-                maxLines: 1,
+                // 2 lines so longer labels wrap cleanly on narrower tiles
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
