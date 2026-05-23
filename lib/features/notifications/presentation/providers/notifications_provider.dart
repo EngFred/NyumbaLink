@@ -63,15 +63,28 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
   Future<void> load() async {
     if (!_isAuthenticated) {
+      // Guard: notifier may have been disposed before we even start
+      if (!mounted) return;
       state = state.copyWith(isLoading: false);
       return;
     }
+
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, clearError: true);
+
     try {
       final responses = await Future.wait([
         _dataSource.getNotifications(page: 1),
         _dataSource.getUnreadCount(),
       ]);
+
+      // Guard: user may have navigated away while the two requests were in
+      // flight. The provider is autoDispose so the notifier gets disposed as
+      // soon as no widget is watching it. Without this check, setting state
+      // on a disposed notifier throws:
+      // "Bad state: Tried to use NotificationsNotifier after dispose was called."
+      if (!mounted) return;
+
       final paginated =
           responses[0] as dynamic; // PaginatedResponse<NotificationModel>
       final count = responses[1] as int;
@@ -79,6 +92,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
           .map((m) => m.toEntity())
           .toList()
           .cast<AppNotification>();
+
       state = state.copyWith(
         notifications: entities,
         unreadCount: count,
@@ -87,6 +101,8 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         hasNextPage: paginated.hasNextPage,
       );
     } catch (e) {
+      // Guard on the error path too — disposal can happen mid-catch
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -97,10 +113,15 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         state.isLoadingMore ||
         !state.hasNextPage)
       return;
+
+    if (!mounted) return;
     state = state.copyWith(isLoadingMore: true);
+
     try {
       final nextPage = state.currentPage + 1;
       final res = await _dataSource.getNotifications(page: nextPage);
+
+      if (!mounted) return; // Guard after await
       final entities = res.data.map((m) => m.toEntity()).toList();
       state = state.copyWith(
         notifications: [...state.notifications, ...entities],
@@ -109,6 +130,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         hasNextPage: res.hasNextPage,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoadingMore: false);
     }
   }
@@ -116,6 +138,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> markAsRead(String id) async {
     try {
       await _dataSource.markAsRead(id);
+      if (!mounted) return; // Guard after await
       // Update local state instantly
       final updatedList = state.notifications.map((n) {
         if (n.id == id && !n.isRead) {
@@ -142,6 +165,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> markAllAsRead() async {
     try {
       await _dataSource.markAllAsRead();
+      if (!mounted) return; // Guard after await
       final updatedList = state.notifications.map((n) {
         return AppNotification(
           id: n.id,
@@ -161,6 +185,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   Future<void> deleteNotification(String id) async {
     try {
       await _dataSource.deleteNotification(id);
+      if (!mounted) return; // Guard after await
       final wasUnread =
           state.notifications.firstWhere((n) => n.id == id).isRead == false;
       final updatedList = state.notifications.where((n) => n.id != id).toList();
