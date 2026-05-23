@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/feature_flags.dart';
 
 // ── Property Type ─────────────────────────────────────────────────────────────
 
@@ -26,7 +27,9 @@ abstract final class PropertyTypeHelper {
   static String label(String type) => _labels[type] ?? type;
   static IconData icon(String type) => _icons[type] ?? Icons.home_rounded;
 
-  static const all = [
+  /// The canonical ordered list of ALL property types supported by the backend.
+  /// Kept private so nothing references it directly — use [all] instead.
+  static const _all = [
     'RESIDENTIAL_HOUSE',
     'APARTMENT',
     'AIRBNB',
@@ -35,6 +38,15 @@ abstract final class PropertyTypeHelper {
     'HOSTEL',
     'HOTEL_LODGE',
   ];
+
+  /// The list of property types visible in the consumer UI.
+  ///
+  /// Respects [FeatureFlags.showHostelListings] — when the flag is off,
+  /// HOSTEL is silently excluded. Every widget that renders a type list
+  /// (category grid, filter sheet) must use this getter, never [_all].
+  static List<String> get all => FeatureFlags.showHostelListings
+      ? List.unmodifiable(_all)
+      : List.unmodifiable(_all.where((t) => t != 'HOSTEL'));
 }
 
 // ── Billing Cycle ─────────────────────────────────────────────────────────────

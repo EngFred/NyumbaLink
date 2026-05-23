@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/config/feature_flags.dart';
 import '../../domain/entities/property_entities.dart';
 import '../../domain/entities/property_filters.dart';
 import '../../domain/usecases/property_usecases.dart';
@@ -65,9 +66,17 @@ class FeaturedPropertiesNotifier
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final res = await _getProperties(_featuredFilters);
+
+      // Exclude any property types that are currently feature-flagged off.
+      // A hostel owner could have a featured listing — we still hide it in
+      // the carousel while showHostelListings is false.
+      final visible = FeatureFlags.showHostelListings
+          ? res.data
+          : res.data.where((p) => p.type != 'HOSTEL').toList();
+
       // Shuffle so the carousel order is different on every cold load,
       // giving all featured landlords equal first-position exposure.
-      final shuffled = List<Property>.from(res.data)..shuffle();
+      final shuffled = List<Property>.from(visible)..shuffle();
       state = state.copyWith(properties: shuffled, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

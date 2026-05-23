@@ -18,7 +18,9 @@ class PropertyCategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const types = PropertyTypeHelper.all;
+    // `final` instead of `const` because PropertyTypeHelper.all is a getter
+    // that filters based on FeatureFlags at runtime — not a compile-time constant.
+    final types = PropertyTypeHelper.all;
 
     // ── NEW FIX: Ensures the background matches the Search Bar perfectly ──
     return ColoredBox(

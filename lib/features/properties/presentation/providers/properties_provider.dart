@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/config/feature_flags.dart';
 import '../../domain/entities/property_entities.dart';
 import '../../domain/entities/property_filters.dart';
 import '../../domain/usecases/property_usecases.dart';
@@ -61,6 +62,16 @@ class PropertiesNotifier extends StateNotifier<PropertiesState> {
 
   final GetPropertiesUseCase _getProperties;
 
+  /// Strips any property types that are currently feature-flagged off.
+  ///
+  /// This is a client-side safety net: even if the API returns a HOSTEL
+  /// (e.g. via a search query or a cached response), it will never reach
+  /// the UI while [FeatureFlags.showHostelListings] is false.
+  List<Property> _applyFeatureFlags(List<Property> raw) {
+    if (FeatureFlags.showHostelListings) return raw;
+    return raw.where((p) => p.type != 'HOSTEL').toList();
+  }
+
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
@@ -68,7 +79,9 @@ class PropertiesNotifier extends StateNotifier<PropertiesState> {
       final res = await _getProperties(filters);
 
       state = state.copyWith(
-        properties: res.data,
+        // Apply feature flags before storing — HOSTEL entries are excluded
+        // when showHostelListings is false.
+        properties: _applyFeatureFlags(res.data),
         isLoading: false,
         total: res.meta.total,
         currentPage: res.meta.page,
@@ -90,7 +103,8 @@ class PropertiesNotifier extends StateNotifier<PropertiesState> {
       final res = await _getProperties(filters);
 
       state = state.copyWith(
-        properties: [...state.properties, ...res.data],
+        // Apply feature flags to paginated results as well.
+        properties: [...state.properties, ..._applyFeatureFlags(res.data)],
         isLoadingMore: false,
         currentPage: res.meta.page,
         hasNextPage: res.hasNextPage,

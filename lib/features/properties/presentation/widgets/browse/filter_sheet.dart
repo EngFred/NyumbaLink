@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
+import '../../../../../core/config/feature_flags.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/currency_formatter.dart';
@@ -27,8 +28,11 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   static const double _minPrice = 0;
   static const double _maxPrice = 5_000_000;
 
-  // University section is relevant for HOSTEL or when no type is selected
-  bool get _showUniversitySection => _type == null || _type == 'HOSTEL';
+  // University section is relevant for HOSTEL or when no type is selected.
+  // Also gated by [FeatureFlags.showHostelListings] — when the hostel type is
+  // hidden from the app, the "Near University" filter has no purpose either.
+  bool get _showUniversitySection =>
+      FeatureFlags.showHostelListings && (_type == null || _type == 'HOSTEL');
 
   int get _activeCount {
     int n = 0;
@@ -80,6 +84,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                   ),
                   children: [
                     // ── Property Type ──────────────────────────────────────
+                    // _TypeGrid internally uses PropertyTypeHelper.all, which
+                    // already respects FeatureFlags — no extra work needed here.
                     const _Label('Property Type'),
                     const Gap(12),
                     _TypeGrid(
@@ -94,6 +100,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     ),
 
                     // ── University (HOSTEL only) ───────────────────────────
+                    // Hidden automatically when showHostelListings is false
+                    // because _showUniversitySection returns false in that case.
                     if (_showUniversitySection) ...[
                       const Gap(28),
                       Row(
@@ -351,6 +359,8 @@ class _TypeGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // PropertyTypeHelper.all already filters out HOSTEL when the flag is off —
+    // nothing extra needed here.
     return Wrap(
       spacing: 8,
       runSpacing: 8,
