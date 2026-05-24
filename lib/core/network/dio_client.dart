@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentora/features/auth/data/datasources/auth_local_datasource.dart';
+import 'package:rentora/core/network/auth_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
@@ -8,11 +9,11 @@ import '../errors/app_exception.dart';
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-final dioProvider = Provider<Dio>((ref) => _buildDio());
+final dioProvider = Provider<Dio>((ref) => _buildDio(ref));
 
 // ── Factory ───────────────────────────────────────────────────────────────────
 
-Dio _buildDio() {
+Dio _buildDio(Ref ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConstants.baseUrl,
@@ -25,7 +26,7 @@ Dio _buildDio() {
     ),
   );
 
-  // ── Inject Bearer Token Interceptor ──
+  // ── Inject Bearer Token ───────────────────────────────────────────────────
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -40,7 +41,10 @@ Dio _buildDio() {
     ),
   );
 
-  // Log in debug mode only
+  // ── Auto-logout on 401 ────────────────────────────────────────────────────
+  dio.interceptors.add(AuthInterceptor(ref));
+
+  // ── Log in debug mode only ────────────────────────────────────────────────
   assert(() {
     dio.interceptors.add(
       LogInterceptor(
@@ -76,7 +80,6 @@ AppException handleDioException(DioException e) {
       final status = e.response?.statusCode ?? 0;
       final data = e.response?.data;
 
-      // Extract message from NestJS error response
       String msg = 'Something went wrong.';
       if (data is Map) {
         final raw = data['message'];
