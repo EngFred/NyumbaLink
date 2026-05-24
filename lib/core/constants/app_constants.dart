@@ -5,7 +5,7 @@ abstract final class AppConstants {
   // static const String baseUrl =
   //     'https://rentora-houselink-api-production.up.railway.app/api/v1';
 
-  static const String baseUrl = 'http://78.46.203.160/api/v1';
+  static const String baseUrl = 'https://rentora-api.duckdns.org/api/v1';
 
   // ─── App ──────────────────────────────────────────────────────────────────
   static const String appName = 'Rentora';
