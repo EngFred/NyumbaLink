@@ -18,7 +18,7 @@ const _propertyTypes = [
   _TypeOption('OFFICE_SPACE', 'Office Spaces', Icons.business_outlined),
   _TypeOption('BUSINESS_SPACE', 'Business Spaces', Icons.storefront_outlined),
   // _TypeOption('HOSTEL', 'Hostel', Icons.school_outlined),
-  _TypeOption('HOTEL_LODGE', 'Hotels / Guesthouses', Icons.hotel_outlined),
+  _TypeOption('HOTEL_LODGE', 'Hotels / Guest Houses', Icons.hotel_outlined),
 ];
 
 class PropertyTypeSelector extends StatelessWidget {

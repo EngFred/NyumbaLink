@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:rentora/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:rentora/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:rentora/features/notifications/presentation/widgets/notifications_skeleton.dart';
-
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -17,6 +17,7 @@ class AuthenticatedBody extends ConsumerWidget {
     required this.scrollCtrl,
     required this.state,
   });
+
   final ScrollController scrollCtrl;
   final NotificationsState state;
 
@@ -34,20 +35,46 @@ class AuthenticatedBody extends ConsumerWidget {
     }
 
     if (state.notifications.isEmpty) {
-      return const AppEmptyState(
-        icon: Icons.notifications_none_rounded,
-        title: 'All caught up!',
-        subtitle:
-            'When you get messages, updates or alerts, they will appear right here.',
+      // ── PRO UX FIX: The bulletproof centering method for Pull-to-Refresh ──
+      return RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: () => ref.read(notificationsProvider.notifier).load(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: const Center(
+                  // Nudge it slightly upwards for perfect "optical" centering
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 60.0),
+                    child: AppEmptyState(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'All caught up!',
+                      subtitle:
+                          'When you get messages, updates or alerts, they will appear right here.',
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       );
     }
 
     return RefreshIndicator(
       color: AppColors.primary,
+      backgroundColor: AppColors.surface,
       onRefresh: () => ref.read(notificationsProvider.notifier).load(),
       child: ListView.builder(
         controller: scrollCtrl,
-        padding: EdgeInsets.zero,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(
+          bottom: 100,
+        ), // Added bottom padding so the last item isn't flush with the screen edge
         itemCount: state.notifications.length + (state.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= state.notifications.length) {

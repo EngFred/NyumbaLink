@@ -7,11 +7,11 @@ abstract final class PropertyTypeHelper {
   static const _labels = {
     'RESIDENTIAL_HOUSE': 'Rentals',
     'APARTMENT': 'Apartments',
-    'AIRBNB': 'Airbnbs',
+    'AIRBNB': 'AirBnBs',
     'OFFICE_SPACE': 'Office Spaces',
     'BUSINESS_SPACE': 'Business Spaces',
     'HOSTEL': 'Hostel',
-    'HOTEL_LODGE': 'Hotels / Guesthouses',
+    'HOTEL_LODGE': 'Hotels / Guest Houses',
   };
 
   static const _icons = {
