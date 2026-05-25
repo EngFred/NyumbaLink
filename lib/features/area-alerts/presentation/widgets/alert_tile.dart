@@ -165,19 +165,19 @@ class _TypeChip extends StatelessWidget {
   String _formatTypeLabel(String value) {
     switch (value) {
       case 'RESIDENTIAL_HOUSE':
-        return 'House';
+        return 'Rentals';
       case 'APARTMENT':
-        return 'Apartment';
+        return 'Apartments';
       case 'AIRBNB':
-        return 'Airbnb';
+        return 'AirBnBs';
       case 'OFFICE_SPACE':
-        return 'Office';
+        return 'Office Spaces';
       case 'BUSINESS_SPACE':
-        return 'Business';
+        return 'Business Spaces';
       case 'HOSTEL':
-        return 'Hostel';
+        return 'Hostels';
       case 'HOTEL_LODGE':
-        return 'Hotel/Lodge';
+        return 'Hotels/Guest Houses';
       default:
         return value;
     }

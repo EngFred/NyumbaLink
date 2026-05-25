@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rentora/features/auth/data/datasources/auth_local_datasource.dart';
-import 'package:rentora/core/network/auth_interceptor.dart';
+// import 'package:rentora/core/network/auth_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
@@ -42,7 +42,7 @@ Dio _buildDio(Ref ref) {
   );
 
   // ── Auto-logout on 401 ────────────────────────────────────────────────────
-  dio.interceptors.add(AuthInterceptor(ref));
+  // dio.interceptors.add(AuthInterceptor(ref));
 
   // ── Log in debug mode only ────────────────────────────────────────────────
   assert(() {
