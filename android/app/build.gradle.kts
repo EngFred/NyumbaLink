@@ -25,7 +25,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.rentora.app"
+        applicationId = "com.rentoraug.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

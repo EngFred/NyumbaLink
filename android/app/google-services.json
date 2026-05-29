@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:215244487816:android:379d71c6726606feec733d",
+        "android_client_info": {
+          "package_name": "com.rentoraug.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "215244487816-35vooc51sr8apfogcvk9kpu9hecq784q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rentoraug.app",
+            "certificate_hash": "d8d3d2c7533b20b0839ec258064a7c21abf4be58"
+          }
+        },
+        {
+          "client_id": "215244487816-8mipo2gisi4i2an352vc1p6i08agj8k2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyQ1Cy9WRQjeBsXURU62Ujm7SPhddXK2M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "215244487816-8mipo2gisi4i2an352vc1p6i08agj8k2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "215244487816-o3o5ssk8ojmgg7jla0jr4ufb66l2rnoj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rentora.app"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
