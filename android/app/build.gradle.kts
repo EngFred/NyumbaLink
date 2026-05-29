@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rentora.app"
+    namespace = "com.rentoraug.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

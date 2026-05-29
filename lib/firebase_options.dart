@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCyQ1Cy9WRQjeBsXURU62Ujm7SPhddXK2M',
-    appId: '1:215244487816:android:9611e3a67acc0be6ec733d',
+    appId: '1:215244487816:android:379d71c6726606feec733d',
     messagingSenderId: '215244487816',
     projectId: 'rentora-houselink-fcm',
     storageBucket: 'rentora-houselink-fcm.firebasestorage.app',
@@ -59,10 +59,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCACyDu5cNFQrIjTWM7Zjcit3yZ4mQmXtY',
-    appId: '1:215244487816:ios:7995fe964e5554a9ec733d',
+    appId: '1:215244487816:ios:69866c296ac00ff1ec733d',
     messagingSenderId: '215244487816',
     projectId: 'rentora-houselink-fcm',
     storageBucket: 'rentora-houselink-fcm.firebasestorage.app',
-    iosBundleId: 'com.rentora.app',
+    androidClientId: '215244487816-35vooc51sr8apfogcvk9kpu9hecq784q.apps.googleusercontent.com',
+    iosClientId: '215244487816-3e7vttpn1o55auaj797cuoadtdl2rao2.apps.googleusercontent.com',
+    iosBundleId: 'com.rentoraug.app',
   );
+
 }

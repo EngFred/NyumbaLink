@@ -39,10 +39,10 @@
               "client_type": 3
             },
             {
-              "client_id": "215244487816-o3o5ssk8ojmgg7jla0jr4ufb66l2rnoj.apps.googleusercontent.com",
+              "client_id": "215244487816-3e7vttpn1o55auaj797cuoadtdl2rao2.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.rentora.app"
+                "bundle_id": "com.rentoraug.app"
               }
             }
           ]
@@ -83,10 +83,10 @@
               "client_type": 3
             },
             {
-              "client_id": "215244487816-o3o5ssk8ojmgg7jla0jr4ufb66l2rnoj.apps.googleusercontent.com",
+              "client_id": "215244487816-3e7vttpn1o55auaj797cuoadtdl2rao2.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.rentora.app"
+                "bundle_id": "com.rentoraug.app"
               }
             }
           ]
