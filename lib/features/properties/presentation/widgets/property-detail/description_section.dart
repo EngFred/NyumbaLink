@@ -18,7 +18,7 @@ class DescriptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const maxLines = 4; // Slightly increased since we removed the title
+    const maxLines = 4;
     final isLong = description.length > 200;
 
     return Padding(

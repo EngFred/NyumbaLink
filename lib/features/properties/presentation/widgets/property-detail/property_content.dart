@@ -166,7 +166,7 @@ class _PropertyContentState extends State<PropertyContent> {
 
           // ── Description ───────────────────────────────────────────────────
           DescriptionSection(
-            description: p.description,
+            description: p.displayDescription,
             expanded: _descExpanded,
             onToggle: () => setState(() => _descExpanded = !_descExpanded),
           ).animate(delay: 140.ms).fadeIn(duration: 300.ms),

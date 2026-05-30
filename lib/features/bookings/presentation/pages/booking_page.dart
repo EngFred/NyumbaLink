@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/core/utils/string_helpers.dart';
 
 import 'package:rentora/features/bookings/presentation/widgets/book/section_header.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -222,7 +223,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           children: [
             // ── COMPACT, FLAT, EFFICIENT SUMMARY ──────────────────────────────
             PropertySummary(
-              title: widget.propertyTitle,
+              title: widget.propertyTitle.toSentenceCase(),
               location: widget.location,
               price: widget.price,
               billingCycle: widget.billingCycle,

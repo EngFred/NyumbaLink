@@ -3,6 +3,7 @@ import 'package:gap/gap.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/string_helpers.dart';
 
 class AmenitiesSection extends StatelessWidget {
   const AmenitiesSection({super.key, required this.amenities});
@@ -69,7 +70,7 @@ class AmenitiesSection extends StatelessWidget {
                     Icon(_iconFor(a), size: 14, color: AppColors.primary),
                     const Gap(6),
                     Text(
-                      a,
+                      a.toSentenceCase(), // ← Applied capitalization
                       style: AppTextStyles.labelMd.copyWith(
                         color: AppColors.grey700,
                         fontSize: 12,

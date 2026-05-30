@@ -13,6 +13,15 @@ abstract final class PropertyTypeHelper {
     'HOSTEL': 'Hostel',
     'HOTEL_LODGE': 'Hotels / Guest Houses',
   };
+  static const _labels2 = {
+    'RESIDENTIAL_HOUSE': 'Rental',
+    'APARTMENT': 'Apartment',
+    'AIRBNB': 'AirBnB',
+    'OFFICE_SPACE': 'Office Space',
+    'BUSINESS_SPACE': 'Business Space',
+    'HOSTEL': 'Hostel',
+    'HOTEL_LODGE': 'Hotel / Guest House',
+  };
 
   static const _icons = {
     'RESIDENTIAL_HOUSE': Icons.home_rounded,
@@ -25,6 +34,7 @@ abstract final class PropertyTypeHelper {
   };
 
   static String label(String type) => _labels[type] ?? type;
+  static String singularLabel(String type) => _labels2[type] ?? type;
   static IconData icon(String type) => _icons[type] ?? Icons.home_rounded;
 
   /// The canonical ordered list of ALL property types supported by the backend.

@@ -21,7 +21,7 @@ class DetailsGrid extends StatelessWidget {
       DetailRowData(
         icon: PropertyTypeHelper.icon(property.type),
         label: 'Property Type',
-        value: PropertyTypeHelper.label(property.type),
+        value: PropertyTypeHelper.singularLabel(property.type),
       ),
     );
 

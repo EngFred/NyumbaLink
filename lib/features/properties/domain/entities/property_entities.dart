@@ -6,6 +6,8 @@ class District {
   const District({required this.id, required this.name});
   final String id;
   final String name;
+
+  String get displayName => name.toSentenceCase();
 }
 
 // ── Area Entity ───────────────────────────────────────────────────────────────
@@ -13,6 +15,8 @@ class Area {
   const Area({required this.id, required this.name});
   final String id;
   final String name;
+
+  String get displayName => name.toSentenceCase();
 }
 
 // ── Contact Entity ────────────────────────────────────────────────────────────
@@ -137,18 +141,20 @@ class Property {
   bool get isForSale => listingPurpose == 'SALE';
   bool get isForRent => listingPurpose == 'RENT';
 
-  /// Always returns the title in sentence case regardless of how
-  /// the admin entered it in the CMS. Use this in all UI widgets.
+  /// Use in all UI widgets instead of [title] directly.
   String get displayTitle => title.toSentenceCase();
 
-  /// Returns properly formatted location string.
+  /// Use in all UI widgets instead of [description] directly.
+  String get displayDescription => description.toSentenceCase();
+
+  /// Returns a formatted location string using normalised area/district names.
   /// Example: "Kololo, Kampala" or "Kampala" if area is null.
   String get locationDisplay {
-    final areaName = area?.name.trim();
+    final areaName = area?.displayName.trim();
     if (areaName != null && areaName.isNotEmpty) {
-      return '$areaName, ${district.name}';
+      return '$areaName, ${district.displayName}';
     }
-    return district.name;
+    return district.displayName;
   }
 
   String? get thumbnailUrl {

@@ -393,7 +393,7 @@ class _TypeBadge extends StatelessWidget {
           Icon(PropertyTypeHelper.icon(type), size: 11, color: Colors.white),
           const Gap(5),
           Text(
-            PropertyTypeHelper.label(type),
+            PropertyTypeHelper.singularLabel(type),
             style: AppTextStyles.labelSm.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
