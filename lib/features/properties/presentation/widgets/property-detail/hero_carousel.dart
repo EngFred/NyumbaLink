@@ -216,7 +216,9 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   children: [
                     HeroBadge(
                       icon: PropertyTypeHelper.icon(widget.property.type),
-                      label: PropertyTypeHelper.label(widget.property.type),
+                      label: PropertyTypeHelper.singularLabel(
+                        widget.property.type,
+                      ),
                     ),
                     const Gap(8),
                     HeroStatusBadge(status: widget.property.status),
@@ -225,6 +227,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
 
                 const Gap(8),
 
+                // Price
                 // Price
                 Text(
                   CurrencyFormatter.format(widget.property.price),
@@ -238,11 +241,17 @@ class _HeroCarouselState extends State<HeroCarousel> {
                     ],
                   ),
                 ),
-                const Gap(2),
-                Text(
-                  BillingCycleHelper.full(widget.property.billingCycle),
-                  style: AppTextStyles.labelSm.copyWith(color: Colors.white70),
-                ),
+                // Only show billing cycle for rent listings —
+                // sale properties have no recurring cycle.
+                if (!widget.property.isForSale) ...[
+                  const Gap(2),
+                  Text(
+                    BillingCycleHelper.full(widget.property.billingCycle),
+                    style: AppTextStyles.labelSm.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

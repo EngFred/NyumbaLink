@@ -21,6 +21,7 @@ class FilterSheet extends ConsumerStatefulWidget {
 
 class _FilterSheetState extends ConsumerState<FilterSheet> {
   late String? _type;
+  late String? _listingPurpose;
   late String? _universityId;
   late RangeValues _priceRange;
   late int? _numberOfRooms;
@@ -28,15 +29,13 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   static const double _minPrice = 0;
   static const double _maxPrice = 5_000_000;
 
-  // University section is relevant for HOSTEL or when no type is selected.
-  // Also gated by [FeatureFlags.showHostelListings] — when the hostel type is
-  // hidden from the app, the "Near University" filter has no purpose either.
   bool get _showUniversitySection =>
       FeatureFlags.showHostelListings && (_type == null || _type == 'HOSTEL');
 
   int get _activeCount {
     int n = 0;
     if (_type != null) n++;
+    if (_listingPurpose != null) n++;
     if (_numberOfRooms != null) n++;
     if (_universityId != null) n++;
     if (_priceRange.start > _minPrice || _priceRange.end < _maxPrice) n++;
@@ -47,6 +46,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   void initState() {
     super.initState();
     _type = widget.current.type;
+    _listingPurpose = widget.current.listingPurpose;
     _universityId = widget.current.universityId;
     _numberOfRooms = widget.current.numberOfRooms;
     _priceRange = RangeValues(
@@ -83,25 +83,27 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
                     vertical: 24,
                   ),
                   children: [
+                    // ── Listing Purpose ────────────────────────────────────
+                    const _Label('Listing Type'),
+                    const Gap(12),
+                    _ListingPurposeRow(
+                      selected: _listingPurpose,
+                      onSelect: (v) => setState(() => _listingPurpose = v),
+                    ),
+
                     // ── Property Type ──────────────────────────────────────
-                    // _TypeGrid internally uses PropertyTypeHelper.all, which
-                    // already respects FeatureFlags — no extra work needed here.
+                    const Gap(28),
                     const _Label('Property Type'),
                     const Gap(12),
                     _TypeGrid(
                       selected: _type,
                       onSelect: (t) => setState(() {
                         _type = t;
-                        // Clear university if switching away from HOSTEL
-                        if (t != null && t != 'HOSTEL') {
-                          _universityId = null;
-                        }
+                        if (t != null && t != 'HOSTEL') _universityId = null;
                       }),
                     ),
 
                     // ── University (HOSTEL only) ───────────────────────────
-                    // Hidden automatically when showHostelListings is false
-                    // because _showUniversitySection returns false in that case.
                     if (_showUniversitySection) ...[
                       const Gap(28),
                       Row(
@@ -174,6 +176,7 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
 
   void _clearAll() => setState(() {
     _type = null;
+    _listingPurpose = null;
     _universityId = null;
     _numberOfRooms = null;
     _priceRange = const RangeValues(_minPrice, _maxPrice);
@@ -183,6 +186,8 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
     final result = widget.current.copyWith(
       type: _type,
       clearType: _type == null,
+      listingPurpose: _listingPurpose,
+      clearListingPurpose: _listingPurpose == null,
       universityId: _universityId,
       clearUniversityId: _universityId == null,
       numberOfRooms: _numberOfRooms,
@@ -193,6 +198,70 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
       clearMaxPrice: !(_priceRange.end < _maxPrice),
     );
     Navigator.of(context).pop(result);
+  }
+}
+
+// ── Listing Purpose Row ───────────────────────────────────────────────────────
+
+class _ListingPurposeRow extends StatelessWidget {
+  const _ListingPurposeRow({required this.selected, required this.onSelect});
+  final String? selected;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    const options = [
+      (value: null, label: 'All', icon: Icons.apps_rounded),
+      (value: 'RENT', label: 'For Rent', icon: Icons.home_outlined),
+      (value: 'SALE', label: 'For Sale', icon: Icons.sell_outlined),
+    ];
+
+    return Row(
+      children: options.map((opt) {
+        final isSelected = selected == opt.value;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => onSelect(opt.value),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : AppColors.grey100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: AppColors.grey200),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      opt.icon,
+                      size: 18,
+                      color: isSelected ? Colors.white : AppColors.grey600,
+                    ),
+                    const Gap(5),
+                    Text(
+                      opt.label,
+                      style: AppTextStyles.labelMd.copyWith(
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
@@ -280,7 +349,7 @@ class _UniversityLoadingRow extends StatelessWidget {
   }
 }
 
-// ── Sheet sub-widgets ─────────────────────────────────────────────
+// ── Sheet sub-widgets ─────────────────────────────────────────────────────────
 
 class _Handle extends StatelessWidget {
   @override

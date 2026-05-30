@@ -1,6 +1,7 @@
 class PropertyFilters {
   const PropertyFilters({
     this.type,
+    this.listingPurpose,
     this.districtId,
     this.universityId,
     this.minPrice,
@@ -16,6 +17,10 @@ class PropertyFilters {
   });
 
   final String? type;
+
+  /// 'RENT' | 'SALE' | null (null = show both)
+  final String? listingPurpose;
+
   final String? districtId;
   final String? universityId;
   final double? minPrice;
@@ -24,21 +29,14 @@ class PropertyFilters {
   final String? search;
   final String? status;
   final bool? isFeatured;
-
-  /// Field to sort results by.
-  /// Allowed values: 'createdAt' | 'price' | 'viewCount' | 'enquiryCount'
-  /// Default on the backend is 'createdAt'.
-  /// Pass 'viewCount' to get "most popular" listings.
   final String? sortBy;
-
-  /// Sort direction: 'ASC' | 'DESC'. Backend defaults to 'DESC'.
   final String? sortOrder;
-
   final int page;
   final int limit;
 
   PropertyFilters copyWith({
     String? type,
+    String? listingPurpose,
     String? districtId,
     String? universityId,
     double? minPrice,
@@ -52,6 +50,7 @@ class PropertyFilters {
     int? page,
     int? limit,
     bool clearType = false,
+    bool clearListingPurpose = false,
     bool clearDistrictId = false,
     bool clearUniversityId = false,
     bool clearMinPrice = false,
@@ -64,6 +63,9 @@ class PropertyFilters {
   }) {
     return PropertyFilters(
       type: clearType ? null : (type ?? this.type),
+      listingPurpose: clearListingPurpose
+          ? null
+          : (listingPurpose ?? this.listingPurpose),
       districtId: clearDistrictId ? null : (districtId ?? this.districtId),
       universityId: clearUniversityId
           ? null
@@ -85,6 +87,7 @@ class PropertyFilters {
 
   bool get hasActiveFilters =>
       type != null ||
+      listingPurpose != null ||
       districtId != null ||
       universityId != null ||
       minPrice != null ||
@@ -96,6 +99,7 @@ class PropertyFilters {
     final map = <String, dynamic>{'page': page, 'limit': limit};
 
     if (type != null) map['type'] = type;
+    if (listingPurpose != null) map['listingPurpose'] = listingPurpose;
     if (districtId != null) map['districtId'] = districtId;
     if (universityId != null) map['universityId'] = universityId;
     if (minPrice != null) map['minPrice'] = minPrice;

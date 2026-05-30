@@ -78,7 +78,7 @@ class FeaturedHeroCard extends StatelessWidget {
                     ),
                     const Gap(4),
                     Text(
-                      PropertyTypeHelper.label(property.type),
+                      PropertyTypeHelper.singularLabel(property.type),
                       style: AppTextStyles.labelSm.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,

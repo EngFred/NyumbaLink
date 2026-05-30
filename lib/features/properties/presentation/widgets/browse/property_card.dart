@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:rentora/core/utils/string_helpers.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
@@ -168,7 +169,6 @@ class _ImageHero extends StatelessWidget {
                 else
                   _TypeBadge(type: property.type),
                 const Spacer(),
-                // ── NEW: FOR SALE badge ──────────────────────────────────
                 if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
                 if (onSaveTap != null)
                   _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
@@ -198,19 +198,21 @@ class _ImageHero extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const Gap(2),
-                      Text(
-                        BillingCycleHelper.full(property.billingCycle),
-                        style: AppTextStyles.caption.copyWith(
-                          color: Colors.white70,
-                          fontSize: 11,
+                      // Only show billing cycle for rent listings —
+                      // sale properties have no recurring cycle.
+                      if (!property.isForSale) ...[
+                        const Gap(2),
+                        Text(
+                          BillingCycleHelper.full(property.billingCycle),
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-
-                // ── NEW PRO UX: Book/Enquire CTA instead of static Available badge ──
                 if (property.isAvailable)
                   const _ActionPill()
                 else
@@ -224,7 +226,7 @@ class _ImageHero extends StatelessWidget {
   }
 }
 
-// ── NEW: Action Pill CTA ──────────────────────────────────────────────────────
+// ── Action Pill CTA ───────────────────────────────────────────────────────────
 class _ActionPill extends StatelessWidget {
   const _ActionPill();
 
@@ -299,13 +301,13 @@ class _FeaturedBadge extends StatelessWidget {
   }
 }
 
-// ── NEW: Sale Badge ───────────────────────────────────────────────────────────
+// ── Sale Badge ────────────────────────────────────────────────────────────────
 class _SaleBadge extends StatelessWidget {
   const _SaleBadge();
 
   @override
   Widget build(BuildContext context) {
-    const color = Color(0xFF16A34A); // emerald green
+    const color = Color(0xFF16A34A);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
@@ -440,17 +442,16 @@ class _SaveButton extends StatelessWidget {
   }
 }
 
-// ── Updated Status Pill ───────────────────────────────────────────────────────
+// ── Status Pill ───────────────────────────────────────────────────────────────
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
 
   @override
   Widget build(BuildContext context) {
-    // ── Map each status to a label + colour ──────────────────────────────
     final (label, color) = switch (status) {
       'RENTED' => ('Rented', AppColors.grey600),
-      'SOLD' => ('Sold', const Color(0xFFD97706)), // amber — visually distinct
+      'SOLD' => ('Sold', const Color(0xFFD97706)),
       _ => ('Unavailable', AppColors.grey600),
     };
 
@@ -554,7 +555,10 @@ class _MetaRow extends StatelessWidget {
             label: 'Floor ${property.floor}',
           ),
         if (property.amenities != null && property.amenities!.isNotEmpty)
-          _MetaChip(icon: Icons.wifi_rounded, label: property.amenities!.first),
+          _MetaChip(
+            icon: Icons.wifi_rounded,
+            label: property.amenities!.first.toSentenceCase(),
+          ),
       ],
     );
   }
