@@ -1,4 +1,5 @@
 import '../../../universities/domain/entities/university.dart';
+import '../../../../../core/utils/string_helpers.dart';
 
 // ── District Entity ──────────────────────────────────────────────────────────
 class District {
@@ -46,6 +47,20 @@ class PropertyImage {
   final bool isPrimary;
 }
 
+// ── Property Video Entity ─────────────────────────────────────────────────────
+class PropertyVideo {
+  const PropertyVideo({
+    required this.id,
+    required this.url,
+    required this.publicId,
+    required this.videoType,
+  });
+  final String id;
+  final String url;
+  final String publicId;
+  final String videoType; // 'INTERIOR' | 'EXTERIOR' | 'NEIGHBORHOOD'
+}
+
 // ── Main Property Entity ──────────────────────────────────────────────────────
 class Property {
   const Property({
@@ -78,6 +93,8 @@ class Property {
     this.lat,
     this.lng,
     this.university,
+    this.listingPurpose = 'RENT',
+    this.videos = const [],
   });
 
   final String id;
@@ -109,25 +126,35 @@ class Property {
   final double? lat;
   final double? lng;
   final University? university;
+  final String listingPurpose;
+  final List<PropertyVideo> videos;
+
+  // ── Convenience getters ───────────────────────────────────────────────────
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
+  bool get isForSale => listingPurpose == 'SALE';
+  bool get isForRent => listingPurpose == 'RENT';
+
+  /// Always returns the title in sentence case regardless of how
+  /// the admin entered it in the CMS. Use this in all UI widgets.
+  String get displayTitle => title.toSentenceCase();
+
+  /// Returns properly formatted location string.
+  /// Example: "Kololo, Kampala" or "Kampala" if area is null.
+  String get locationDisplay {
+    final areaName = area?.name.trim();
+    if (areaName != null && areaName.isNotEmpty) {
+      return '$areaName, ${district.name}';
+    }
+    return district.name;
+  }
 
   String? get thumbnailUrl {
     if (images.isEmpty) return null;
     final primary = images.where((i) => i.isPrimary).firstOrNull;
     return (primary ?? images.first).url;
-  }
-
-  /// Returns properly formatted location string
-  /// Example: "Kololo, Kampala" or "Kampala" if area is null
-  String get locationDisplay {
-    final areaName = area?.name?.trim();
-    if (areaName != null && areaName.isNotEmpty) {
-      return '$areaName, ${district.name}';
-    }
-    return district.name;
   }
 
   Property copyWith({
@@ -160,6 +187,8 @@ class Property {
     double? lat,
     double? lng,
     University? university,
+    String? listingPurpose,
+    List<PropertyVideo>? videos,
   }) {
     return Property(
       id: id ?? this.id,
@@ -191,6 +220,8 @@ class Property {
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       university: university ?? this.university,
+      listingPurpose: listingPurpose ?? this.listingPurpose,
+      videos: videos ?? this.videos,
     );
   }
 }

@@ -65,6 +65,28 @@ class PropertyImageModel {
       );
 }
 
+// ── Property Video ─────────────────────────────────────────────────────────────
+class PropertyVideoModel {
+  const PropertyVideoModel({
+    required this.id,
+    required this.url,
+    required this.publicId,
+    required this.videoType,
+  });
+  final String id;
+  final String url;
+  final String publicId;
+  final String videoType; // 'INTERIOR' | 'EXTERIOR' | 'NEIGHBORHOOD'
+
+  factory PropertyVideoModel.fromJson(Map<String, dynamic> j) =>
+      PropertyVideoModel(
+        id: j['id'] as String,
+        url: j['url'] as String,
+        publicId: j['publicId'] as String,
+        videoType: j['videoType'] as String,
+      );
+}
+
 // ── Property ──────────────────────────────────────────────────────────────────
 class PropertyModel {
   const PropertyModel({
@@ -97,6 +119,8 @@ class PropertyModel {
     this.lat,
     this.lng,
     this.university,
+    this.listingPurpose = 'RENT',
+    this.videos = const [],
   });
   final String id;
   final String title;
@@ -127,6 +151,8 @@ class PropertyModel {
   final double? lat;
   final double? lng;
   final UniversityModel? university;
+  final String listingPurpose;
+  final List<PropertyVideoModel> videos;
 
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
@@ -185,6 +211,10 @@ class PropertyModel {
       university: j['university'] != null
           ? UniversityModel.fromJson(j['university'] as Map<String, dynamic>)
           : null,
+      listingPurpose: j['listingPurpose'] as String? ?? 'RENT',
+      videos: (j['videos'] as List? ?? [])
+          .map((e) => PropertyVideoModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/details_grid.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/engagement_stats.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/meta_chips_row.dart';
+import 'package:rentora/features/properties/presentation/widgets/property-detail/property_videos_section.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/sheet_handle.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/similar_properties_section.dart';
 
@@ -47,7 +48,7 @@ class _PropertyContentState extends State<PropertyContent> {
           // Handle
           const SheetHandle(),
 
-          // Title + Location (with Premium Featured Left Border integration)
+          // ── Title + Location + Listing Purpose ───────────────────────────
           Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: Container(
@@ -87,7 +88,7 @@ class _PropertyContentState extends State<PropertyContent> {
                       ),
                       const Gap(8),
 
-                      // ── Render University if it exists ──
+                      // ── University (HOSTEL only) ──────────────────────────
                       if (p.university != null) ...[
                         Row(
                           children: [
@@ -113,7 +114,7 @@ class _PropertyContentState extends State<PropertyContent> {
                         const Gap(6),
                       ],
 
-                      // ──────────────────────────────────────────
+                      // ── Location ──────────────────────────────────────────
                       Row(
                         children: [
                           const Icon(
@@ -134,6 +135,10 @@ class _PropertyContentState extends State<PropertyContent> {
                           ),
                         ],
                       ),
+
+                      // ── Listing purpose pill ─────────────────────────
+                      const Gap(10),
+                      _ListingPurposePill(listingPurpose: p.listingPurpose),
                     ],
                   ),
                 ),
@@ -144,7 +149,7 @@ class _PropertyContentState extends State<PropertyContent> {
 
           const Gap(15),
 
-          // Meta chips
+          // ── Meta chips ────────────────────────────────────────────────────
           if (_hasMeta(p))
             MetaChipsRow(
               property: p,
@@ -159,14 +164,14 @@ class _PropertyContentState extends State<PropertyContent> {
           ),
           const Gap(10),
 
-          // Description (Header removed internally)
+          // ── Description ───────────────────────────────────────────────────
           DescriptionSection(
             description: p.description,
             expanded: _descExpanded,
             onToggle: () => setState(() => _descExpanded = !_descExpanded),
           ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
 
-          // Amenities
+          // ── Amenities ─────────────────────────────────────────────────────
           if (p.amenities != null && p.amenities!.isNotEmpty) ...[
             const Gap(24),
             const Divider(
@@ -181,7 +186,22 @@ class _PropertyContentState extends State<PropertyContent> {
             ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
           ],
 
-          // Details grid (Now flattened)
+          // ── NEW: Property Videos ──────────────────────────────────────────
+          if (p.videos.isNotEmpty) ...[
+            const Gap(24),
+            const Divider(
+              indent: 20,
+              endIndent: 20,
+              height: 1,
+              color: AppColors.grey200,
+            ),
+            const Gap(20),
+            PropertyVideosSection(
+              videos: p.videos,
+            ).animate(delay: 200.ms).fadeIn(duration: 300.ms),
+          ],
+
+          // ── Details grid ──────────────────────────────────────────────────
           const Gap(24),
           const Divider(
             indent: 20,
@@ -194,7 +214,7 @@ class _PropertyContentState extends State<PropertyContent> {
             property: p,
           ).animate(delay: 220.ms).fadeIn(duration: 300.ms),
 
-          // Engagement stats
+          // ── Engagement stats ──────────────────────────────────────────────
           const Gap(24),
           const Divider(
             indent: 20,
@@ -206,7 +226,7 @@ class _PropertyContentState extends State<PropertyContent> {
             property: p,
           ).animate(delay: 260.ms).fadeIn(duration: 300.ms),
 
-          // Report button
+          // ── Report button ─────────────────────────────────────────────────
           const Gap(8),
           Center(
             child: TextButton.icon(
@@ -228,7 +248,7 @@ class _PropertyContentState extends State<PropertyContent> {
           ),
           const Gap(24),
 
-          // ── Similar Properties ─────────────────────────────────────────────
+          // ── Similar Properties ────────────────────────────────────────────
           const Divider(
             indent: 20,
             endIndent: 20,
@@ -251,4 +271,52 @@ class _PropertyContentState extends State<PropertyContent> {
       p.floor != null ||
       p.hotelCategory != null ||
       p.furnishingStatus != null;
+}
+
+class _ListingPurposePill extends StatelessWidget {
+  const _ListingPurposePill({required this.listingPurpose});
+  final String listingPurpose;
+
+  @override
+  Widget build(BuildContext context) {
+    final isForSale = listingPurpose == 'SALE';
+
+    const saleColor = Color(0xFF16A34A); // emerald green
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: isForSale
+            ? saleColor.withOpacity(0.10)
+            : AppColors.primary.withOpacity(0.09),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isForSale
+              ? saleColor.withOpacity(0.35)
+              : AppColors.primary.withOpacity(0.28),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isForSale ? Icons.sell_outlined : Icons.home_outlined,
+            size: 12,
+            color: isForSale ? saleColor : AppColors.primary,
+          ),
+          const Gap(5),
+          Text(
+            isForSale ? 'For Sale' : 'For Rent',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+              color: isForSale ? saleColor : AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

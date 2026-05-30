@@ -156,18 +156,20 @@ class _ImageHero extends StatelessWidget {
             ),
           ),
 
-          // Top row: type badge/featured badge + save button
+          // Top row: type badge/featured badge + save button + FOR SALE badge
           Positioned(
             top: 12,
             left: 12,
             right: 12,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (property.isFeatured)
                   const _FeaturedBadge()
                 else
                   _TypeBadge(type: property.type),
+                const Spacer(),
+                // ── NEW: FOR SALE badge ──────────────────────────────────
+                if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
                 if (onSaveTap != null)
                   _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
               ],
@@ -297,6 +299,39 @@ class _FeaturedBadge extends StatelessWidget {
   }
 }
 
+// ── NEW: Sale Badge ───────────────────────────────────────────────────────────
+class _SaleBadge extends StatelessWidget {
+  const _SaleBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF16A34A); // emerald green
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.45),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: const Text(
+        'FOR SALE',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+}
+
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;
@@ -405,16 +440,24 @@ class _SaveButton extends StatelessWidget {
   }
 }
 
+// ── Updated Status Pill ───────────────────────────────────────────────────────
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
 
   @override
   Widget build(BuildContext context) {
+    // ── Map each status to a label + colour ──────────────────────────────
+    final (label, color) = switch (status) {
+      'RENTED' => ('Rented', AppColors.grey600),
+      'SOLD' => ('Sold', const Color(0xFFD97706)), // amber — visually distinct
+      _ => ('Unavailable', AppColors.grey600),
+    };
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.grey600.withOpacity(0.9),
+        color: color.withOpacity(0.9),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -430,7 +473,7 @@ class _StatusPill extends StatelessWidget {
           ),
           const Gap(6),
           Text(
-            'Unavailable',
+            label,
             style: AppTextStyles.labelSm.copyWith(
               color: Colors.white,
               fontSize: 11,

@@ -27,6 +27,11 @@ extension PropertyImageModelX on PropertyImageModel {
       PropertyImage(id: id, url: url, publicId: publicId, isPrimary: isPrimary);
 }
 
+extension PropertyVideoModelX on PropertyVideoModel {
+  PropertyVideo toEntity() =>
+      PropertyVideo(id: id, url: url, publicId: publicId, videoType: videoType);
+}
+
 extension UniversityModelX on UniversityModel {
   University toEntity() =>
       University(id: id, name: name, shortName: shortName, location: location);
@@ -63,6 +68,8 @@ extension PropertyModelX on PropertyModel {
     lat: lat,
     lng: lng,
     university: university?.toEntity(),
+    listingPurpose: listingPurpose,
+    videos: videos.map((e) => e.toEntity()).toList(),
   );
 }
 
