@@ -64,3 +64,5 @@ assets/images/logo_original.png
 # OS
 .DS_Store
 Thumbs.db
+
+**/key.properties

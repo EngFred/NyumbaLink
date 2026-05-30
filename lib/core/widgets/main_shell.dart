@@ -4,22 +4,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/core/widgets/nav_Item.dart';
-
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart'; // Adjust path if needed
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-class MainShell extends ConsumerWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key, required this.navigationShell});
-
   final StatefulNavigationShell navigationShell;
 
+  @override
+  ConsumerState<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends ConsumerState<MainShell> {
+  @override
+  void initState() {
+    super.initState();
+    // Safe post-frame execution ensures the UI renders cleanly before
+    // verifying authenticated registration, preserving a premium user experience.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authProvider.notifier).initFcmToken();
+    });
+  }
+
   void _onTap(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
       // When tapping the current tab again, go back to its initial location
       // (e.g. tapping Explore while already on Explore scrolls to top).
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
@@ -35,7 +49,7 @@ class MainShell extends ConsumerWidget {
     return Text(titles[index], style: AppTextStyles.h3);
   }
 
-  List<Widget> _buildActions(BuildContext context, WidgetRef ref, int index) {
+  List<Widget> _buildActions(BuildContext context, int index) {
     final unreadCount = ref.watch(notificationsProvider).unreadCount;
     return [
       IconButton(
@@ -81,24 +95,24 @@ class MainShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = navigationShell.currentIndex;
+  Widget build(BuildContext context) {
+    final currentIndex = widget.navigationShell.currentIndex;
     return PopScope(
       canPop: currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && currentIndex != 0) {
-          navigationShell.goBranch(0);
+          widget.navigationShell.goBranch(0);
         }
       },
       child: Scaffold(
         appBar: AppBar(
           title: _buildTitle(currentIndex),
-          actions: _buildActions(context, ref, currentIndex),
+          actions: _buildActions(context, currentIndex),
           scrolledUnderElevation: 0,
           backgroundColor: AppColors.surface, // Forces pure white
           surfaceTintColor: Colors.transparent,
         ),
-        body: navigationShell,
+        body: widget.navigationShell,
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,

@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_entities.dart';
 import '../../domain/usecases/auth_usecases.dart';
@@ -48,7 +47,6 @@ final appleSignInUseCaseProvider = Provider(
 // ── Clear-on-logout use cases ─────────────────────────────────────────────────
 // Defined here to avoid circular imports. Both booking and favorites files
 // do not import auth_provider, so this direction is safe.
-
 final clearLocalFavoritesUseCaseProvider = Provider(
   (ref) => ClearLocalFavoritesUseCase(ref.watch(favoritesRepositoryProvider)),
 );
@@ -57,16 +55,12 @@ final clearLocalBookingsUseCaseProvider = Provider(
 );
 
 // ── State ─────────────────────────────────────────────────────────────────────
-
 class AuthState {
   const AuthState({this.user, this.isLoading = true, this.error});
-
   final AuthUser? user;
   final bool isLoading;
   final String? error;
-
   bool get isAuthenticated => user != null;
-
   AuthState copyWith({
     AuthUser? user,
     bool? isLoading,
@@ -83,7 +77,6 @@ class AuthState {
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
-
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     ref.watch(loginUseCaseProvider),
@@ -104,7 +97,6 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 });
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
-
 class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(
     this._loginUseCase,
@@ -143,14 +135,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _checkAuthStatusUseCase();
       state = state.copyWith(user: user, isLoading: false);
-
-      // Register FCM token for the restored session (fire-and-forget).
-      if (user != null) {
-        final dio = _ref.read(dioProvider);
-        FcmService().init(dio).ignore();
-      }
+      // Note: FCM initialization for restored sessions is omitted here to avoid
+      // unprofessional native permission prompts popping up on Splash or Onboarding screens.
+      // It is handled cleanly via initFcmToken() when entering the MainShell.
     } catch (e) {
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  /// Requests notification permissions and synchronizes the FCM token sequentially.
+  /// Call this when the user arrives on the main application view to keep the onboarding clean.
+  Future<void> initFcmToken() async {
+    if (state.user != null) {
+      try {
+        final dio = _ref.read(dioProvider);
+        await FcmService().requestPermission();
+        await FcmService().init(dio);
+      } catch (_) {
+        // Fail silently in production to guarantee auth flows never break due to network drops
+      }
     }
   }
 
@@ -161,10 +164,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
 
-      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      // Request notification permission and register FCM token securely now that a valid auth session exists.
       final dio = _ref.read(dioProvider);
-      FcmService().init(dio).ignore();
-
+      await FcmService().requestPermission();
+      await FcmService().init(dio);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -179,10 +182,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
 
-      // Register FCM token for the new account (fire-and-forget).
+      // Request notification permission and register FCM token sequentially for the new account.
       final dio = _ref.read(dioProvider);
-      FcmService().init(dio).ignore();
-
+      await FcmService().requestPermission();
+      await FcmService().init(dio);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -193,21 +196,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     // 1. Trigger the loading overlay
     state = state.copyWith(isLoading: true);
-
     // 2. UX Polish: The local logout is so fast (< 5ms) that the user never sees
     // the loading overlay. We add a short artificial delay here so the user
     // sees the secure logout blur animation, confirming the action worked.
     await Future.delayed(const Duration(milliseconds: 600));
-
     // 3. Remove this device's FCM token from the backend BEFORE invalidating
     // the session — dio still carries a valid Bearer token at this point.
-    // Fire-and-forget — a failed delete must never block the logout flow.
+    // Awaiting here ensures clean state removal; errors caught to prevent blocking flows.
     final dio = _ref.read(dioProvider);
-    FcmService().removeFcmToken(dio).ignore();
-
+    try {
+      await FcmService().removeFcmToken(dio);
+    } catch (_) {}
     // 4. Perform the actual logout (invalidates the token on the server)
     await _logoutUseCase();
-
     // 5. Wipe all locally cached user data so the next guest session starts
     // with a clean slate. This must happen BEFORE clearUser is set — that
     // flip triggers provider rebuilds which call load(), and by then
@@ -216,7 +217,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _clearLocalFavoritesUseCase(),
       _clearLocalBookingsUseCase(),
     ]);
-
     // 6. Clear the in-memory user → isAuthenticated becomes false →
     // savedPropertiesProvider and myBookingsProvider rebuild and call
     // load() which now reads empty SharedPreferences → empty UI ✓
@@ -297,10 +297,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
 
-      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      // Register FCM token sequentially now that a valid auth session exists.
       final dio = _ref.read(dioProvider);
-      FcmService().init(dio).ignore();
-
+      await FcmService().requestPermission();
+      await FcmService().init(dio);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -315,10 +315,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: response.user, isLoading: false);
       _syncGuestData();
 
-      // Register FCM token now that we have a valid auth session (fire-and-forget).
+      // Register FCM token sequentially now that a valid auth session exists.
       final dio = _ref.read(dioProvider);
-      FcmService().init(dio).ignore();
-
+      await FcmService().requestPermission();
+      await FcmService().init(dio);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -329,7 +329,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void _syncGuestData() {
     // 1. Updated to call syncData() instead of syncGuestData()
     _ref.read(savedPropertiesProvider.notifier).syncData().catchError((_) {});
-
     // 2. Booking repository remains unchanged
     _ref.read(bookingRepositoryProvider).syncGuestData().catchError((_) {});
   }

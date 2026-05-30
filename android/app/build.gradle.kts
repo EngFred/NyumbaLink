@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -5,6 +8,13 @@ plugins {
     // END: FlutterFire Configuration
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Read keystore credentials securely from key.properties
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -32,23 +42,29 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("debug")
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as? String
+            keyPassword = keystoreProperties["keyPassword"] as? String
+            storeFile = (keystoreProperties["storeFile"] as? String)?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as? String
         }
     }
 
-    // buildTypes {
-    //     release {
-    //         signingConfig = signingConfigs.getByName("debug")
-    //         isMinifyEnabled = true
-    //         isShrinkResources = true
-    //         proguardFiles(
-    //             getDefaultProguardFile("proguard-android-optimize.txt"),
-    //             "proguard-rules.pro"
-    //         )
-    //     }
-    // }
+    buildTypes {
+        release {
+            // Configured to use your secure play store key configuration
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Code optimization switches for clean production code execution
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
 }
 
 flutter {
