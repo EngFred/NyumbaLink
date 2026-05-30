@@ -17,7 +17,7 @@ class TypePill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        PropertyTypeHelper.label(type),
+        PropertyTypeHelper.singularLabel(type),
         style: AppTextStyles.labelSm.copyWith(
           color: AppColors.primary,
           fontSize: 10,

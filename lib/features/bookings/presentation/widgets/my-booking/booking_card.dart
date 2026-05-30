@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rentora/core/utils/string_helpers.dart';
 import 'package:rentora/features/bookings/presentation/widgets/my-booking/status_badge.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../core/utils/enum_helpers.dart';
 import '../../../domain/entities/booking_entities.dart';
 
 class BookingCard extends StatelessWidget {
@@ -29,7 +31,6 @@ class BookingCard extends StatelessWidget {
     return Opacity(
       opacity: isCancelled ? 0.65 : 1.0,
       child: GestureDetector(
-        // UX Polish: Now taps navigate to the BOOKING detail, not the property
         onTap: () => context.push(AppRoutes.bookingDetailPath(booking.id)),
         child: Container(
           decoration: BoxDecoration(
@@ -41,7 +42,7 @@ class BookingCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Top Row: Status & Date ──────────────────────────────────────
+              // ── Top Row: Status & Date ────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -56,10 +57,12 @@ class BookingCard extends StatelessWidget {
                 ],
               ),
               const Gap(16),
-              // ── Middle: Property Info ───────────────────────────────────────
+
+              // ── Middle: Property Info ─────────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Thumbnail
                   Container(
                     width: 72,
                     height: 72,
@@ -88,12 +91,14 @@ class BookingCard extends StatelessWidget {
                           ),
                   ),
                   const Gap(16),
+
+                  // Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          booking.propertyTitle,
+                          booking.propertyTitle.toSentenceCase(),
                           style: AppTextStyles.h4.copyWith(
                             fontWeight: FontWeight.bold,
                             height: 1.3,
@@ -131,6 +136,18 @@ class BookingCard extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
+                          // Show billing cycle for rent listings only.
+                          // Sale properties have no billingCycle (null) so
+                          // this block is naturally skipped for them.
+                          if (booking.billingCycle != null) ...[
+                            const Gap(2),
+                            Text(
+                              BillingCycleHelper.full(booking.billingCycle),
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ],
                       ],
                     ),

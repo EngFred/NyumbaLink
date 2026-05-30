@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/string_helpers.dart';
 import '../providers/my_bookings_provider.dart';
 import '../widgets/my-booking/status_badge.dart';
 
@@ -59,33 +60,27 @@ class BookingDetailPage extends ConsumerWidget {
     );
   }
 
-  String _formatBillingCycle(String? cycle) {
-    if (cycle == null || cycle.isEmpty) return '';
-    switch (cycle.toUpperCase()) {
-      case 'DAILY':
-        return ' / day';
-      case 'MONTHLY':
-        return ' / month';
-      case 'QUARTERLY':
-        return ' / quarter';
-      case 'FOUR_MONTHS':
-        return ' / 4 months';
-      case 'BIANNUAL':
-        return ' / 6 months';
-      case 'ANNUAL':
-        return ' / year';
-      case 'SEMESTER':
-        return ' / semester';
-      default:
-        return ' / ${cycle.toLowerCase()}';
-    }
+  /// Formats billing cycle for inline display next to the price.
+  /// Returns null for sale properties (billingCycle is null) so the
+  /// caller can skip rendering entirely rather than showing empty text.
+  String? _formatBillingCycle(String? cycle) {
+    if (cycle == null || cycle.isEmpty) return null;
+    return switch (cycle.toUpperCase()) {
+      'DAILY' => ' / day',
+      'MONTHLY' => ' / month',
+      'QUARTERLY' => ' / quarter',
+      'FOUR_MONTHS' => ' / 4 months',
+      'BIANNUAL' => ' / 6 months',
+      'ANNUAL' => ' / year',
+      'SEMESTER' => ' / semester',
+      _ => ' / ${cycle.toLowerCase()}',
+    };
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(myBookingsProvider);
 
-    // Find the booking in local state instantly
     final booking = state.bookings.where((b) => b.id == bookingId).firstOrNull;
 
     if (booking == null) {
@@ -105,8 +100,10 @@ class BookingDetailPage extends ConsumerWidget {
       decimalDigits: 0,
     );
 
+    final billingLabel = _formatBillingCycle(booking.billingCycle);
+
     return Scaffold(
-      backgroundColor: AppColors.surface, // Clean flat background
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
@@ -126,7 +123,7 @@ class BookingDetailPage extends ConsumerWidget {
           ListView(
             padding: const EdgeInsets.only(bottom: 40),
             children: [
-              // ── 1. Status & Date Header ──────────────────────────────────────
+              // ── 1. Status & Date Header ──────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
                 child: Row(
@@ -151,7 +148,7 @@ class BookingDetailPage extends ConsumerWidget {
                 ),
               ),
 
-              // ── 2. Prominent Property Image ──────────────────────────────────
+              // ── 2. Property Image ────────────────────────────────────────
               if (booking.thumbnailUrl != null)
                 AspectRatio(
                   aspectRatio: 16 / 9,
@@ -181,7 +178,7 @@ class BookingDetailPage extends ConsumerWidget {
                   ),
                 ),
 
-              // ── 3. Property Details (Top-to-bottom flow) ─────────────────────
+              // ── 3. Property Details ──────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -193,7 +190,7 @@ class BookingDetailPage extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            booking.propertyTitle,
+                            booking.propertyTitle.toSentenceCase(),
                             style: AppTextStyles.h2.copyWith(height: 1.2),
                           ),
                         ),
@@ -243,7 +240,7 @@ class BookingDetailPage extends ConsumerWidget {
                       ],
                     ),
 
-                    // University (Hostels)
+                    // University (Hostels only)
                     if (booking.universityName != null &&
                         booking.universityName!.isNotEmpty) ...[
                       const Gap(10),
@@ -271,7 +268,9 @@ class BookingDetailPage extends ConsumerWidget {
                     const Divider(height: 1, color: AppColors.grey200),
                     const Gap(24),
 
-                    // Price
+                    // Price — billing cycle shown only for rent listings.
+                    // Sale properties have billingCycle == null so
+                    // billingLabel is null and the suffix is omitted.
                     if (booking.price > 0)
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -283,22 +282,23 @@ class BookingDetailPage extends ConsumerWidget {
                               fontWeight: FontWeight.w800,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
-                            child: Text(
-                              _formatBillingCycle(booking.billingCycle),
-                              style: AppTextStyles.bodyMd.copyWith(
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                          if (billingLabel != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                billingLabel,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
 
                     const Gap(32),
 
-                    // ── 4. Actions ────────────────────────────────────────────────
+                    // ── 4. Actions ───────────────────────────────────────────
                     OutlinedButton.icon(
                       onPressed: () => context.push(
                         AppRoutes.propertyDetailPath(booking.propertyId),
@@ -316,7 +316,7 @@ class BookingDetailPage extends ConsumerWidget {
 
                     const Gap(32),
 
-                    // Cancellation Section
+                    // Cancellation section
                     if (!booking.isCancelled) ...[
                       Center(
                         child: TextButton.icon(

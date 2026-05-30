@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:rentora/core/utils/string_helpers.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/thumbnail_fallback.dart';
 import 'package:rentora/features/properties/presentation/widgets/saved-properties/type_pill.dart';
 
@@ -60,7 +61,7 @@ class SavedPropertyCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            property.title,
+                            property.title.toSentenceCase(),
                             style: AppTextStyles.labelLg,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
