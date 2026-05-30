@@ -499,7 +499,7 @@ class _CardInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            property.title,
+            property.displayTitle,
             style: AppTextStyles.h4,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

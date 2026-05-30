@@ -81,7 +81,7 @@ class _PropertyContentState extends State<PropertyContent> {
                         const Gap(6),
                       ],
                       Text(
-                        p.title,
+                        p.displayTitle,
                         style: AppTextStyles.h1.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
