@@ -1,12 +1,31 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:video_player/video_player.dart';
+
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
 
-/// A premium, production-ready horizontally scrollable video card section.
+/// Derives a Cloudinary thumbnail URL from a video URL.
+/// Uses `so_auto` (auto-selected representative frame) and returns a .jpg.
+/// Returns null if the URL doesn't look like a Cloudinary video URL.
+String? _cloudinaryThumbnail(String videoUrl) {
+  try {
+    if (!videoUrl.contains('cloudinary.com')) return null;
+    // Keep /video/upload/ — just inject transforms and swap the extension
+    return videoUrl
+        .replaceFirst(
+          '/video/upload/',
+          '/video/upload/so_auto,w_600,q_auto,f_jpg/',
+        )
+        .replaceFirst(RegExp(r'\.(mp4|mov|webm)(\?.*)?$'), '.jpg');
+  } catch (_) {
+    return null;
+  }
+}
+
 class PropertyVideosSection extends StatelessWidget {
   const PropertyVideosSection({super.key, required this.videos});
   final List<PropertyVideo> videos;
@@ -16,7 +35,7 @@ class PropertyVideosSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section Header ───────────────────────────────────────────────────
+        // ── Section Header ───────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Row(
@@ -59,9 +78,9 @@ class PropertyVideosSection extends StatelessWidget {
           ),
         ),
 
-        // ── Cinematic Video Cards ────────────────────────────────────────────
+        // ── Video Cards ──────────────────────────────────────────────────
         SizedBox(
-          height: 135, // Optimized height for clean 16:9-proportioned items
+          height: 135,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -75,7 +94,8 @@ class PropertyVideosSection extends StatelessWidget {
   }
 }
 
-// ── Minimalist Content Configuration ──────────────────────────────────────────
+// ── Video config ──────────────────────────────────────────────────────────────
+
 class _VideoConfig {
   const _VideoConfig({required this.label, required this.icon});
   final String label;
@@ -102,7 +122,8 @@ const _kDefaultVideoConfig = _VideoConfig(
   icon: Icons.videocam_rounded,
 );
 
-// ── Premium Video Card ────────────────────────────────────────────────────────
+// ── Video Card ────────────────────────────────────────────────────────────────
+
 class _VideoCard extends StatelessWidget {
   const _VideoCard({required this.video});
   final PropertyVideo video;
@@ -110,6 +131,7 @@ class _VideoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = _kVideoConfigs[video.videoType] ?? _kDefaultVideoConfig;
+    final thumbnailUrl = _cloudinaryThumbnail(video.url);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -124,92 +146,111 @@ class _VideoCard extends StatelessWidget {
         ),
       ),
       child: Container(
-        width: 215, // Widescreen ratio silhouette
+        width: 215,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A), // Deep obsidian studio surface
+          color: const Color(0xFF0F172A),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
           ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: Stack(
-          clipBehavior: Clip.antiAlias,
+          fit: StackFit.expand,
           children: [
-            // Subtly muted cinematic radial backing to replace raw flat orbs
-            Positioned.fill(
-              child: DecoratedBox(
+            // ── Thumbnail ────────────────────────────────────────────────
+            if (thumbnailUrl != null)
+              CachedNetworkImage(
+                imageUrl: thumbnailUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    const ColoredBox(color: Color(0xFF0F172A)),
+                errorWidget: (_, __, ___) =>
+                    const ColoredBox(color: Color(0xFF0F172A)),
+              )
+            else
+              // Fallback radial gradient when no thumbnail available
+              DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     center: Alignment.center,
                     radius: 1.2,
                     colors: [
-                      const Color(0xFF1E293B).withOpacity(0.4),
+                      const Color(0xFF1E293B).withOpacity(0.6),
                       Colors.transparent,
                     ],
                   ),
                 ),
               ),
+
+            // ── Dark gradient overlay for readability ─────────────────────
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.72),
+                  ],
+                ),
+              ),
             ),
 
-            // Layout Structure
+            // ── Content overlay ───────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(14.0),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Upper Row: Clean Context Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                  // Type badge — top left
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(config.icon, size: 11, color: Colors.white70),
+                        const Gap(5),
+                        Text(
+                          config.label,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.07),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(config.icon, size: 12, color: Colors.white70),
-                            const Gap(5),
-                            Text(
-                              config.label,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+
                   const Spacer(),
 
-                  // Lower Layout: Clean Text details & Absolute Inline Action
+                  // Play button + label — bottom
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Refined High-End Glassmorphic Play Trigger
                       Container(
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withOpacity(0.2),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.25),
-                            width: 1,
+                            color: Colors.white.withOpacity(0.4),
+                            width: 1.5,
                           ),
                         ),
                         child: const Icon(
@@ -219,30 +260,27 @@ class _VideoCard extends StatelessWidget {
                         ),
                       ),
                       const Gap(10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'Watch Video',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Watch Video',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const Gap(1),
-                            Text(
-                              'Tap to preview',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.4),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w400,
-                              ),
+                          ),
+                          const Gap(1),
+                          Text(
+                            'Tap to preview',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 10,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -257,6 +295,7 @@ class _VideoCard extends StatelessWidget {
 }
 
 // ── Full-Screen Video Player Page ─────────────────────────────────────────────
+
 class _VideoPlayerPage extends StatefulWidget {
   const _VideoPlayerPage({required this.url, required this.title});
   final String url;
@@ -398,6 +437,7 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
 }
 
 // ── Controls Overlay ──────────────────────────────────────────────────────────
+
 class _ControlsOverlay extends StatelessWidget {
   const _ControlsOverlay({
     required this.controller,
@@ -579,7 +619,8 @@ class _ControlsOverlay extends StatelessWidget {
   }
 }
 
-// ── Loading View ──────────────────────────────────────────────────────────────
+// ── Loading / Error views ─────────────────────────────────────────────────────
+
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
   @override
@@ -598,11 +639,9 @@ class _LoadingView extends StatelessWidget {
   }
 }
 
-// ── Error View ────────────────────────────────────────────────────────────────
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.onClose});
   final VoidCallback onClose;
-
   @override
   Widget build(BuildContext context) {
     return Column(
