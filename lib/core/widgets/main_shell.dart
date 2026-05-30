@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:rentora/core/widgets/nav_Item.dart';
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart'; // Adjust path if needed
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
@@ -97,6 +98,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = widget.navigationShell.currentIndex;
+
     return PopScope(
       canPop: currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
@@ -104,62 +106,74 @@ class _MainShellState extends ConsumerState<MainShell> {
           widget.navigationShell.goBranch(0);
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: _buildTitle(currentIndex),
-          actions: _buildActions(context, currentIndex),
-          scrolledUnderElevation: 0,
-          backgroundColor: AppColors.surface, // Forces pure white
-          surfaceTintColor: Colors.transparent,
+      // ── ENCAPSULATE APP WORKSPACE WITH THE UPGRADE ALERT DIALOG ────────────
+      child: UpgradeAlert(
+        showLater: true, // Provides the clean optional "Later" dismiss option
+        showIgnore:
+            false, // Disables "Skip this version" so they are continually reminded
+        dialogStyle: UpgradeDialogStyle
+            .cupertino, // Uses clean, professional typography lines
+        upgrader: Upgrader(
+          // Setting duration to zero guarantees it prompts EVERY single time the app opens/mounts
+          durationUntilAlertAgain: Duration.zero,
         ),
-        body: widget.navigationShell,
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 16,
-                offset: const Offset(0, -3),
-              ),
-            ],
+        child: Scaffold(
+          appBar: AppBar(
+            title: _buildTitle(currentIndex),
+            actions: _buildActions(context, currentIndex),
+            scrolledUnderElevation: 0,
+            backgroundColor: AppColors.surface, // Forces pure white
+            surfaceTintColor: Colors.transparent,
           ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  NavItem(
-                    icon: Icons.explore_outlined,
-                    activeIcon: Icons.explore,
-                    label: 'Explore',
-                    isActive: currentIndex == 0,
-                    onTap: () => _onTap(0),
-                  ),
-                  NavItem(
-                    icon: Icons.favorite_border_rounded,
-                    activeIcon: Icons.favorite_rounded,
-                    label: 'Saved',
-                    isActive: currentIndex == 1,
-                    onTap: () => _onTap(1),
-                  ),
-                  NavItem(
-                    icon: Icons.receipt_long_outlined,
-                    activeIcon: Icons.receipt_long_rounded,
-                    label: 'Bookings',
-                    isActive: currentIndex == 2,
-                    onTap: () => _onTap(2),
-                  ),
-                  NavItem(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
-                    label: 'Account',
-                    isActive: currentIndex == 3,
-                    onTap: () => _onTap(3),
-                  ),
-                ],
+          body: widget.navigationShell,
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, -3),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    NavItem(
+                      icon: Icons.explore_outlined,
+                      activeIcon: Icons.explore,
+                      label: 'Explore',
+                      isActive: currentIndex == 0,
+                      onTap: () => _onTap(0),
+                    ),
+                    NavItem(
+                      icon: Icons.favorite_border_rounded,
+                      activeIcon: Icons.favorite_rounded,
+                      label: 'Saved',
+                      isActive: currentIndex == 1,
+                      onTap: () => _onTap(1),
+                    ),
+                    NavItem(
+                      icon: Icons.receipt_long_outlined,
+                      activeIcon: Icons.receipt_long_rounded,
+                      label: 'Bookings',
+                      isActive: currentIndex == 2,
+                      onTap: () => _onTap(2),
+                    ),
+                    NavItem(
+                      icon: Icons.person_outline_rounded,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Account',
+                      isActive: currentIndex == 3,
+                      onTap: () => _onTap(3),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
