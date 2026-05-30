@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:video_player/video_player.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
 
-/// Horizontally scrollable video cards — one per PropertyVideoType.
-/// Tapping any card opens a full-screen player with custom controls.
+/// A premium, production-ready horizontally scrollable video card section.
 class PropertyVideosSection extends StatelessWidget {
   const PropertyVideosSection({super.key, required this.videos});
   final List<PropertyVideo> videos;
@@ -18,38 +16,42 @@ class PropertyVideosSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section header ────────────────────────────────────────────────────
+        // ── Section Header ───────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.play_circle_outline_rounded,
                   color: AppColors.primary,
-                  size: 20,
+                  size: 22,
                 ),
               ),
               const Gap(12),
               Text('Property Videos', style: AppTextStyles.h4),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.grey100,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   '${videos.length} ${videos.length == 1 ? 'clip' : 'clips'}',
                   style: AppTextStyles.labelSm.copyWith(
-                    color: AppColors.grey500,
+                    color: AppColors.grey600,
                     fontSize: 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -57,14 +59,14 @@ class PropertyVideosSection extends StatelessWidget {
           ),
         ),
 
-        // ── Video cards ───────────────────────────────────────────────────────
+        // ── Cinematic Video Cards ────────────────────────────────────────────
         SizedBox(
-          height: 152,
+          height: 135, // Optimized height for clean 16:9-proportioned items
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: videos.length,
-            separatorBuilder: (_, __) => const Gap(12),
+            separatorBuilder: (_, __) => const Gap(14),
             itemBuilder: (context, index) => _VideoCard(video: videos[index]),
           ),
         ),
@@ -73,51 +75,34 @@ class PropertyVideosSection extends StatelessWidget {
   }
 }
 
-// ── Video type config ─────────────────────────────────────────────────────────
-
+// ── Minimalist Content Configuration ──────────────────────────────────────────
 class _VideoConfig {
-  const _VideoConfig({
-    required this.label,
-    required this.icon,
-    required this.gradientColors,
-    required this.accentColor,
-  });
+  const _VideoConfig({required this.label, required this.icon});
   final String label;
   final IconData icon;
-  final List<Color> gradientColors;
-  final Color accentColor;
 }
 
 const _kVideoConfigs = {
   'INTERIOR': _VideoConfig(
     label: 'Interior Tour',
-    icon: Icons.living_outlined,
-    gradientColors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
-    accentColor: Color(0xFF64B5F6),
+    icon: Icons.chair_alt_rounded,
   ),
   'EXTERIOR': _VideoConfig(
-    label: 'Exterior Tour',
-    icon: Icons.villa_outlined,
-    gradientColors: [Color(0xFF134E5E), Color(0xFF1A5C3A), Color(0xFF2D8653)],
-    accentColor: Color(0xFF81C784),
+    label: 'Exterior View',
+    icon: Icons.home_work_rounded,
   ),
   'NEIGHBORHOOD': _VideoConfig(
-    label: 'Neighbourhood',
-    icon: Icons.location_city_outlined,
-    gradientColors: [Color(0xFF1A0533), Color(0xFF2D1B69), Color(0xFF3B2A8A)],
-    accentColor: Color(0xFFCE93D8),
+    label: 'Neighborhood',
+    icon: Icons.explore_rounded,
   ),
 };
 
 const _kDefaultVideoConfig = _VideoConfig(
   label: 'Video Tour',
-  icon: Icons.videocam_outlined,
-  gradientColors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
-  accentColor: Color(0xFF90CAF9),
+  icon: Icons.videocam_rounded,
 );
 
-// ── Video Card ────────────────────────────────────────────────────────────────
-
+// ── Premium Video Card ────────────────────────────────────────────────────────
 class _VideoCard extends StatelessWidget {
   const _VideoCard({required this.video});
   final PropertyVideo video;
@@ -131,129 +116,138 @@ class _VideoCard extends StatelessWidget {
         PageRouteBuilder(
           opaque: false,
           barrierColor: Colors.black,
-          transitionDuration: const Duration(milliseconds: 280),
-          pageBuilder: (_, __, ___) => _VideoPlayerPage(
-            url: video.url,
-            title: config.label,
-            accentColor: config.accentColor,
-          ),
+          transitionDuration: const Duration(milliseconds: 250),
+          pageBuilder: (_, __, ___) =>
+              _VideoPlayerPage(url: video.url, title: config.label),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
         ),
       ),
       child: Container(
-        width: 186,
+        width: 215, // Widescreen ratio silhouette
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: config.gradientColors,
-          ),
+          color: const Color(0xFF0F172A), // Deep obsidian studio surface
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.06), width: 1),
           boxShadow: [
             BoxShadow(
-              color: config.gradientColors.first.withOpacity(0.55),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Stack(
+          clipBehavior: Clip.antiAlias,
           children: [
-            // ── Decorative background orbs ──────────────────────────────────
-            Positioned(
-              top: -18,
-              right: -18,
-              child: Container(
-                width: 90,
-                height: 90,
+            // Subtly muted cinematic radial backing to replace raw flat orbs
+            Positioned.fill(
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: config.accentColor.withOpacity(0.09),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -28,
-              left: -28,
-              child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: config.accentColor.withOpacity(0.07),
-                ),
-              ),
-            ),
-
-            // ── Main content ────────────────────────────────────────────────
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Type icon
-                Center(
-                  child: Icon(
-                    config.icon,
-                    size: 20,
-                    color: config.accentColor.withOpacity(0.85),
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.2,
+                    colors: [
+                      const Color(0xFF1E293B).withOpacity(0.4),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
-                const Gap(10),
+              ),
+            ),
 
-                // Play button
-                Center(
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.14),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.55),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+            // Layout Structure
+            Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Upper Row: Clean Context Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.07),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(config.icon, size: 12, color: Colors.white70),
+                            const Gap(5),
+                            Text(
+                              config.label,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const Spacer(),
 
-                const Gap(12),
-
-                // Label
-                Center(
-                  child: Text(
-                    config.label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                    ),
+                  // Lower Layout: Clean Text details & Absolute Inline Action
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Refined High-End Glassmorphic Play Trigger
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const Gap(10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Watch Video',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Gap(1),
+                            Text(
+                              'Tap to preview',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.4),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const Gap(3),
-                Center(
-                  child: Text(
-                    'Tap to watch',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.45),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -263,16 +257,10 @@ class _VideoCard extends StatelessWidget {
 }
 
 // ── Full-Screen Video Player Page ─────────────────────────────────────────────
-
 class _VideoPlayerPage extends StatefulWidget {
-  const _VideoPlayerPage({
-    required this.url,
-    required this.title,
-    required this.accentColor,
-  });
+  const _VideoPlayerPage({required this.url, required this.title});
   final String url;
   final String title;
-  final Color accentColor;
 
   @override
   State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
@@ -282,7 +270,6 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
     with SingleTickerProviderStateMixin {
   late final VideoPlayerController _controller;
   late final AnimationController _controlsFade;
-
   bool _initialized = false;
   bool _showControls = true;
   bool _hasError = false;
@@ -290,8 +277,6 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
   @override
   void initState() {
     super.initState();
-
-    // Allow landscape while player is open
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,
@@ -301,7 +286,7 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
 
     _controlsFade = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 240),
+      duration: const Duration(milliseconds: 200),
       value: 1,
     );
 
@@ -354,7 +339,7 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
   void _togglePlayPause() {
     if (_controller.value.isPlaying) {
       _controller.pause();
-      _showControlsNow(); // Always show controls when paused
+      _showControlsNow();
     } else {
       _controller.play();
       _scheduleControlsHide();
@@ -363,7 +348,6 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
 
   @override
   void dispose() {
-    // Restore portrait-only and system UI on close
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _controller
@@ -384,7 +368,6 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
           fit: StackFit.expand,
           alignment: Alignment.center,
           children: [
-            // ── Video ──────────────────────────────────────────────────────
             if (_initialized)
               Center(
                 child: AspectRatio(
@@ -395,16 +378,14 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
             else if (_hasError)
               _ErrorView(onClose: () => Navigator.of(context).pop())
             else
-              _LoadingView(accentColor: widget.accentColor),
+              const _LoadingView(),
 
-            // ── Controls overlay ───────────────────────────────────────────
             if (_initialized)
               FadeTransition(
                 opacity: _controlsFade,
                 child: _ControlsOverlay(
                   controller: _controller,
                   title: widget.title,
-                  accentColor: widget.accentColor,
                   onClose: () => Navigator.of(context).pop(),
                   onPlayPause: _togglePlayPause,
                 ),
@@ -417,19 +398,15 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage>
 }
 
 // ── Controls Overlay ──────────────────────────────────────────────────────────
-
 class _ControlsOverlay extends StatelessWidget {
   const _ControlsOverlay({
     required this.controller,
     required this.title,
-    required this.accentColor,
     required this.onClose,
     required this.onPlayPause,
   });
-
   final VideoPlayerController controller;
   final String title;
-  final Color accentColor;
   final VoidCallback onClose;
   final VoidCallback onPlayPause;
 
@@ -449,48 +426,43 @@ class _ControlsOverlay extends StatelessWidget {
 
     return Stack(
       children: [
-        // Top fade gradient
         Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: Container(
-            height: 130,
+            height: 110,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xCC000000), Colors.transparent],
+                colors: [Color(0x99000000), Colors.transparent],
               ),
             ),
           ),
         ),
-
-        // Bottom fade gradient
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
           child: Container(
-            height: 130,
+            height: 110,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
-                colors: [Color(0xCC000000), Colors.transparent],
+                colors: [Color(0x99000000), Colors.transparent],
               ),
             ),
           ),
         ),
-
-        // ── Top bar: close button + title ───────────────────────────────────
         Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(4, 6, 16, 0),
+              padding: const EdgeInsets.fromLTRB(6, 6, 16, 0),
               child: Row(
                 children: [
                   IconButton(
@@ -506,8 +478,9 @@ class _ControlsOverlay extends StatelessWidget {
                     title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ],
@@ -515,21 +488,18 @@ class _ControlsOverlay extends StatelessWidget {
             ),
           ),
         ),
-
-        // ── Center play/pause ───────────────────────────────────────────────
         Center(
           child: GestureDetector(
             onTap: onPlayPause,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              width: 68,
-              height: 68,
+            child: Container(
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.48),
+                color: Colors.black.withOpacity(0.4),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.35),
-                  width: 1.5,
+                  color: Colors.white.withOpacity(0.25),
+                  width: 1,
                 ),
               ),
               child: Icon(
@@ -537,36 +507,34 @@ class _ControlsOverlay extends StatelessWidget {
                     ? Icons.pause_rounded
                     : Icons.play_arrow_rounded,
                 color: Colors.white,
-                size: 36,
+                size: 32,
               ),
             ),
           ),
         ),
-
-        // ── Bottom controls: seek bar + time ────────────────────────────────
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SliderTheme(
                     data: SliderThemeData(
-                      trackHeight: 3,
+                      trackHeight: 2.5,
                       thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 6,
+                        enabledThumbRadius: 5,
                       ),
                       overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 14,
+                        overlayRadius: 12,
                       ),
-                      activeTrackColor: accentColor,
-                      inactiveTrackColor: Colors.white.withOpacity(0.28),
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.white.withOpacity(0.24),
                       thumbColor: Colors.white,
-                      overlayColor: Colors.white.withOpacity(0.15),
+                      overlayColor: Colors.white.withOpacity(0.12),
                     ),
                     child: Slider(
                       value: progress,
@@ -585,7 +553,7 @@ class _ControlsOverlay extends StatelessWidget {
                         Text(
                           _fmt(pos),
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withOpacity(0.55),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -593,7 +561,7 @@ class _ControlsOverlay extends StatelessWidget {
                         Text(
                           _fmt(dur),
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withOpacity(0.55),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -612,21 +580,18 @@ class _ControlsOverlay extends StatelessWidget {
 }
 
 // ── Loading View ──────────────────────────────────────────────────────────────
-
 class _LoadingView extends StatelessWidget {
-  const _LoadingView({required this.accentColor});
-  final Color accentColor;
-
+  const _LoadingView();
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        CircularProgressIndicator(color: accentColor, strokeWidth: 2.5),
-        const Gap(20),
+        const CircularProgressIndicator(color: Colors.white24, strokeWidth: 2),
+        const Gap(16),
         Text(
           'Loading video…',
-          style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 13),
+          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
         ),
       ],
     );
@@ -634,7 +599,6 @@ class _LoadingView extends StatelessWidget {
 }
 
 // ── Error View ────────────────────────────────────────────────────────────────
-
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.onClose});
   final VoidCallback onClose;
@@ -645,28 +609,26 @@ class _ErrorView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(
-          Icons.broken_image_outlined,
-          color: Colors.white38,
-          size: 56,
+          Icons.error_outline_rounded,
+          color: Colors.white30,
+          size: 44,
         ),
-        const Gap(16),
+        const Gap(14),
         const Text(
           'Could not load video',
           style: TextStyle(
             color: Colors.white60,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const Gap(8),
-        const Text(
-          'Check your connection and try again.',
-          style: TextStyle(color: Colors.white38, fontSize: 12),
-        ),
-        const Gap(28),
+        const Gap(24),
         TextButton(
           onPressed: onClose,
-          child: const Text('Go back', style: TextStyle(color: Colors.white54)),
+          child: const Text(
+            'Go back',
+            style: TextStyle(color: Colors.white54, fontSize: 13),
+          ),
         ),
       ],
     );
