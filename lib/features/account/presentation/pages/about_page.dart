@@ -227,7 +227,7 @@ class AboutPage extends ConsumerWidget {
             // ── Footer ───────────────────────────────────────────────
             Center(
               child: Text(
-                '© ${DateTime.now().year} Rentora Uganda',
+                '© ${DateTime.now().year} Rentora Houselink Uganda',
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textHint,
                   letterSpacing: 0.3,
