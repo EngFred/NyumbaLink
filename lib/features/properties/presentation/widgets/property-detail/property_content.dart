@@ -7,10 +7,10 @@ import 'package:rentora/features/properties/presentation/widgets/property-detail
 import 'package:rentora/features/properties/presentation/widgets/property-detail/details_grid.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/engagement_stats.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/meta_chips_row.dart';
+import 'package:rentora/features/properties/presentation/widgets/property-detail/property_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/property_videos_section.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/sheet_handle.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/similar_properties_section.dart';
-
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
@@ -37,6 +37,11 @@ class _PropertyContentState extends State<PropertyContent> {
   Widget build(BuildContext context) {
     final p = widget.property;
 
+    // The videos section is shown here only when the property also has images.
+    // When there are no images the hero itself already surfaces the videos,
+    // so we must not duplicate them in the scrollable content below.
+    final showVideosSection = p.images.isNotEmpty && p.videos.isNotEmpty;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
@@ -45,103 +50,13 @@ class _PropertyContentState extends State<PropertyContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
+          // ── Handle ────────────────────────────────────────────────────
           const SheetHandle(),
 
-          // ── Title + Location + Listing Purpose ───────────────────────────
+          // ── Title + location + listing purpose ────────────────────────
           Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Container(
-                  padding: p.isFeatured
-                      ? const EdgeInsets.only(left: 14)
-                      : EdgeInsets.zero,
-                  decoration: p.isFeatured
-                      ? const BoxDecoration(
-                          border: Border(
-                            left: BorderSide(
-                              color: Color(0xFFD4A017),
-                              width: 3.5,
-                            ),
-                          ),
-                        )
-                      : null,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (p.isFeatured) ...[
-                        const Text(
-                          '★ FEATURED LISTING',
-                          style: TextStyle(
-                            color: Color(0xFFD4A017),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.1,
-                          ),
-                        ),
-                        const Gap(6),
-                      ],
-                      Text(
-                        p.displayTitle,
-                        style: AppTextStyles.h1.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Gap(8),
-
-                      // ── University (HOSTEL only) ──────────────────────────
-                      if (p.university != null) ...[
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.school_outlined,
-                              size: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                            const Gap(6),
-                            Expanded(
-                              child: Text(
-                                p.university!.name,
-                                style: AppTextStyles.bodyMd.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Gap(6),
-                      ],
-
-                      // ── Location ──────────────────────────────────────────
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_rounded,
-                            size: 16,
-                            color: AppColors.accent,
-                          ),
-                          const Gap(6),
-                          Expanded(
-                            child: Text(
-                              p.locationDisplay,
-                              style: AppTextStyles.bodyMd.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // ── Listing purpose pill ─────────────────────────
-                      const Gap(10),
-                      _ListingPurposePill(listingPurpose: p.listingPurpose),
-                    ],
-                  ),
-                ),
+                child: PropertyHeader(property: p),
               )
               .animate(delay: 60.ms)
               .fadeIn(duration: 300.ms)
@@ -149,7 +64,7 @@ class _PropertyContentState extends State<PropertyContent> {
 
           const Gap(15),
 
-          // ── Meta chips ────────────────────────────────────────────────────
+          // ── Meta chips ────────────────────────────────────────────────
           if (_hasMeta(p))
             MetaChipsRow(
               property: p,
@@ -164,14 +79,14 @@ class _PropertyContentState extends State<PropertyContent> {
           ),
           const Gap(10),
 
-          // ── Description ───────────────────────────────────────────────────
+          // ── Description ───────────────────────────────────────────────
           DescriptionSection(
             description: p.displayDescription,
             expanded: _descExpanded,
             onToggle: () => setState(() => _descExpanded = !_descExpanded),
           ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
 
-          // ── Amenities ─────────────────────────────────────────────────────
+          // ── Amenities ─────────────────────────────────────────────────
           if (p.amenities != null && p.amenities!.isNotEmpty) ...[
             const Gap(24),
             const Divider(
@@ -186,8 +101,8 @@ class _PropertyContentState extends State<PropertyContent> {
             ).animate(delay: 180.ms).fadeIn(duration: 300.ms),
           ],
 
-          // ── NEW: Property Videos ──────────────────────────────────────────
-          if (p.videos.isNotEmpty) ...[
+          // ── Videos (only shown when property also has images) ─────────
+          if (showVideosSection) ...[
             const Gap(24),
             const Divider(
               indent: 20,
@@ -201,7 +116,7 @@ class _PropertyContentState extends State<PropertyContent> {
             ).animate(delay: 200.ms).fadeIn(duration: 300.ms),
           ],
 
-          // ── Details grid ──────────────────────────────────────────────────
+          // ── Details grid ──────────────────────────────────────────────
           const Gap(24),
           const Divider(
             indent: 20,
@@ -214,7 +129,7 @@ class _PropertyContentState extends State<PropertyContent> {
             property: p,
           ).animate(delay: 220.ms).fadeIn(duration: 300.ms),
 
-          // ── Engagement stats ──────────────────────────────────────────────
+          // ── Engagement stats ──────────────────────────────────────────
           const Gap(24),
           const Divider(
             indent: 20,
@@ -226,7 +141,7 @@ class _PropertyContentState extends State<PropertyContent> {
             property: p,
           ).animate(delay: 260.ms).fadeIn(duration: 300.ms),
 
-          // ── Report button ─────────────────────────────────────────────────
+          // ── Report button ─────────────────────────────────────────────
           const Gap(8),
           Center(
             child: TextButton.icon(
@@ -248,7 +163,7 @@ class _PropertyContentState extends State<PropertyContent> {
           ),
           const Gap(24),
 
-          // ── Similar Properties ────────────────────────────────────────────
+          // ── Similar properties ────────────────────────────────────────
           const Divider(
             indent: 20,
             endIndent: 20,
@@ -271,52 +186,4 @@ class _PropertyContentState extends State<PropertyContent> {
       p.floor != null ||
       p.hotelCategory != null ||
       p.furnishingStatus != null;
-}
-
-class _ListingPurposePill extends StatelessWidget {
-  const _ListingPurposePill({required this.listingPurpose});
-  final String listingPurpose;
-
-  @override
-  Widget build(BuildContext context) {
-    final isForSale = listingPurpose == 'SALE';
-
-    const saleColor = Color(0xFF16A34A); // emerald green
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: isForSale
-            ? saleColor.withOpacity(0.10)
-            : AppColors.primary.withOpacity(0.09),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isForSale
-              ? saleColor.withOpacity(0.35)
-              : AppColors.primary.withOpacity(0.28),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isForSale ? Icons.sell_outlined : Icons.home_outlined,
-            size: 12,
-            color: isForSale ? saleColor : AppColors.primary,
-          ),
-          const Gap(5),
-          Text(
-            isForSale ? 'For Sale' : 'For Rent',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-              color: isForSale ? saleColor : AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

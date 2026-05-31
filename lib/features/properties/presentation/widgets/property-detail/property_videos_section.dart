@@ -1,31 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
-import 'package:video_player/video_player.dart';
 
+import 'package:rentora/features/properties/presentation/widgets/property-detail/video_player_page.dart';
+import 'package:rentora/features/properties/presentation/widgets/property-detail/video_utils.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/property_entities.dart';
 
-/// Derives a Cloudinary thumbnail URL from a video URL.
-/// Uses `so_auto` (auto-selected representative frame) and returns a .jpg.
-/// Returns null if the URL doesn't look like a Cloudinary video URL.
-String? _cloudinaryThumbnail(String videoUrl) {
-  try {
-    if (!videoUrl.contains('cloudinary.com')) return null;
-    // Keep /video/upload/ — just inject transforms and swap the extension
-    return videoUrl
-        .replaceFirst(
-          '/video/upload/',
-          '/video/upload/so_auto,w_600,q_auto,f_jpg/',
-        )
-        .replaceFirst(RegExp(r'\.(mp4|mov|webm)(\?.*)?$'), '.jpg');
-  } catch (_) {
-    return null;
-  }
-}
-
+/// Horizontal scrollable row of video cards shown in the property-detail
+/// content area (only when the property has BOTH images and videos).
 class PropertyVideosSection extends StatelessWidget {
   const PropertyVideosSection({super.key, required this.videos});
   final List<PropertyVideo> videos;
@@ -35,7 +19,7 @@ class PropertyVideosSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Section Header ───────────────────────────────────────────────
+        // ── Section header ───────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: Row(
@@ -78,7 +62,7 @@ class PropertyVideosSection extends StatelessWidget {
           ),
         ),
 
-        // ── Video Cards ──────────────────────────────────────────────────
+        // ── Video cards ──────────────────────────────────────────────────
         SizedBox(
           height: 135,
           child: ListView.separated(
@@ -94,35 +78,7 @@ class PropertyVideosSection extends StatelessWidget {
   }
 }
 
-// ── Video config ──────────────────────────────────────────────────────────────
-
-class _VideoConfig {
-  const _VideoConfig({required this.label, required this.icon});
-  final String label;
-  final IconData icon;
-}
-
-const _kVideoConfigs = {
-  'INTERIOR': _VideoConfig(
-    label: 'Interior Tour',
-    icon: Icons.chair_alt_rounded,
-  ),
-  'EXTERIOR': _VideoConfig(
-    label: 'Exterior View',
-    icon: Icons.home_work_rounded,
-  ),
-  'NEIGHBORHOOD': _VideoConfig(
-    label: 'Neighborhood',
-    icon: Icons.explore_rounded,
-  ),
-};
-
-const _kDefaultVideoConfig = _VideoConfig(
-  label: 'Video Tour',
-  icon: Icons.videocam_rounded,
-);
-
-// ── Video Card ────────────────────────────────────────────────────────────────
+// ── Video card ────────────────────────────────────────────────────────────────
 
 class _VideoCard extends StatelessWidget {
   const _VideoCard({required this.video});
@@ -130,8 +86,9 @@ class _VideoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _kVideoConfigs[video.videoType] ?? _kDefaultVideoConfig;
-    final thumbnailUrl = _cloudinaryThumbnail(video.url);
+    final config =
+        kVideoTypeConfigs[video.videoType] ?? kDefaultVideoTypeConfig;
+    final thumbnailUrl = cloudinaryThumbnail(video.url);
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
@@ -140,7 +97,7 @@ class _VideoCard extends StatelessWidget {
           barrierColor: Colors.black,
           transitionDuration: const Duration(milliseconds: 250),
           pageBuilder: (_, __, ___) =>
-              _VideoPlayerPage(url: video.url, title: config.label),
+              VideoPlayerPage(url: video.url, title: config.label),
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
         ),
@@ -163,7 +120,7 @@ class _VideoCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // ── Thumbnail ────────────────────────────────────────────────
+            // Thumbnail
             if (thumbnailUrl != null)
               CachedNetworkImage(
                 imageUrl: thumbnailUrl,
@@ -174,7 +131,6 @@ class _VideoCard extends StatelessWidget {
                     const ColoredBox(color: Color(0xFF0F172A)),
               )
             else
-              // Fallback radial gradient when no thumbnail available
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
@@ -188,7 +144,7 @@ class _VideoCard extends StatelessWidget {
                 ),
               ),
 
-            // ── Dark gradient overlay for readability ─────────────────────
+            // Dark gradient overlay
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -202,7 +158,7 @@ class _VideoCard extends StatelessWidget {
               ),
             ),
 
-            // ── Content overlay ───────────────────────────────────────────
+            // Content overlay
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -235,9 +191,7 @@ class _VideoCard extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const Spacer(),
-
                   // Play button + label — bottom
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -290,386 +244,6 @@ class _VideoCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Full-Screen Video Player Page ─────────────────────────────────────────────
-
-class _VideoPlayerPage extends StatefulWidget {
-  const _VideoPlayerPage({required this.url, required this.title});
-  final String url;
-  final String title;
-
-  @override
-  State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
-}
-
-class _VideoPlayerPageState extends State<_VideoPlayerPage>
-    with SingleTickerProviderStateMixin {
-  late final VideoPlayerController _controller;
-  late final AnimationController _controlsFade;
-  bool _initialized = false;
-  bool _showControls = true;
-  bool _hasError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
-    _controlsFade = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      value: 1,
-    );
-
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize()
-          .then((_) {
-            if (!mounted) return;
-            setState(() => _initialized = true);
-            _controller.play();
-            _scheduleControlsHide();
-          })
-          .catchError((_) {
-            if (mounted) setState(() => _hasError = true);
-          });
-
-    _controller.addListener(_onVideoTick);
-  }
-
-  void _onVideoTick() {
-    if (mounted) setState(() {});
-  }
-
-  void _scheduleControlsHide() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _showControls && _controller.value.isPlaying) {
-        _hideControls();
-      }
-    });
-  }
-
-  void _hideControls() {
-    setState(() => _showControls = false);
-    _controlsFade.reverse();
-  }
-
-  void _showControlsNow() {
-    setState(() => _showControls = true);
-    _controlsFade.forward();
-  }
-
-  void _toggleControls() {
-    if (_showControls) {
-      _hideControls();
-    } else {
-      _showControlsNow();
-      _scheduleControlsHide();
-    }
-  }
-
-  void _togglePlayPause() {
-    if (_controller.value.isPlaying) {
-      _controller.pause();
-      _showControlsNow();
-    } else {
-      _controller.play();
-      _scheduleControlsHide();
-    }
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    _controller
-      ..removeListener(_onVideoTick)
-      ..dispose();
-    _controlsFade.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: _toggleControls,
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          fit: StackFit.expand,
-          alignment: Alignment.center,
-          children: [
-            if (_initialized)
-              Center(
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                ),
-              )
-            else if (_hasError)
-              _ErrorView(onClose: () => Navigator.of(context).pop())
-            else
-              const _LoadingView(),
-
-            if (_initialized)
-              FadeTransition(
-                opacity: _controlsFade,
-                child: _ControlsOverlay(
-                  controller: _controller,
-                  title: widget.title,
-                  onClose: () => Navigator.of(context).pop(),
-                  onPlayPause: _togglePlayPause,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Controls Overlay ──────────────────────────────────────────────────────────
-
-class _ControlsOverlay extends StatelessWidget {
-  const _ControlsOverlay({
-    required this.controller,
-    required this.title,
-    required this.onClose,
-    required this.onPlayPause,
-  });
-  final VideoPlayerController controller;
-  final String title;
-  final VoidCallback onClose;
-  final VoidCallback onPlayPause;
-
-  String _fmt(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pos = controller.value.position;
-    final dur = controller.value.duration;
-    final progress = dur.inMilliseconds > 0
-        ? (pos.inMilliseconds / dur.inMilliseconds).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 110,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x99000000), Colors.transparent],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 110,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Color(0x99000000), Colors.transparent],
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(6, 6, 16, 0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: onClose,
-                  ),
-                  const Gap(4),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Center(
-          child: GestureDetector(
-            onTap: onPlayPause,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.4),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.25),
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                controller.value.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 2.5,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 5,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 12,
-                      ),
-                      activeTrackColor: Colors.white,
-                      inactiveTrackColor: Colors.white.withOpacity(0.24),
-                      thumbColor: Colors.white,
-                      overlayColor: Colors.white.withOpacity(0.12),
-                    ),
-                    child: Slider(
-                      value: progress,
-                      onChanged: (v) => controller.seekTo(
-                        Duration(
-                          milliseconds: (v * dur.inMilliseconds).round(),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _fmt(pos),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.55),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          _fmt(dur),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.55),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Loading / Error views ─────────────────────────────────────────────────────
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CircularProgressIndicator(color: Colors.white24, strokeWidth: 2),
-        const Gap(16),
-        Text(
-          'Loading video…',
-          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
-        ),
-      ],
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onClose});
-  final VoidCallback onClose;
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.error_outline_rounded,
-          color: Colors.white30,
-          size: 44,
-        ),
-        const Gap(14),
-        const Text(
-          'Could not load video',
-          style: TextStyle(
-            color: Colors.white60,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Gap(24),
-        TextButton(
-          onPressed: onClose,
-          child: const Text(
-            'Go back',
-            style: TextStyle(color: Colors.white54, fontSize: 13),
-          ),
-        ),
-      ],
     );
   }
 }
