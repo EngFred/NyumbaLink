@@ -89,7 +89,7 @@ class FeaturedHeroCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // ── Title + listing purpose inline ─────────────────────
-                  // e.g. "Testing — For Sale"  or  "rental — For Rent"
+                  // Show "For Sale" only. For rent listings, do not repeat it.
                   Text.rich(
                     TextSpan(
                       children: [
@@ -100,15 +100,16 @@ class FeaturedHeroCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        TextSpan(
-                          text: isForSale ? ' — For Sale' : ' — For Rent',
-                          style: AppTextStyles.h4.copyWith(
-                            color: Colors.white60,
-                            fontWeight: FontWeight.w400,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
+                        if (isForSale)
+                          TextSpan(
+                            text: ' — For Sale',
+                            style: AppTextStyles.h4.copyWith(
+                              color: Colors.white60,
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                     maxLines: 2,
