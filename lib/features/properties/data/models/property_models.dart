@@ -1,6 +1,5 @@
 import '../../../universities/data/models/university_model.dart';
 
-// ── District ──────────────────────────────────────────────────────────────────
 class DistrictModel {
   const DistrictModel({required this.id, required this.name});
   final String id;
@@ -9,7 +8,6 @@ class DistrictModel {
       DistrictModel(id: j['id'] as String, name: j['name'] as String);
 }
 
-// ── Area ──────────────────────────────────────────────────────────────────────
 class AreaModel {
   const AreaModel({required this.id, required this.name});
   final String id;
@@ -18,7 +16,6 @@ class AreaModel {
       AreaModel(id: j['id'] as String, name: j['name'] as String);
 }
 
-// ── Contact ───────────────────────────────────────────────────────────────────
 class ContactModel {
   const ContactModel({
     required this.id,
@@ -44,7 +41,6 @@ class ContactModel {
   );
 }
 
-// ── Property Image ────────────────────────────────────────────────────────────
 class PropertyImageModel {
   const PropertyImageModel({
     required this.id,
@@ -65,7 +61,6 @@ class PropertyImageModel {
       );
 }
 
-// ── Property Video ─────────────────────────────────────────────────────────────
 class PropertyVideoModel {
   const PropertyVideoModel({
     required this.id,
@@ -87,7 +82,6 @@ class PropertyVideoModel {
       );
 }
 
-// ── Property ──────────────────────────────────────────────────────────────────
 class PropertyModel {
   const PropertyModel({
     required this.id,
@@ -159,9 +153,24 @@ class PropertyModel {
   bool get hasImages => images.isNotEmpty;
 
   String? get thumbnailUrl {
-    if (images.isEmpty) return null;
-    final primary = images.where((i) => i.isPrimary).firstOrNull;
-    return (primary ?? images.first).url;
+    if (images.isNotEmpty) {
+      final primary = images.where((i) => i.isPrimary).firstOrNull;
+      return (primary ?? images.first).url;
+    }
+    if (videos.isNotEmpty) {
+      return _videoThumbnail(videos.first.url);
+    }
+    return null;
+  }
+
+  static String? _videoThumbnail(String url) {
+    if (!url.contains('cloudinary.com')) return null;
+    return url
+        .replaceFirst(
+          '/video/upload/',
+          '/video/upload/so_auto,w_600,q_auto,f_jpg/',
+        )
+        .replaceFirst(RegExp(r'\.(mp4|mov|webm)(\?.*)?$'), '.jpg');
   }
 
   factory PropertyModel.fromJson(Map<String, dynamic> j) {
@@ -219,7 +228,6 @@ class PropertyModel {
   }
 }
 
-// ── Hostel Room ───────────────────────────────────────────────────────────────
 class HostelRoomModel {
   const HostelRoomModel({
     required this.id,
@@ -255,7 +263,6 @@ class HostelRoomModel {
   );
 }
 
-// ── Hostel Stats ──────────────────────────────────────────────────────────────
 class HostelStatsModel {
   const HostelStatsModel({
     required this.total,

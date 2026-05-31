@@ -1,7 +1,6 @@
 import '../../../universities/domain/entities/university.dart';
 import '../../../../../core/utils/string_helpers.dart';
 
-// ── District Entity ──────────────────────────────────────────────────────────
 class District {
   const District({required this.id, required this.name});
   final String id;
@@ -10,7 +9,6 @@ class District {
   String get displayName => name.toSentenceCase();
 }
 
-// ── Area Entity ───────────────────────────────────────────────────────────────
 class Area {
   const Area({required this.id, required this.name});
   final String id;
@@ -19,7 +17,6 @@ class Area {
   String get displayName => name.toSentenceCase();
 }
 
-// ── Contact Entity ────────────────────────────────────────────────────────────
 class Contact {
   const Contact({
     required this.id,
@@ -37,7 +34,6 @@ class Contact {
   final String? email;
 }
 
-// ── Property Image Entity ─────────────────────────────────────────────────────
 class PropertyImage {
   const PropertyImage({
     required this.id,
@@ -51,7 +47,6 @@ class PropertyImage {
   final bool isPrimary;
 }
 
-// ── Property Video Entity ─────────────────────────────────────────────────────
 class PropertyVideo {
   const PropertyVideo({
     required this.id,
@@ -65,7 +60,6 @@ class PropertyVideo {
   final String videoType; // 'INTERIOR' | 'EXTERIOR' | 'NEIGHBORHOOD'
 }
 
-// ── Main Property Entity ──────────────────────────────────────────────────────
 class Property {
   const Property({
     required this.id,
@@ -133,22 +127,15 @@ class Property {
   final String listingPurpose;
   final List<PropertyVideo> videos;
 
-  // ── Convenience getters ───────────────────────────────────────────────────
-
   bool get isAvailable => status == 'AVAILABLE';
   bool get isHostel => type == 'HOSTEL';
   bool get hasImages => images.isNotEmpty;
   bool get isForSale => listingPurpose == 'SALE';
   bool get isForRent => listingPurpose == 'RENT';
 
-  /// Use in all UI widgets instead of [title] directly.
   String get displayTitle => title.toSentenceCase();
-
-  /// Use in all UI widgets instead of [description] directly.
   String get displayDescription => description.toSentenceCase();
 
-  /// Returns a formatted location string using normalised area/district names.
-  /// Example: "Kololo, Kampala" or "Kampala" if area is null.
   String get locationDisplay {
     final areaName = area?.displayName.trim();
     if (areaName != null && areaName.isNotEmpty) {
@@ -158,9 +145,24 @@ class Property {
   }
 
   String? get thumbnailUrl {
-    if (images.isEmpty) return null;
-    final primary = images.where((i) => i.isPrimary).firstOrNull;
-    return (primary ?? images.first).url;
+    if (images.isNotEmpty) {
+      final primary = images.where((i) => i.isPrimary).firstOrNull;
+      return (primary ?? images.first).url;
+    }
+    if (videos.isNotEmpty) {
+      return _videoThumbnail(videos.first.url);
+    }
+    return null;
+  }
+
+  static String? _videoThumbnail(String url) {
+    if (!url.contains('cloudinary.com')) return null;
+    return url
+        .replaceFirst(
+          '/video/upload/',
+          '/video/upload/so_auto,w_600,q_auto,f_jpg/',
+        )
+        .replaceFirst(RegExp(r'\.(mp4|mov|webm)(\?.*)?$'), '.jpg');
   }
 
   Property copyWith({
@@ -232,7 +234,6 @@ class Property {
   }
 }
 
-// ── Hostel Room Entity ────────────────────────────────────────────────────────
 class HostelRoom {
   const HostelRoom({
     required this.id,
@@ -257,7 +258,6 @@ class HostelRoom {
   bool get isAvailable => status == 'AVAILABLE';
 }
 
-// ── Hostel Stats Entity ───────────────────────────────────────────────────────
 class HostelStats {
   const HostelStats({
     required this.total,
