@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rentora/core/router/router_key.dart';
-
 import 'package:rentora/features/account/presentation/pages/about_page.dart';
 import 'package:rentora/features/area-alerts/domain/entities/area_alert.dart';
 import 'package:rentora/features/area-alerts/presentation/pages/add_area_alert_page.dart';
@@ -24,6 +23,7 @@ import '../../features/properties/presentation/pages/hostel_rooms_page.dart';
 import '../../features/properties/presentation/pages/property_detail_page.dart';
 import '../../features/properties/presentation/pages/saved_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/properties/presentation/widgets/property-detail/video_player_page.dart';
 import '../constants/app_constants.dart';
 import '../widgets/main_shell.dart';
 
@@ -157,7 +157,6 @@ final GoRouter appRouter = GoRouter(
         final location = extra['location'] as String? ?? '';
         final imageUrl = extra['imageUrl'] as String?;
         final universityName = extra['universityName'] as String?;
-
         return MaterialPage(
           key: state.pageKey,
           child: HostelRoomsPage(
@@ -266,7 +265,6 @@ final GoRouter appRouter = GoRouter(
         transitionsBuilder: _slideUpTransition,
       ),
     ),
-    // Add this inside your GoRouter routes list:
     GoRoute(
       path: AppRoutes.bookingDetail,
       name: 'bookingDetail',
@@ -279,17 +277,35 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+    // ── Video Player ─────────────────────────────────────────────────────────
+    GoRoute(
+      path: '/video-player',
+      name: 'videoPlayer',
+      pageBuilder: (context, state) {
+        final extra = (state.extra as Map<String, dynamic>?) ?? {};
+        return CustomTransitionPage(
+          key: state.pageKey,
+          opaque: false,
+          barrierColor: Colors.black,
+          child: VideoPlayerPage(
+            url: extra['url'] as String? ?? '',
+            title: extra['title'] as String? ?? 'Property Video',
+          ),
+          transitionsBuilder: _fadeTransition,
+        );
+      },
+    ),
   ],
 );
 
 Widget _slideUpTransition(
   BuildContext context,
-  Animation<double> animation,
-  Animation<double> secondaryAnimation,
+  Animation<double> animation, // ← Fixed: Added <double>
+  Animation<double> secondaryAnimation, // ← Fixed: Added <double>
   Widget child,
 ) {
   return SlideTransition(
-    position: Tween<Offset>(
+    position: Tween(
       begin: const Offset(0, 1),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
@@ -299,8 +315,8 @@ Widget _slideUpTransition(
 
 Widget _fadeTransition(
   BuildContext context,
-  Animation<double> animation,
-  Animation<double> secondaryAnimation,
+  Animation<double> animation, // ← Fixed: Added <double>
+  Animation<double> secondaryAnimation, // ← Fixed: Added <double>
   Widget child,
 ) {
   return FadeTransition(opacity: animation, child: child);

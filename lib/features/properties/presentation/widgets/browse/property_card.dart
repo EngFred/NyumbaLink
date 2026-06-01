@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rentora/core/utils/string_helpers.dart';
 
 import '../../../../../core/services/video_player_manager.dart';
@@ -192,8 +193,17 @@ class _ImageHero extends StatelessWidget {
                     _TypeBadge(type: property.type),
                   const Spacer(),
                   if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
-                  // Mute button shown only when a video is present.
-                  if (hasVideo) ...[const _MuteButton(), const Gap(6)],
+
+                  if (hasVideo) ...[
+                    const _MuteButton(),
+                    const Gap(6),
+                    _FullscreenButton(
+                      videoUrl: property.videos.first.url,
+                      title: property.displayTitle,
+                    ),
+                    const Gap(6),
+                  ],
+
                   if (onSaveTap != null)
                     _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
                 ],
@@ -271,6 +281,46 @@ class _MuteButton extends ConsumerWidget {
         child: Icon(
           isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
           size: 14,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Fullscreen Button ─────────────────────────────────────────────────────────
+class _FullscreenButton extends ConsumerWidget {
+  const _FullscreenButton({required this.videoUrl, required this.title});
+
+  final String videoUrl;
+  final String title;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () {
+        // Pause the feed video before opening the full screen player
+        ref.read(videoPlayerManagerProvider.notifier).pauseAll();
+
+        // Push the transparent video route, wait for it to close, then resume feed video
+        context
+            .push('/video-player', extra: {'url': videoUrl, 'title': title})
+            .then((_) {
+              ref.read(videoPlayerManagerProvider.notifier).resumeActive();
+            });
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withOpacity(0.50),
+          border: Border.all(color: Colors.white.withOpacity(0.30), width: 0.8),
+        ),
+        child: const Icon(
+          Icons.fullscreen_rounded,
+          size: 16,
           color: Colors.white,
         ),
       ),
@@ -384,6 +434,8 @@ class _SaleBadge extends StatelessWidget {
 }
 
 // ── Property Image ────────────────────────────────────────────────────────────
+/// Renders the property's primary image or a type-icon fallback.
+/// Used only when the property has no video clips.
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;

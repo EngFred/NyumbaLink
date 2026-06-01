@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ── State ──────────────────────────────────────────────────────────────────────
-
 /// Immutable state for the global in-feed video playback coordinator.
 class VideoPlayerManagerState {
   const VideoPlayerManagerState({
@@ -43,7 +42,6 @@ class VideoPlayerManagerState {
 }
 
 // ── Provider ───────────────────────────────────────────────────────────────────
-
 /// Global in-feed video playback coordinator.
 ///
 /// Guarantees only one in-feed video plays at a time across the entire app —
@@ -63,7 +61,6 @@ final videoPlayerManagerProvider =
     );
 
 // ── Notifier ───────────────────────────────────────────────────────────────────
-
 class VideoPlayerManagerNotifier
     extends StateNotifier<VideoPlayerManagerState> {
   VideoPlayerManagerNotifier() : super(const VideoPlayerManagerState());
@@ -81,7 +78,6 @@ class VideoPlayerManagerNotifier
   /// visible one wins instead of whichever happened to call [setActive] last.
   void updateVisibility(String id, double fraction) {
     final updated = Map<String, double>.from(state.visibilityFractions);
-
     if (fraction < 0.01) {
       // Card is effectively off-screen — remove it from the tracking map.
       updated.remove(id);
@@ -124,6 +120,25 @@ class VideoPlayerManagerNotifier
       isMuted: state.isMuted,
       visibilityFractions: state.visibilityFractions,
     );
+  }
+
+  /// Wakes up the most visible video based on the last known visibility fractions.
+  /// Call this after returning from a screen where [pauseAll] was used (like transparent routes).
+  void resumeActive() {
+    String? bestId;
+    var bestFraction = _kPlayThreshold; // Must beat the 0.5 threshold
+
+    for (final entry in state.visibilityFractions.entries) {
+      if (entry.value >= bestFraction) {
+        bestFraction = entry.value;
+        bestId = entry.key;
+      }
+    }
+
+    // If we found a valid video that should be playing, wake it up
+    if (bestId != null && state.activeVideoId != bestId) {
+      state = state.copyWith(activeVideoId: bestId);
+    }
   }
 
   /// Toggles the global mute state for all in-feed videos.

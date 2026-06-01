@@ -1,28 +1,26 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
-
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_price_overlay.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/hero_scrims.dart';
-import 'package:rentora/features/properties/presentation/widgets/property-detail/video_player_page.dart';
 import 'package:rentora/features/properties/presentation/widgets/property-detail/video_utils.dart';
 import '../../../domain/entities/property_entities.dart';
 
 /// Hero widget used when a property has **videos but no images**.
 ///
 /// Behaviour:
-///   - First video auto-plays muted as soon as it is initialised.
-///   - Tapping the slide toggles play / pause inline.
-///   - Mute / unmute and full-screen buttons are accessible directly in the
-///     carousel — no navigation required.
-///   - The inline video renders with BoxFit.cover semantics, matching the
-///     thumbnail frame exactly.
-///   - Thumbnail is always rendered as a base layer; the video overlays it
-///     once initialised, ensuring a seamless transition.
+/// - First video auto-plays muted as soon as it is initialised.
+/// - Tapping the slide toggles play / pause inline.
+/// - Mute / unmute and full-screen buttons are accessible directly in the
+/// carousel — no navigation required.
+/// - The inline video renders with BoxFit.cover semantics, matching the
+/// thumbnail frame exactly.
+/// - Thumbnail is always rendered as a base layer; the video overlays it
+/// once initialised, ensuring a seamless transition.
 class HeroVideoHero extends StatefulWidget {
   const HeroVideoHero({super.key, required this.property});
-
   final Property property;
 
   @override
@@ -41,7 +39,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
   final Set<int> _errors = {};
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
@@ -62,7 +59,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
   }
 
   // ── Controller management ────────────────────────────────────────────────
-
   void _onControllerTick() {
     if (mounted) setState(() {});
   }
@@ -105,7 +101,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
   }
 
   // ── User actions ─────────────────────────────────────────────────────────
-
   void _onPageChanged(int i) {
     _controllers[_currentIndex]?.pause();
     setState(() => _currentIndex = i);
@@ -130,18 +125,9 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
     _controllers[_currentIndex]?.pause();
     final config =
         kVideoTypeConfigs[video.videoType] ?? kDefaultVideoTypeConfig;
-    Navigator.of(context)
-        .push(
-          PageRouteBuilder(
-            opaque: false,
-            barrierColor: Colors.black,
-            transitionDuration: const Duration(milliseconds: 250),
-            pageBuilder: (_, __, ___) =>
-                VideoPlayerPage(url: video.url, title: config.label),
-            transitionsBuilder: (_, anim, __, child) =>
-                FadeTransition(opacity: anim, child: child),
-          ),
-        )
+
+    context
+        .push('/video-player', extra: {'url': video.url, 'title': config.label})
         .then((_) {
           // Resume playback when returning from full-screen
           if (mounted) _controllers[_currentIndex]?.play();
@@ -149,7 +135,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final videos = widget.property.videos;
@@ -187,10 +172,8 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
             );
           },
         ),
-
         // ── Gradient scrims ──────────────────────────────────────────────
         const HeroScrims(),
-
         // ── Buffering spinner ────────────────────────────────────────────
         if (isLoading)
           const Center(
@@ -203,7 +186,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
               ),
             ),
           ),
-
         // ── Centre play icon (fades out while playing) ───────────────────
         if (!isLoading && isReady)
           IgnorePointer(
@@ -231,7 +213,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
               ),
             ),
           ),
-
         // ── Price / badges / dots overlay ────────────────────────────────
         Positioned(
           bottom: 0,
@@ -245,7 +226,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
             reserveRightSpace: true,
           ),
         ),
-
         // ── Inline controls: mute + full-screen ──────────────────────────
         // Listed after HeroPriceOverlay so they sit above it in z-order
         // and receive tap events correctly.
@@ -277,7 +257,6 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
 }
 
 // ── _Thumbnail ────────────────────────────────────────────────────────────────
-
 /// Static thumbnail shown immediately, before the video is ready.
 /// Uses [BoxFit.cover] — the exact same visual footprint as [CoverVideo].
 class _Thumbnail extends StatelessWidget {
@@ -308,7 +287,6 @@ class _Thumbnail extends StatelessWidget {
 }
 
 // ── _ControlCircle ────────────────────────────────────────────────────────────
-
 class _ControlCircle extends StatelessWidget {
   const _ControlCircle({required this.icon, required this.onTap, this.tooltip});
 
@@ -331,7 +309,6 @@ class _ControlCircle extends StatelessWidget {
         child: Icon(icon, color: Colors.white, size: 18),
       ),
     );
-
     if (tooltip == null) return button;
     return Tooltip(message: tooltip!, child: button);
   }
