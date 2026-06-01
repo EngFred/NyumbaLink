@@ -60,7 +60,6 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
   }
 
   // ── Controller lifecycle ──────────────────────────────────────────────────
-
   Future<void> _initController() async {
     final ctrl = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _controller = ctrl;
@@ -69,18 +68,20 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
     try {
       await ctrl.initialize();
       if (!mounted) return;
-
       await Future.wait([
         ctrl.setVolume(0), // always start silent — correct volume applied below
         ctrl.setLooping(true),
       ]);
-
       setState(() => _initialized = true);
 
       // Sync volume and auto-play against whatever the manager state is *now*,
       // since the initialisation is async and the state may have changed.
       final managerState = ref.read(videoPlayerManagerProvider);
-      await ctrl.setVolume(managerState.isMuted ? 0.0 : 1.0);
+
+      // Check if this specific video is unmuted
+      final isMuted = !managerState.unmutedVideoIds.contains(widget.videoId);
+      await ctrl.setVolume(isMuted ? 0.0 : 1.0);
+
       if (managerState.activeVideoId == widget.videoId) _play();
     } catch (_) {
       if (mounted) setState(() => _hasError = true);
@@ -101,7 +102,6 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
   void _applyMute(bool muted) => _controller?.setVolume(muted ? 0.0 : 1.0);
 
   // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     // React to active-video and mute changes without triggering a full rebuild —
@@ -121,9 +121,13 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
         _pause();
       }
 
-      // Sync volume whenever the global mute state is toggled.
-      if (prev?.isMuted != next.isMuted) {
-        _applyMute(next.isMuted);
+      // Sync volume whenever THIS video's mute state is toggled.
+      final wasMuted =
+          !(prev?.unmutedVideoIds.contains(widget.videoId) ?? false);
+      final isCurrentlyMuted = !next.unmutedVideoIds.contains(widget.videoId);
+
+      if (wasMuted != isCurrentlyMuted) {
+        _applyMute(isCurrentlyMuted);
       }
     });
 
@@ -132,7 +136,6 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
       children: [
         // ── Static thumbnail — always rendered as base layer ──────────────
         _VideoThumbnail(url: widget.thumbnailUrl),
-
         // ── Video overlay — appears once controller is initialised ─────────
         if (_initialized && _controller != null)
           CoverVideo(controller: _controller!),
@@ -142,7 +145,6 @@ class _InlineVideoPlayerState extends ConsumerState<InlineVideoPlayer> {
 }
 
 // ── _VideoThumbnail ───────────────────────────────────────────────────────────
-
 /// Static image rendered before the video controller is ready.
 ///
 /// Named [_VideoThumbnail] (not [_Thumbnail]) to be unambiguous alongside the

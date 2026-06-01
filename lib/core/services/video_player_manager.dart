@@ -5,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class VideoPlayerManagerState {
   const VideoPlayerManagerState({
     this.activeVideoId,
-    this.isMuted = true,
+    Set<String>? unmutedVideoIds,
     Map<String, double>? visibilityFractions,
-  }) : visibilityFractions = visibilityFractions ?? const {};
+  }) : unmutedVideoIds = unmutedVideoIds ?? const {},
+       visibilityFractions = visibilityFractions ?? const {};
 
   /// The property ID of the currently playing in-feed video.
   /// Null when no video is playing.
   final String? activeVideoId;
 
-  /// Global mute flag — starts muted (Instagram-style).
-  /// Once the user unmutes one video, all subsequent auto-playing
-  /// in-feed videos in the session also play with audio.
-  final bool isMuted;
+  /// Tracks which videos have been explicitly unmuted by the user.
+  /// Videos start muted by default. Each video's mute state is independent.
+  final Set<String> unmutedVideoIds;
 
   /// Tracks the current visible fraction (0.0–1.0) of every in-feed video
   /// that has reported a non-zero visibility. Used by the notifier to always
@@ -30,12 +30,12 @@ class VideoPlayerManagerState {
   VideoPlayerManagerState copyWith({
     String? activeVideoId,
     bool clearActive = false,
-    bool? isMuted,
+    Set<String>? unmutedVideoIds,
     Map<String, double>? visibilityFractions,
   }) {
     return VideoPlayerManagerState(
       activeVideoId: clearActive ? null : (activeVideoId ?? this.activeVideoId),
-      isMuted: isMuted ?? this.isMuted,
+      unmutedVideoIds: unmutedVideoIds ?? this.unmutedVideoIds,
       visibilityFractions: visibilityFractions ?? this.visibilityFractions,
     );
   }
@@ -103,7 +103,7 @@ class VideoPlayerManagerNotifier
 
     state = VideoPlayerManagerState(
       activeVideoId: newActive,
-      isMuted: state.isMuted,
+      unmutedVideoIds: state.unmutedVideoIds,
       visibilityFractions: updated,
     );
   }
@@ -117,7 +117,7 @@ class VideoPlayerManagerNotifier
   void pauseAll() {
     if (!state.hasActiveVideo) return;
     state = VideoPlayerManagerState(
-      isMuted: state.isMuted,
+      unmutedVideoIds: state.unmutedVideoIds,
       visibilityFractions: state.visibilityFractions,
     );
   }
@@ -141,8 +141,14 @@ class VideoPlayerManagerNotifier
     }
   }
 
-  /// Toggles the global mute state for all in-feed videos.
-  void toggleMute() {
-    state = state.copyWith(isMuted: !state.isMuted);
+  /// Toggles the mute state for a specific in-feed video.
+  void toggleMute(String videoId) {
+    final newUnmuted = Set<String>.from(state.unmutedVideoIds);
+    if (newUnmuted.contains(videoId)) {
+      newUnmuted.remove(videoId);
+    } else {
+      newUnmuted.add(videoId);
+    }
+    state = state.copyWith(unmutedVideoIds: newUnmuted);
   }
 }

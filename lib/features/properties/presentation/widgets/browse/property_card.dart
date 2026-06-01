@@ -193,9 +193,8 @@ class _ImageHero extends StatelessWidget {
                     _TypeBadge(type: property.type),
                   const Spacer(),
                   if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
-
                   if (hasVideo) ...[
-                    const _MuteButton(),
+                    _MuteButton(videoId: property.id),
                     const Gap(6),
                     _FullscreenButton(
                       videoUrl: property.videos.first.url,
@@ -203,7 +202,6 @@ class _ImageHero extends StatelessWidget {
                     ),
                     const Gap(6),
                   ],
-
                   if (onSaveTap != null)
                     _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
                 ],
@@ -261,14 +259,21 @@ class _ImageHero extends StatelessWidget {
 
 // ── Mute Button ───────────────────────────────────────────────────────────────
 class _MuteButton extends ConsumerWidget {
-  const _MuteButton();
+  const _MuteButton({required this.videoId});
+  final String videoId;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMuted = ref.watch(
-      videoPlayerManagerProvider.select((s) => s.isMuted),
+    // Check if THIS specific video is in the unmuted set
+    final isMuted = !ref.watch(
+      videoPlayerManagerProvider.select(
+        (s) => s.unmutedVideoIds.contains(videoId),
+      ),
     );
+
     return GestureDetector(
-      onTap: () => ref.read(videoPlayerManagerProvider.notifier).toggleMute(),
+      onTap: () =>
+          ref.read(videoPlayerManagerProvider.notifier).toggleMute(videoId),
       behavior: HitTestBehavior.opaque,
       child: Container(
         width: 30,
@@ -291,7 +296,6 @@ class _MuteButton extends ConsumerWidget {
 // ── Fullscreen Button ─────────────────────────────────────────────────────────
 class _FullscreenButton extends ConsumerWidget {
   const _FullscreenButton({required this.videoUrl, required this.title});
-
   final String videoUrl;
   final String title;
 
@@ -301,7 +305,6 @@ class _FullscreenButton extends ConsumerWidget {
       onTap: () {
         // Pause the feed video before opening the full screen player
         ref.read(videoPlayerManagerProvider.notifier).pauseAll();
-
         // Push the transparent video route, wait for it to close, then resume feed video
         context
             .push('/video-player', extra: {'url': videoUrl, 'title': title})
