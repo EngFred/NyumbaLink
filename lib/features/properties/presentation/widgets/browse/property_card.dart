@@ -260,7 +260,7 @@ class _ImageHero extends StatelessWidget {
 /// [videoPlayerManagerProvider]. Shown in the card's top-right control row
 /// only when the property has video clips.
 class _MuteButton extends ConsumerWidget {
-  const _MuteButton({super.key});
+  const _MuteButton();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
