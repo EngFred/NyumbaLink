@@ -85,7 +85,6 @@ class _PropertyCardState extends State<PropertyCard>
 }
 
 // ── Body ──────────────────────────────────────────────────────────────────────
-
 class _CardBody extends StatelessWidget {
   const _CardBody({
     required this.property,
@@ -133,7 +132,6 @@ class _CardBody extends StatelessWidget {
 }
 
 // ── Hero Image ────────────────────────────────────────────────────────────────
-
 class _ImageHero extends StatelessWidget {
   const _ImageHero({
     required this.property,
@@ -147,129 +145,118 @@ class _ImageHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 16 / 10,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ── Media base layer ───────────────────────────────────────────
-          // Auto-playing muted video when the property has video clips;
-          // static image (or type-icon fallback) otherwise.
-          if (property.videos.isNotEmpty)
-            VisibilityVideoWrapper(
-              videoId: property.id,
-              videoUrl: property.videos.first.url,
-              // Use the Cloudinary auto-thumbnail for the video so the
-              // placeholder matches the video content, not an unrelated image.
-              thumbnailUrl: cloudinaryThumbnail(property.videos.first.url),
-            )
-          else
-            _PropertyImage(property: property),
+    final hasVideo = property.videos.isNotEmpty;
+    // UI FIX: Adaptive ratio gives vertical videos more room to breathe.
+    final double cardRatio = hasVideo ? 4 / 5 : 16 / 10;
 
-          // Bottom gradient for text readability
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: [0.35, 1.0],
-                colors: [Colors.transparent, Color(0xDC000000)],
+    // UI FIX: ClipRect prevents the media inside from bleeding down into the CardInfo area.
+    return ClipRect(
+      child: AspectRatio(
+        aspectRatio: cardRatio,
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // ── Media base layer ───────────────────────────────────────────
+            if (hasVideo)
+              VisibilityVideoWrapper(
+                videoId: property.id,
+                videoUrl: property.videos.first.url,
+                thumbnailUrl: cloudinaryThumbnail(property.videos.first.url),
+              )
+            else
+              _PropertyImage(property: property),
+
+            // Bottom gradient for text readability
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.35, 1.0],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.85)],
+                ),
               ),
             ),
-          ),
 
-          // Top row: type/featured badge · (mute when video) · FOR SALE badge · save
-          Positioned(
-            top: 12,
-            left: 12,
-            right: 12,
-            child: Row(
-              children: [
-                if (property.isFeatured)
-                  const _FeaturedBadge()
-                else
-                  _TypeBadge(type: property.type),
-                const Spacer(),
-                if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
-                // Mute button shown only when a video is present.
-                if (property.videos.isNotEmpty) ...[
-                  const _MuteButton(),
-                  const Gap(6),
+            // Top row: type/featured badge · (mute when video) · FOR SALE badge · save
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Row(
+                children: [
+                  if (property.isFeatured)
+                    const _FeaturedBadge()
+                  else
+                    _TypeBadge(type: property.type),
+                  const Spacer(),
+                  if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
+                  // Mute button shown only when a video is present.
+                  if (hasVideo) ...[const _MuteButton(), const Gap(6)],
+                  if (onSaveTap != null)
+                    _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
                 ],
-                if (onSaveTap != null)
-                  _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
-              ],
+              ),
             ),
-          ),
 
-          // Bottom row: price + action button
-          Positioned(
-            bottom: 12,
-            left: 14,
-            right: 14,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        CurrencyFormatter.format(property.price),
-                        style: AppTextStyles.priceMd.copyWith(
-                          color: Colors.white,
-                          fontSize: 18,
-                          height: 1.1,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      // Only show billing cycle for rent listings —
-                      // sale properties have no recurring cycle.
-                      if (!property.isForSale) ...[
-                        const Gap(2),
+            // Bottom row: price + action button
+            Positioned(
+              bottom: 12,
+              left: 14,
+              right: 14,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
-                          BillingCycleHelper.full(property.billingCycle),
-                          style: AppTextStyles.caption.copyWith(
-                            color: Colors.white70,
-                            fontSize: 11,
+                          CurrencyFormatter.format(property.price),
+                          style: AppTextStyles.priceMd.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                            height: 1.1,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
+                        if (!property.isForSale) ...[
+                          const Gap(2),
+                          Text(
+                            BillingCycleHelper.full(property.billingCycle),
+                            style: AppTextStyles.caption.copyWith(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                if (property.isAvailable)
-                  const _ActionPill()
-                else
-                  _StatusPill(status: property.status),
-              ],
+                  if (property.isAvailable)
+                    const _ActionPill()
+                  else
+                    _StatusPill(status: property.status),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 // ── Mute Button ───────────────────────────────────────────────────────────────
-
-/// Self-contained mute toggle for in-feed video cards.
-///
-/// Single responsibility: read and write the global mute state from
-/// [videoPlayerManagerProvider]. Shown in the card's top-right control row
-/// only when the property has video clips.
 class _MuteButton extends ConsumerWidget {
   const _MuteButton();
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Select only isMuted so this widget rebuilds solely on mute changes,
-    // not on every activeVideoId change.
     final isMuted = ref.watch(
       videoPlayerManagerProvider.select((s) => s.isMuted),
     );
-
     return GestureDetector(
       onTap: () => ref.read(videoPlayerManagerProvider.notifier).toggleMute(),
       behavior: HitTestBehavior.opaque,
@@ -292,10 +279,8 @@ class _MuteButton extends ConsumerWidget {
 }
 
 // ── Action Pill CTA ───────────────────────────────────────────────────────────
-
 class _ActionPill extends StatelessWidget {
   const _ActionPill();
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -336,10 +321,8 @@ class _ActionPill extends StatelessWidget {
 }
 
 // ── Featured Badge ────────────────────────────────────────────────────────────
-
 class _FeaturedBadge extends StatelessWidget {
   const _FeaturedBadge();
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -369,10 +352,8 @@ class _FeaturedBadge extends StatelessWidget {
 }
 
 // ── Sale Badge ────────────────────────────────────────────────────────────────
-
 class _SaleBadge extends StatelessWidget {
   const _SaleBadge();
-
   @override
   Widget build(BuildContext context) {
     const color = Color(0xFF16A34A);
@@ -403,13 +384,9 @@ class _SaleBadge extends StatelessWidget {
 }
 
 // ── Property Image ────────────────────────────────────────────────────────────
-
-/// Renders the property's primary image or a type-icon fallback.
-/// Used only when the property has no video clips.
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return property.thumbnailUrl != null
@@ -427,7 +404,6 @@ class _PropertyImage extends StatelessWidget {
 class _Fallback extends StatelessWidget {
   const _Fallback(this.type);
   final String type;
-
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -452,7 +428,6 @@ class _Fallback extends StatelessWidget {
 class _TypeBadge extends StatelessWidget {
   const _TypeBadge({required this.type});
   final String type;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -484,7 +459,6 @@ class _SaveButton extends StatelessWidget {
   const _SaveButton({required this.isSaved, required this.onTap});
   final bool isSaved;
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -515,11 +489,9 @@ class _SaveButton extends StatelessWidget {
 }
 
 // ── Status Pill ───────────────────────────────────────────────────────────────
-
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
-
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
@@ -527,7 +499,6 @@ class _StatusPill extends StatelessWidget {
       'SOLD' => ('Sold', const Color(0xFFD97706)),
       _ => ('Unavailable', AppColors.grey600),
     };
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -561,11 +532,9 @@ class _StatusPill extends StatelessWidget {
 }
 
 // ── Info Section ──────────────────────────────────────────────────────────────
-
 class _CardInfo extends StatelessWidget {
   const _CardInfo({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -611,7 +580,6 @@ class _CardInfo extends StatelessWidget {
 class _MetaRow extends StatelessWidget {
   const _MetaRow({required this.property});
   final Property property;
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -642,7 +610,6 @@ class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.icon, required this.label});
   final IconData icon;
   final String label;
-
   @override
   Widget build(BuildContext context) {
     return Container(
