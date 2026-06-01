@@ -179,8 +179,9 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
                   // Thumbnail — base layer, always visible until video is up
                   _Thumbnail(video: videos[i]),
                   // Inline video — overlays thumbnail once initialised,
-                  // rendered with BoxFit.cover to match thumbnail frame
-                  if (ready && c != null) _CoverVideo(controller: c),
+                  // rendered with BoxFit.cover to match thumbnail frame.
+                  // Uses the shared CoverVideo widget from video_utils.dart.
+                  if (ready && c != null) CoverVideo(controller: c),
                 ],
               ),
             );
@@ -275,38 +276,10 @@ class _HeroVideoHeroState extends State<HeroVideoHero> {
   }
 }
 
-// ── _CoverVideo ───────────────────────────────────────────────────────────────
-
-/// Renders [VideoPlayer] covering the full available space — equivalent to
-/// [BoxFit.cover] on a [CachedNetworkImage] — so the video frame matches
-/// the thumbnail frame exactly.
-class _CoverVideo extends StatelessWidget {
-  const _CoverVideo({required this.controller});
-  final VideoPlayerController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = controller.value.size;
-    // Guard: size is populated after initialise(); check just in case.
-    if (size.isEmpty) return const SizedBox.shrink();
-
-    return SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: VideoPlayer(controller),
-        ),
-      ),
-    );
-  }
-}
-
 // ── _Thumbnail ────────────────────────────────────────────────────────────────
 
 /// Static thumbnail shown immediately, before the video is ready.
-/// Uses [BoxFit.cover] — the exact same visual footprint as [_CoverVideo].
+/// Uses [BoxFit.cover] — the exact same visual footprint as [CoverVideo].
 class _Thumbnail extends StatelessWidget {
   const _Thumbnail({required this.video});
   final PropertyVideo video;

@@ -1,18 +1,25 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:rentora/core/utils/string_helpers.dart';
 
+import '../../../../../core/services/video_player_manager.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../../core/utils/enum_helpers.dart';
 import '../../../domain/entities/property_entities.dart';
+import '../property-detail/video_utils.dart';
+import 'visibility_video_wrapper.dart';
 
 /// Gold accent used for all featured UI across the properties feature.
 const _kFeaturedGold = Color(0xFFD4A017);
 
-/// Pure-presentation property card — zero provider dependencies.
+/// Pure-presentation property card — zero provider dependencies at the card
+/// level, except for [_MuteButton] which self-connects to the global
+/// [videoPlayerManagerProvider] for mute toggling.
+///
 /// The parent is responsible for wiring [isSaved] and [onSaveTap].
 class PropertyCard extends StatefulWidget {
   const PropertyCard({
@@ -78,6 +85,7 @@ class _PropertyCardState extends State<PropertyCard>
 }
 
 // ── Body ──────────────────────────────────────────────────────────────────────
+
 class _CardBody extends StatelessWidget {
   const _CardBody({
     required this.property,
@@ -125,6 +133,7 @@ class _CardBody extends StatelessWidget {
 }
 
 // ── Hero Image ────────────────────────────────────────────────────────────────
+
 class _ImageHero extends StatelessWidget {
   const _ImageHero({
     required this.property,
@@ -143,7 +152,19 @@ class _ImageHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _PropertyImage(property: property),
+          // ── Media base layer ───────────────────────────────────────────
+          // Auto-playing muted video when the property has video clips;
+          // static image (or type-icon fallback) otherwise.
+          if (property.videos.isNotEmpty)
+            VisibilityVideoWrapper(
+              videoId: property.id,
+              videoUrl: property.videos.first.url,
+              // Use the Cloudinary auto-thumbnail for the video so the
+              // placeholder matches the video content, not an unrelated image.
+              thumbnailUrl: cloudinaryThumbnail(property.videos.first.url),
+            )
+          else
+            _PropertyImage(property: property),
 
           // Bottom gradient for text readability
           const DecoratedBox(
@@ -157,7 +178,7 @@ class _ImageHero extends StatelessWidget {
             ),
           ),
 
-          // Top row: type badge/featured badge + save button + FOR SALE badge
+          // Top row: type/featured badge · (mute when video) · FOR SALE badge · save
           Positioned(
             top: 12,
             left: 12,
@@ -170,6 +191,11 @@ class _ImageHero extends StatelessWidget {
                   _TypeBadge(type: property.type),
                 const Spacer(),
                 if (property.isForSale) ...[const _SaleBadge(), const Gap(6)],
+                // Mute button shown only when a video is present.
+                if (property.videos.isNotEmpty) ...[
+                  const _MuteButton(),
+                  const Gap(6),
+                ],
                 if (onSaveTap != null)
                   _SaveButton(isSaved: isSaved, onTap: onSaveTap!),
               ],
@@ -226,7 +252,47 @@ class _ImageHero extends StatelessWidget {
   }
 }
 
+// ── Mute Button ───────────────────────────────────────────────────────────────
+
+/// Self-contained mute toggle for in-feed video cards.
+///
+/// Single responsibility: read and write the global mute state from
+/// [videoPlayerManagerProvider]. Shown in the card's top-right control row
+/// only when the property has video clips.
+class _MuteButton extends ConsumerWidget {
+  const _MuteButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Select only isMuted so this widget rebuilds solely on mute changes,
+    // not on every activeVideoId change.
+    final isMuted = ref.watch(
+      videoPlayerManagerProvider.select((s) => s.isMuted),
+    );
+
+    return GestureDetector(
+      onTap: () => ref.read(videoPlayerManagerProvider.notifier).toggleMute(),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withOpacity(0.50),
+          border: Border.all(color: Colors.white.withOpacity(0.30), width: 0.8),
+        ),
+        child: Icon(
+          isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          size: 14,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
 // ── Action Pill CTA ───────────────────────────────────────────────────────────
+
 class _ActionPill extends StatelessWidget {
   const _ActionPill();
 
@@ -270,6 +336,7 @@ class _ActionPill extends StatelessWidget {
 }
 
 // ── Featured Badge ────────────────────────────────────────────────────────────
+
 class _FeaturedBadge extends StatelessWidget {
   const _FeaturedBadge();
 
@@ -302,6 +369,7 @@ class _FeaturedBadge extends StatelessWidget {
 }
 
 // ── Sale Badge ────────────────────────────────────────────────────────────────
+
 class _SaleBadge extends StatelessWidget {
   const _SaleBadge();
 
@@ -334,6 +402,10 @@ class _SaleBadge extends StatelessWidget {
   }
 }
 
+// ── Property Image ────────────────────────────────────────────────────────────
+
+/// Renders the property's primary image or a type-icon fallback.
+/// Used only when the property has no video clips.
 class _PropertyImage extends StatelessWidget {
   const _PropertyImage({required this.property});
   final Property property;
@@ -443,6 +515,7 @@ class _SaveButton extends StatelessWidget {
 }
 
 // ── Status Pill ───────────────────────────────────────────────────────────────
+
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
@@ -488,6 +561,7 @@ class _StatusPill extends StatelessWidget {
 }
 
 // ── Info Section ──────────────────────────────────────────────────────────────
+
 class _CardInfo extends StatelessWidget {
   const _CardInfo({required this.property});
   final Property property;

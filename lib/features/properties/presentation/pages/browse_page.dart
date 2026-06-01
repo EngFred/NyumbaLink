@@ -1,11 +1,15 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:go_router/go_router.dart';
 
 import 'package:rentora/features/properties/presentation/utils/property_mapper_ext.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/results_header.dart';
 import 'package:rentora/features/properties/presentation/widgets/browse/search_bar.dart';
+import '../../../../core/services/video_player_manager.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -44,6 +48,9 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
 
   @override
   void deactivate() {
+    // Pause all in-feed videos when navigating away from the browse page
+    // so a browse video never plays simultaneously with a detail-page video.
+    ref.read(videoPlayerManagerProvider.notifier).pauseAll();
     _searchFocusNode.unfocus();
     super.deactivate();
   }
@@ -119,7 +126,6 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
       behavior: HitTestBehavior.translucent,
       onTap: () => _searchFocusNode.unfocus(),
       child: ColoredBox(
-        // ── NEW FIX: Set entirely to surface (pure white) so the list and grid blend perfectly ──
         color: AppColors.surface,
         child: Column(
           children: [
@@ -162,6 +168,7 @@ class _BrowsePageState extends ConsumerState<BrowsePage> {
 }
 
 // ── List Items ──────────────────────────────────────────────────────────────
+
 sealed class _ListItem {}
 
 class _CategoryGridItem extends _ListItem {
@@ -192,6 +199,7 @@ class _PropertyItem extends _ListItem {
 class _FooterItem extends _ListItem {}
 
 // ── List View ───────────────────────────────────────────────────────────────
+
 class _ListView extends ConsumerWidget {
   const _ListView({
     super.key,
@@ -321,7 +329,14 @@ class _ListView extends ConsumerWidget {
 
                     return PropertyCard(
                       property: property,
-                      onTap: () => context.push('/properties/${property.id}'),
+                      onTap: () {
+                        // Pause any playing video before navigating to
+                        // prevent simultaneous playback on detail page.
+                        ref
+                            .read(videoPlayerManagerProvider.notifier)
+                            .pauseAll();
+                        context.push('/properties/${property.id}');
+                      },
                       isSaved: isSaved,
                       onSaveTap: () => ref
                           .read(savedPropertiesProvider.notifier)
